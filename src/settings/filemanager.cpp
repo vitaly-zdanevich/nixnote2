@@ -160,10 +160,6 @@ void FileManager::setup(QString startupConfigDir, QString startupUserDataDir, QS
     checkExistingReadableDir(imagesDir);
     imagesDirPath = slashTerminatePath(imagesDir.path());
 
-    javaDir.setPath(programDataDir + "java");
-    checkExistingReadableDir(javaDir);
-    javaDirPath = slashTerminatePath(javaDir.path());
-
     QDir spellDirUser;
     spellDirUser.setPath(this->configDir + "spell");
     this->spellDirPathUser = slashTerminatePath(spellDirUser.path());
@@ -345,14 +341,6 @@ QString FileManager::getImageDirPath(QString relativePath) {
     return imagesDirPath + toPlatformPathSeparator(relativePath);
 }
 
-QDir FileManager::getJavaDirFile(QString relativePath) {
-    return QDir(javaDir.dirName() + toPlatformPathSeparator(relativePath));
-}
-
-QString FileManager::getJavaDirPath(QString relativePath) {
-    return javaDirPath + toPlatformPathSeparator(relativePath);
-}
-
 QDir FileManager::getLogsDirFile(QString relativePath) {
     return QDir(logsDir.dirName() + toPlatformPathSeparator(relativePath));
 }
@@ -449,5 +437,4 @@ void FileManager::setupFileAttachmentLogging() {
 
     logger.setFileLoggingPath(loggingAttachmentsPath);
 }
-
 

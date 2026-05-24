@@ -881,8 +881,7 @@ void NBrowserWindow::saveNoteContent() {
 
         QString contents = editor->documentElementOuterXmlSync();
 
-        EnmlFormatter formatter(contents, global.guiAvailable, global.passwordSafe,
-                                global.fileManager.getCryptoJarPath());
+        EnmlFormatter formatter(contents, global.guiAvailable, global.passwordSafe);
         formatter.rebuildNoteEnml();
         if (formatter.isFormattingError()) {
             QMessageBox::information(
@@ -1238,7 +1237,7 @@ void NBrowserWindow::htmlCleanup(HtmlCleanupMode mode) {
     QString contents = editor->documentElementOuterXmlSync();
     bool isSimplify = mode == HtmlCleanupMode::Simplify;
 
-    EnmlFormatter formatter(contents, global.guiAvailable, global.passwordSafe, global.fileManager.getCryptoJarPath());
+    EnmlFormatter formatter(contents, global.guiAvailable, global.passwordSafe);
 
     if (isSimplify) {
         formatter.tidyHtml(HtmlCleanupMode::Tidy);
@@ -2107,7 +2106,7 @@ void NBrowserWindow::microFocusChanged() {
     forceTextPaste = false;
     insidePre = false;
 
-    if (editor->selectedText().trimmed().length() > 0 && global.javaFound)
+    if (editor->selectedText().trimmed().length() > 0 && global.encryptionAvailable)
         editor->encryptAction->setEnabled(true);
     else
         editor->encryptAction->setEnabled(false);
@@ -3554,7 +3553,7 @@ void NBrowserWindow::decryptText(QString id, QString text, QString hint, QString
         return;
     }
 
-    EnCrypt crypt(global.fileManager.getCryptoJarPath());
+    EnCrypt crypt;
     QString plainText = "";
     QUuid uuid;
     QString slot = uuid.createUuid().toString().replace("{", "").replace("}", "");
@@ -3663,7 +3662,7 @@ void NBrowserWindow::removeEncryption(QString id, QString plainText, bool perman
 
 
 void NBrowserWindow::encryptButtonPressed() {
-    //EnCrypt encrypt(global.fileManager.getCryptoJarPath());
+    //EnCrypt encrypt;
 
     QString text = editor->selectedText();
     if (text.trimmed() == "") {
@@ -3677,13 +3676,13 @@ void NBrowserWindow::encryptButtonPressed() {
         return;
     }
 
-    EnCrypt crypt(global.fileManager.getCryptoJarPath());
+    EnCrypt crypt;
     QString encrypted;
     int rc = crypt.encrypt(encrypted, text, dialog.getPassword().trimmed());
 
     if (rc != 0) {
         QMessageBox::information(this, tr("Error"),
-                                 tr("Error Encrypting String.  Please verify you have Java installed."));
+                                 tr("Error encrypting string. Please verify the encrypted note data."));
         return;
     }
     QString buffer;

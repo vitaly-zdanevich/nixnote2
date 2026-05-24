@@ -561,9 +561,6 @@ icons.files = resources/icons/*
 images.path = $${PREFIX}/share/$$TARGET/images
 images.files = resources/images/*
 
-java.path = $${PREFIX}/share/$$TARGET/java
-java.files = java/crypto.jar
-
 help.path = $${PREFIX}/share/$$TARGET/help
 help.files = help/*
 
@@ -655,8 +652,6 @@ mac {
     # the shared library dependencies - use macdeployqt for those).
     images.path = Contents/Resources
     images.files = resources/images
-    java.path = Contents/Resources
-    java.files = java
     textfiles.path = Contents/Resources
     translations.path = Contents/Resources/translations
     translations.files = $$TRANSLATIONS_OUT
@@ -666,10 +661,10 @@ mac {
     help.path = Contents/Resources
     help.files = help
 
-    QMAKE_BUNDLE_DATA += images java translations help textfiles docs
+    QMAKE_BUNDLE_DATA += images translations help textfiles docs
     #INSTALLS = binary
 } else {
     translations.path = $${PREFIX}/share/$$TARGET
 
-    INSTALLS = binary desktop images java help textfiles docs man translations icons
+    INSTALLS = binary desktop images help textfiles docs man translations icons
 }

@@ -35,6 +35,7 @@ private slots:
     void enmlHtmlCommentTest();
     void enmlHtmlMapTest();
     void htmlDomAdapterTest();
+    void encryptionRc2CompatibilityTest();
 
 private slots:
     void enmlHtmlSvgTest();

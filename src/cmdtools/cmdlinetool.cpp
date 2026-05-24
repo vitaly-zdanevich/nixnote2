@@ -210,7 +210,7 @@ int CmdLineTool::addNote(StartupConfig config) {
     }
 
 
-    EnmlFormatter formatter(config.newNote->content, global.guiAvailable, global.passwordSafe, global.fileManager.getCryptoJarPath());
+    EnmlFormatter formatter(config.newNote->content, global.guiAvailable, global.passwordSafe);
     formatter.rebuildNoteEnml();
     config.newNote->content = formatter.getContent();
 
@@ -385,7 +385,7 @@ int CmdLineTool::appendNote(StartupConfig config) {
     }
 
 
-    EnmlFormatter formatter(config.newNote->content, global.guiAvailable, global.passwordSafe, global.fileManager.getCryptoJarPath());
+    EnmlFormatter formatter(config.newNote->content, global.guiAvailable, global.passwordSafe);
     formatter.rebuildNoteEnml();
     config.newNote->content = formatter.getContent();
 

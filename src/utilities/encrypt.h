@@ -21,24 +21,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define ENCRYPT_H
 
 #include <QString>
-#include <string>
-
-using namespace std;
 
 class EnCrypt
 {
-private:
-    bool do_encrypt(const char *in, unsigned char *out, int *outlen, unsigned char *key, unsigned char *iv);
-    bool do_decrypt(const unsigned char *in, unsigned char *out, int inlen, unsigned char *key, unsigned char *iv);
-    string string_to_hex(const std::string& input);
-    string hex_to_string(const std::string& input);
-    int runner(QString &result, QString text, QString passphrase, QString method,  int keylen);
-    QString cryptoJarPath;
-
 public:
-    EnCrypt(QString cryptoJarPath);
+    EnCrypt();
     enum CryptoResults {
-        Java_Not_Found = 255,
+        No_Error = 0,
+        Crypto_Not_Available = 255,
         Invalid_Arguments = 16,
         Invalid_Method = 14,
         Invalid_Key = 4

@@ -108,11 +108,10 @@ private:
     QList<qint32> resources;
     bool guiAvailable;
     QHash< QString, QPair <QString, QString> > passwordSafe;
-    QString cryptoJarPath;
     void recursiveTreeCleanup(HtmlDomElement &elementRoot, int level);
 
 public:
-    explicit EnmlFormatter(QString html, bool guiAvailable, QHash< QString, QPair <QString, QString> > passwordSafe, QString cryptoJarPath);
+    explicit EnmlFormatter(QString html, bool guiAvailable, QHash< QString, QPair <QString, QString> > passwordSafe);
 
     QList<qint32> getResources() const { return resources; }
     QString getContent() const;

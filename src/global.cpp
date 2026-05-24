@@ -85,7 +85,7 @@ Global::Global() {
     this->defaultFontSize = 8;
     this->countBehavior = Global::CountAll;
     password = "";
-    javaFound = false;
+    encryptionAvailable = false;
     reminderManager = nullptr;
     settings = nullptr;
     startupNewNote = false;

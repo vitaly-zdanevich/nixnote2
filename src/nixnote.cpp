@@ -217,15 +217,15 @@ NixNote::NixNote(QWidget *parent) : QMainWindow(parent) {
         global.setLastReminderTime(QDateTime::currentMSecsSinceEpoch());
 
 
-    // Check for Java and verify encryption works
+    // Verify encrypted note support
     QLOG_DEBUG() << "encryption selftest";
     QString test = "Test Message";
     QString result;
-    EnCrypt encrypt(global.fileManager.getCryptoJarPath());
+    EnCrypt encrypt;
     if (!encrypt.encrypt(result, test, test)) {
         if (!encrypt.decrypt(result, result, test)) {
             if (result == test) {
-                global.javaFound = true;
+                global.encryptionAvailable = true;
                 QLOG_DEBUG() << "encrypt available";
             } else {
                 QLOG_WARN() << "encrypt.decrypt failed (different result)";

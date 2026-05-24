@@ -285,7 +285,7 @@ public:
     void setBackgroundIndexing(bool value);                         // Should we do indexing in a separate thread?
     bool getBackgroundIndexing();                         // Should we do indexing in a separate thread?
     DatabaseConnection *db;                               // "default" DB connection for the main thread.
-    bool javaFound;                                       // Have we found Java?
+    bool encryptionAvailable;                            // Is native note encryption available?
     bool forceUTF8;                                       // force UTF8 encoding
     QString defaultFont;                                  // Default editor font name
     int defaultFontSize;                                  // Default editor font size

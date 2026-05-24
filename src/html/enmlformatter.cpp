@@ -57,14 +57,12 @@ QString enMediaXml(const QString &type, const QString &hash) {
 EnmlFormatter::EnmlFormatter(
         QString html,
         bool guiAvailable,
-        QHash<QString, QPair<QString, QString> > passwordSafe,
-        QString cryptoJarPath
+        QHash<QString, QPair<QString, QString> > passwordSafe
 ) : QObject(nullptr) {
     this->guiAvailable = guiAvailable;
 
     // actually currently NOT used, as we don't support editable encrypted areas
     this->passwordSafe = passwordSafe;
-    this->cryptoJarPath = cryptoJarPath;
 
     setContent(html);
 
@@ -877,7 +875,7 @@ void EnmlFormatter::removeInvalidAttributes(HtmlDomElement &e) {
 //         QPair<QString, QString> pair = passwordSafe.value(slot);
 //         QString password = pair.first;
 //         QString hint = pair.second;
-//         EnCrypt crypt(cryptoJarPath);
+//         EnCrypt crypt;
 //         QString encrypted;
 //         crypt.encrypt(encrypted, text, password);
 //

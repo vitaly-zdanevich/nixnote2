@@ -4,8 +4,6 @@ Priority: optional
 Maintainer: Robert Spiegel <nightingale7@gmail.com>
 Build-Depends:
  debhelper (>= 9),
- default-jdk,
- javahelper,
  pkg-config,
  libboost-dev,
  libcurl4-openssl-dev | libcurl-dev | libcurl4-nss-dev | libcurl4-gnutls-dev,
@@ -27,12 +25,10 @@ Package: nixnote2
 Architecture: any
 Depends:
  libqt6sql6-sqlite,
- ${java:Depends},
  ${misc:Depends},
  ${shlibs:Depends},
 Recommends:
  mimetex,
- ${java:Recommends},
 Suggests:
  cups,
 Description: Open Source Evernote desktop client

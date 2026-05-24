@@ -51,9 +51,6 @@ private:
     QString imagesDirPath;
     QDir imagesDir;
 
-    QString javaDirPath;
-    QDir javaDir;
-
     QString spellDirPathUser;
 
     QString tmpDirPath;
@@ -109,11 +106,6 @@ public:
     QString getThumbnailDirPathSpecialChar(QString relativePath);
     QDir getImageDirFile(QString relativePath);
     QString getImageDirPath(QString relativePath);
-    QDir getJavaDirFile(QString relativePath);
-    QString getJavaDirPath(QString relativePath);
-
-    QString getCryptoJarPath() { return this->getJavaDirPath("") + QStringLiteral("crypto.jar"); }
-
     QDir getLogsDirFile(QString relativePath);
     QString getLogsDirPath(QString relativePath) const;
     //    QString getQssDirPath(QString relativePath);
@@ -132,4 +124,3 @@ public:
 };
 
 #endif // FILEMANAGER_H
-

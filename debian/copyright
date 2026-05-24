@@ -30,20 +30,6 @@ Copyright: 2014 Sergey Skoblikov,
            2015-2016 Dmitry Ivanov
 License: MIT
 
-Files: java/src/cx/fbn/encrypt/Base64.java
-Copyright: Robert Harder <rharder@usa.net>
-License: public-domain
- I have released this software into the Public Domain. That means you can do
- whatever you want with it. Really. You don't have to match it up with any
- other open source license &em; just use it. You can rename the files,
- move the Java packages, whatever you want. If your lawyers say you have
- to have a license, contact me, and I'll make a special release to you
- under whatever reasonable license you desire: MIT, BSD, GPL, whatever.
-
-Files: java/src/cx/fbn/encrypt/EnCrypt.java
-Copyright: 2014 Randy Baumgarte <randy@fbn.cx>
-License: GPL-2
-
 Files: src/dialog/faderdialog.h dialog/faderdialog.cpp
 Copyright: d_stranz
 License: public-domain

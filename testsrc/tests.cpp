@@ -9,6 +9,7 @@
 #include "../src/html/htmldom.h"
 #include "../src/logger/qslog.h"
 #include "../src/logger/qslogdest.h"
+#include "../src/utilities/encrypt.h"
 #include "../src/utilities/NixnoteStringUtils.h"
 
 
@@ -37,8 +38,7 @@ Tests::Tests(QObject *parent) :
 QString Tests::formatToEnml(QString source) {
     bool guiAvailable = true;
     QHash<QString, QPair<QString, QString> > passwordSafe;
-    QString cryptoJarPath;
-    EnmlFormatter formatter(source, guiAvailable, passwordSafe, cryptoJarPath);
+    EnmlFormatter formatter(source, guiAvailable, passwordSafe);
     formatter.rebuildNoteEnml();
 
     QString resourceStr;
@@ -390,8 +390,7 @@ void Tests::enmlHtmlFileTest() {
 QString Tests::getHtmlWithStrippedHtmlComments(QString source) {
     bool guiAvailable = true;
     QHash<QString, QPair<QString, QString> > passwordSafe;
-    QString cryptoJarPath;
-    EnmlFormatter formatter(source, guiAvailable, passwordSafe, cryptoJarPath);
+    EnmlFormatter formatter(source, guiAvailable, passwordSafe);
     formatter.removeHtmlCommentsInclContent();
 
     QString res = formatter.getContent();
@@ -480,6 +479,34 @@ void Tests::htmlDomAdapterTest() {
 
     firstParagraph.removeFromDocument();
     QCOMPARE(doc.findAllElements(QStringLiteral("p")).size(), 1);
+}
+
+void Tests::encryptionRc2CompatibilityTest() {
+    EnCrypt crypt;
+    QString result;
+
+    QCOMPARE(crypt.encrypt(result, QStringLiteral("Test Message"), QStringLiteral("Test")),
+             static_cast<int>(EnCrypt::No_Error));
+    QCOMPARE(result, QStringLiteral("yA1td3BnkrM75No8SEHD6Qritn7Kuw/3"));
+
+    QCOMPARE(crypt.encrypt(result, QStringLiteral("hello"), QStringLiteral("password")),
+             static_cast<int>(EnCrypt::No_Error));
+    QCOMPARE(result, QStringLiteral("8nCjh4GgTzMhjAw27Lf8Rg=="));
+
+    QCOMPARE(crypt.decrypt(result, QStringLiteral("8nCjh4GgTzMhjAw27Lf8Rg=="), QStringLiteral("password")),
+             static_cast<int>(EnCrypt::No_Error));
+    QCOMPARE(result, QStringLiteral("hello"));
+
+    QCOMPARE(crypt.decrypt(result, QStringLiteral("G+1HA9cw7Qa/sh5T4nicC0yLuEGLiRtV"), QStringLiteral("password")),
+             static_cast<int>(EnCrypt::No_Error));
+    QCOMPARE(result, QStringLiteral("Привет"));
+
+    QCOMPARE(crypt.encrypt(result, QStringLiteral("Emoji 😀"), QStringLiteral("тест")),
+             static_cast<int>(EnCrypt::No_Error));
+    QCOMPARE(result, QStringLiteral("0ul36j83JTsgPQ2zO1BebQ=="));
+
+    QCOMPARE(crypt.decrypt(result, QStringLiteral("8nCjh4GgTzMhjAw27Lf8Rg=="), QStringLiteral("wrong")),
+             static_cast<int>(EnCrypt::Invalid_Key));
 }
 
 void Tests::enmlHtmlSvgTest() {
