@@ -22,13 +22,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/sql/notetable.h"
 #include "src/sql/nsqlquery.h"
 #include "src/sql/resourcetable.h"
+#include <QFile>
 #include <QTextDocument>
 #include <QtXml>
-#if QT_VERSION < 0x050000
-#include <poppler-qt4.h>
-#else
-#include <poppler-qt5.h>
-#endif
+#include <poppler-qt6.h>
 
 extern Global global;
 using namespace Poppler;
@@ -72,7 +69,7 @@ void IndexRunner::initialize() {
     db = new DatabaseConnection("indexrunner");
     //indexTimer = new QTimer();
     //indexTimer->setInterval(global.minIndexInterval);
-    //connect(indexTimer, SIGNAL(timeout()), this, SLOT(index()));
+    //connect(indexTimer, &QTimer::timeout, this, &IndexRunner::index);
     //indexTimer->start();
     textDocument = new QTextDocument();
     indexHash = new QHash<qint32, IndexRecord*>();
@@ -299,16 +296,15 @@ void IndexRunner::indexRecognition(qint32 lid, Resource &r) {
         return;
 
     QDomDocument doc;
-    QString emsg;
-    doc.setContent(recognition.body, &emsg);
+    const QDomDocument::ParseResult parseResult = doc.setContent(recognition.body);
+    if (!parseResult) {
+        QLOG_WARN() << "Unable to parse recognition XML:" << parseResult.errorMessage;
+        return;
+    }
 
     // look for text tags
     QDomNodeList anchors = doc.documentElement().elementsByTagName("t");
-#if QT_VERSION < 0x050000
-    for (unsigned int i=0; keepRunning && !pauseIndexing && i<anchors.length(); i++) {
-#else
     for (int i=0; keepRunning && !pauseIndexing && i<anchors.length(); i++) {
-#endif
         QApplication::processEvents();
         QDomElement enmedia = anchors.at(i).toElement();
         QString weight = enmedia.attribute("w");
@@ -345,9 +341,12 @@ void IndexRunner::indexPdf(qint32 lid, Resource &r) {
         return;
     }
     QString file = global.fileManager.getDbaDirPath() + QString::number(reslid) +".pdf";
+    if (!QFile::exists(file)) {
+        return;
+    }
 
     QString text = "";
-    Poppler::Document *doc = Poppler::Document::load(file);
+    auto doc = Poppler::Document::load(file);
     if (doc == nullptr || doc->isEncrypted() || doc->isLocked()) {
         //indexTimer->start();
         return;
@@ -427,8 +426,7 @@ void IndexRunner::indexAttachment(qint32 lid, Resource &r) {
                     +outDir + " "
                     +file;
 
-    sofficeProcess.start(cmd,
-                         QIODevice::ReadWrite|QIODevice::Unbuffered);
+    sofficeProcess.startCommand(cmd, QIODevice::ReadWrite | QIODevice::Unbuffered);
 
     QLOG_DEBUG() << "Starting soffice ";
     sofficeProcess.waitForStarted();

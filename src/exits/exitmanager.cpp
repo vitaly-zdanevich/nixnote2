@@ -68,10 +68,13 @@ void ExitManager::loadExitPoint(QString name, int goodVersion) {
         QLOG_ERROR() << tr("Script file doesn't exist or cannot be read. Disabling exit ") << fileName;
         enabled = false;
         return;
-    } else {
-        f.open(QIODevice::ReadOnly);
-        script = f.readAll();
     }
+    if (!f.open(QIODevice::ReadOnly)) {
+        QLOG_ERROR() << tr("Script file cannot be opened. Disabling exit ") << fileName;
+        enabled = false;
+        return;
+    }
+    script = f.readAll();
 
     ExitPoint *point = new ExitPoint();
     point->setEnabled(enabled);

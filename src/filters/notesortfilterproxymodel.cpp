@@ -58,30 +58,32 @@ bool NoteSortFilterProxyModel::lessThan(const QModelIndex &left, const QModelInd
     if (left.column() == NOTE_TABLE_IS_DIRTY_POSITION)
         return leftData.toBool() < rightData.toBool();
 
-    if (leftData.type() == QVariant::Invalid || rightData.type() == QVariant::Invalid)
+    const int leftType = leftData.typeId();
+    const int rightType = rightData.typeId();
+
+    if (leftType == QMetaType::UnknownType || rightType == QMetaType::UnknownType)
         return true;
 
-    if (leftData.type() == QVariant::Icon || rightData.type() == QVariant::Icon)
+    if (leftType == QMetaType::QIcon || rightType == QMetaType::QIcon)
         return true;
 
-    if (leftData.type() == QVariant::Image || rightData.type() == QVariant::Image)
+    if (leftType == QMetaType::QImage || rightType == QMetaType::QImage)
         return true;
 
-    if (leftData.type() == QVariant::String && rightData.type() == QVariant::String) {
+    if (leftType == QMetaType::QString && rightType == QMetaType::QString) {
         QString left = leftData.toString();
         QString right = rightData.toString();
         return left.toLower() < right.toLower();
     }
 
-    if (leftData.type() == QVariant::Int && rightData.type() == QVariant::Int)
+    if (leftType == QMetaType::Int && rightType == QMetaType::Int)
         return leftData.toInt() < rightData.toInt();
 
-    if (leftData.type() == QVariant::LongLong && rightData.type() == QVariant::LongLong)
+    if (leftType == QMetaType::LongLong && rightType == QMetaType::LongLong)
         return leftData.toLongLong() < rightData.toLongLong();
 
-    if (leftData.type() == QVariant::Double && rightData.type() == QVariant::Double)
+    if (leftType == QMetaType::Double && rightType == QMetaType::Double)
         return leftData.toDouble() < rightData.toDouble();
 
     return true;
 }
-

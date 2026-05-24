@@ -49,7 +49,7 @@ EnDecryptDialog::EnDecryptDialog(QWidget *parent) :
 
     ok= new QPushButton(this);
     cancel = new QPushButton(this);
-    connect(password, SIGNAL(textChanged(const QString&)), this, SLOT(validateInput()));
+    connect(password, &QLineEdit::textChanged, this, &EnDecryptDialog::validateInput);
 
     passwordLabel = new QLabel();
     passwordLabel->setText(tr("Password"));
@@ -75,9 +75,9 @@ EnDecryptDialog::EnDecryptDialog(QWidget *parent) :
     ok->setText(tr("OK"));
     if (global.password == "" and global.username == "")
         ok->setEnabled(false);
-    connect(ok, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
+    connect(ok, &QPushButton::clicked, this, &EnDecryptDialog::okButtonPressed);
     cancel->setText(tr("Cancel"));
-    connect(cancel, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
+    connect(cancel, &QPushButton::clicked, this, &EnDecryptDialog::cancelButtonPressed);
     buttonGrid->addWidget(ok, 1, 1);
     buttonGrid->addWidget(cancel, 1,2);
     grid->addLayout(buttonGrid,2,1);

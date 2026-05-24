@@ -108,39 +108,39 @@ EditorButtonBar::EditorButtonBar(QWidget *parent) :
     syncButtonVisible->setCheckable(true);
     emailButtonVisible->setCheckable(true);
 
-    connect(undoVisible, SIGNAL(triggered()), this, SLOT(toggleUndoButtonVisible()));
-    connect(redoVisible, SIGNAL(triggered()), this, SLOT(toggleRedoButtonVisible()));
-    connect(cutVisible, SIGNAL(triggered()), this, SLOT(toggleCutButtonVisible()));
-    connect(copyVisible, SIGNAL(triggered()), this, SLOT(toggleCopyButtonVisible()));
-    connect(pasteVisible, SIGNAL(triggered()), this, SLOT(togglePasteButtonVisible()));
-    connect(removeFormatVisible, SIGNAL(triggered()), this, SLOT(toggleRemoveFormatVisible()));
-    connect(boldVisible, SIGNAL(triggered()), this, SLOT(toggleBoldButtonVisible()));
-    connect(italicVisible, SIGNAL(triggered()), this, SLOT(toggleItalicButtonVisible()));
-    connect(underlineVisible, SIGNAL(triggered()), this, SLOT(toggleUnderlineButtonVisible()));
-    connect(strikethroughVisible, SIGNAL(triggered()), this, SLOT(toggleStrikethroughButtonVisible()));
-    connect(superscriptVisible, SIGNAL(triggered()), this, SLOT(toggleSuperscriptButtonVisible()));
-    connect(subscriptVisible, SIGNAL(triggered()), this, SLOT(toggleSubscriptButtonVisible()));
-    connect(insertDatetimeVisible, SIGNAL(triggered()), this, SLOT(toggleInsertDatetimeVisible()));
-    connect(leftJustifyVisible, SIGNAL(triggered()), this, SLOT(toggleLeftJustifyButtonVisible()));
-    connect(centerJustifyVisible, SIGNAL(triggered()), this, SLOT(toggleCenterJustifyButtonVisible()));
-    connect(fullJustifyVisible, SIGNAL(triggered()), this, SLOT(toggleFullJustifyButtonVisible()));
-    connect(rightJustifyVisible, SIGNAL(triggered()), this, SLOT(toggleRightJustifyButtonVisible()));
-    connect(hlineVisible, SIGNAL(triggered()), this, SLOT(toggleHlineButtonVisible()));
-    connect(shiftRightVisible, SIGNAL(triggered()), this, SLOT(toggleShiftRightButtonVisible()));
-    connect(shiftLeftVisible, SIGNAL(triggered()), this, SLOT(toggleShiftLeftButtonVisible()));
-    connect(bulletListVisible, SIGNAL(triggered()), this, SLOT(toggleBulletListButtonVisible()));
-    connect(numberListVisible, SIGNAL(triggered()), this, SLOT(toggleNumberListButtonVisible()));
-    connect(fontVisible, SIGNAL(triggered()), this, SLOT(toggleFontButtonVisible()));
-    connect(fontSizeVisible, SIGNAL(triggered()), this, SLOT(toggleFontSizeButtonVisible()));
-    connect(todoVisible, SIGNAL(triggered()), this, SLOT(toggleTodoButtonVisible()));
-    connect(highlightVisible, SIGNAL(triggered()), this, SLOT(toggleHighlightColorVisible()));
-    connect(fontColorVisible, SIGNAL(triggered()), this, SLOT(toggleFontColorVisible()));
-    connect(insertTableButtonVisible, SIGNAL(triggered()), this, SLOT(toggleInsertTableButtonVisible()));
-    connect(spellCheckButtonVisible, SIGNAL(triggered()), this, SLOT(toggleSpellCheckButtonVisible()));
-    connect(htmlEntitiesButtonVisible, SIGNAL(triggered()), this, SLOT(toggleHtmlEntitiesButtonVisible()));
-    connect(formatCodeButtonVisible, SIGNAL(triggered()), this, SLOT(toggleFormatCodeButtonVisible()));
-    connect(syncButtonVisible, SIGNAL(triggered()), this, SLOT(toggleSyncButtonVisible()));
-    connect(emailButtonVisible, SIGNAL(triggered()), this, SLOT(toggleEmailButtonVisible()));
+    connect(undoVisible, &QAction::triggered, this, &EditorButtonBar::toggleUndoButtonVisible);
+    connect(redoVisible, &QAction::triggered, this, &EditorButtonBar::toggleRedoButtonVisible);
+    connect(cutVisible, &QAction::triggered, this, &EditorButtonBar::toggleCutButtonVisible);
+    connect(copyVisible, &QAction::triggered, this, &EditorButtonBar::toggleCopyButtonVisible);
+    connect(pasteVisible, &QAction::triggered, this, &EditorButtonBar::togglePasteButtonVisible);
+    connect(removeFormatVisible, &QAction::triggered, this, &EditorButtonBar::toggleRemoveFormatVisible);
+    connect(boldVisible, &QAction::triggered, this, &EditorButtonBar::toggleBoldButtonVisible);
+    connect(italicVisible, &QAction::triggered, this, &EditorButtonBar::toggleItalicButtonVisible);
+    connect(underlineVisible, &QAction::triggered, this, &EditorButtonBar::toggleUnderlineButtonVisible);
+    connect(strikethroughVisible, &QAction::triggered, this, &EditorButtonBar::toggleStrikethroughButtonVisible);
+    connect(superscriptVisible, &QAction::triggered, this, &EditorButtonBar::toggleSuperscriptButtonVisible);
+    connect(subscriptVisible, &QAction::triggered, this, &EditorButtonBar::toggleSubscriptButtonVisible);
+    connect(insertDatetimeVisible, &QAction::triggered, this, &EditorButtonBar::toggleInsertDatetimeVisible);
+    connect(leftJustifyVisible, &QAction::triggered, this, &EditorButtonBar::toggleLeftJustifyButtonVisible);
+    connect(centerJustifyVisible, &QAction::triggered, this, &EditorButtonBar::toggleCenterJustifyButtonVisible);
+    connect(fullJustifyVisible, &QAction::triggered, this, &EditorButtonBar::toggleFullJustifyButtonVisible);
+    connect(rightJustifyVisible, &QAction::triggered, this, &EditorButtonBar::toggleRightJustifyButtonVisible);
+    connect(hlineVisible, &QAction::triggered, this, &EditorButtonBar::toggleHlineButtonVisible);
+    connect(shiftRightVisible, &QAction::triggered, this, &EditorButtonBar::toggleShiftRightButtonVisible);
+    connect(shiftLeftVisible, &QAction::triggered, this, &EditorButtonBar::toggleShiftLeftButtonVisible);
+    connect(bulletListVisible, &QAction::triggered, this, &EditorButtonBar::toggleBulletListButtonVisible);
+    connect(numberListVisible, &QAction::triggered, this, &EditorButtonBar::toggleNumberListButtonVisible);
+    connect(fontVisible, &QAction::triggered, this, &EditorButtonBar::toggleFontButtonVisible);
+    connect(fontSizeVisible, &QAction::triggered, this, &EditorButtonBar::toggleFontSizeButtonVisible);
+    connect(todoVisible, &QAction::triggered, this, &EditorButtonBar::toggleTodoButtonVisible);
+    connect(highlightVisible, &QAction::triggered, this, &EditorButtonBar::toggleHighlightColorVisible);
+    connect(fontColorVisible, &QAction::triggered, this, &EditorButtonBar::toggleFontColorVisible);
+    connect(insertTableButtonVisible, &QAction::triggered, this, &EditorButtonBar::toggleInsertTableButtonVisible);
+    connect(spellCheckButtonVisible, &QAction::triggered, this, &EditorButtonBar::toggleSpellCheckButtonVisible);
+    connect(htmlEntitiesButtonVisible, &QAction::triggered, this, &EditorButtonBar::toggleHtmlEntitiesButtonVisible);
+    connect(formatCodeButtonVisible, &QAction::triggered, this, &EditorButtonBar::toggleFormatCodeButtonVisible);
+    connect(syncButtonVisible, &QAction::triggered, this, &EditorButtonBar::toggleSyncButtonVisible);
+    connect(emailButtonVisible, &QAction::triggered, this, &EditorButtonBar::toggleEmailButtonVisible);
 
     // note editor toolbar items begin
     fontNames = new FontNameComboBox(this);
@@ -805,8 +805,7 @@ void EditorButtonBar::loadFontNames() {
     }
 
     // Load up the list of font names
-    QFontDatabase fonts;
-    QStringList fontFamilies = fonts.families();
+    QStringList fontFamilies = QFontDatabase::families();
     fontFamilies.append(tr("Times"));
     fontFamilies.sort();
     bool first = true;
@@ -828,9 +827,8 @@ void EditorButtonBar::loadFontNames() {
 
 // Load the list of font sizes
 void EditorButtonBar::loadFontSizeComboBox(QString name) {
-    QFontDatabase fdb;
     fontSizes->clear();
-    QList<int> sizes = fdb.pointSizes(name);
+    QList<int> sizes = QFontDatabase::pointSizes(name);
     for (int i = 0; i < sizes.size(); i++) {
         fontSizes->addItem(QString::number(sizes[i]), sizes[i]);
     }

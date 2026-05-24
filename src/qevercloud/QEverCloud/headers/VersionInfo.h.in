@@ -8,7 +8,7 @@
 #ifndef QEVERCLOUD_VERSION_INFO_H
 #define QEVERCLOUD_VERSION_INFO_H
 
-#include \"Export.h\"
+#include <Export.h>
 
 #include <QString>
 
@@ -44,7 +44,7 @@
  * This macro is set to a string holding the information about
  * the current QEverCloud build
  */
-#define QEVERCLOUD_BUILD_INFO \"nixnote2 integrated\"
+#define QEVERCLOUD_BUILD_INFO nixnote2_integrated
 
 /**
  * This macro is set to the major version number of QEverCloud

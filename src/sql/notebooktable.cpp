@@ -1076,7 +1076,7 @@ qint32 NotebookTable::findByUri(string uri) {
 // Return a list of all closed notebooks.  Return the
 // list of LIDs.
 void NotebookTable::getClosedNotebooks(QList<qint32> &lids) {
-    lids.empty();
+    lids.clear();
     NSqlQuery query(db);
     db->lockForRead();
     query.prepare("Select lid from DataStore where key=:key");
@@ -1095,7 +1095,7 @@ void NotebookTable::getClosedNotebooks(QList<qint32> &lids) {
 // Get a list of any notebooks that are open and
 // return a list of LIDs.
 void NotebookTable::getOpenNotebooks(QList<qint32> &lids) {
-    lids.empty();
+    lids.clear();
     NSqlQuery query(db);
     db->lockForRead();
     query.prepare("Select lid from DataStore where key=:key and lid not in (select lid from datastore where key=:key2)");

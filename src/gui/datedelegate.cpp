@@ -34,8 +34,7 @@ QString DateDelegate::displayText(const QVariant &value, const QLocale &locale) 
 
     if (value.toLongLong() == 0)
         return "";
-    QDateTime timestamp;
-    timestamp.setTime_t(value.toLongLong()/1000);
+    QDateTime timestamp = QDateTime::fromSecsSinceEpoch(value.toLongLong()/1000);
 
     //    if (timestamp.date() == QDate::currentDate())
     //        return tr("Today") +" " + timestamp.time().toString(global.getTimeFormat());
@@ -52,4 +51,3 @@ void DateDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
 
     QStyledItemDelegate::paint(painter, noption, index);
 }
-

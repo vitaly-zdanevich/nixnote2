@@ -48,15 +48,15 @@ InsertLinkDialog::InsertLinkDialog(bool insert, QWidget *parent) :
     grid->addLayout(input, 1,1);
 
     ok = new QPushButton(tr("OK"));
-    connect(ok, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(ok, &QPushButton::clicked, this, &InsertLinkDialog::accept);
     ok->setEnabled(false);
 
     QPushButton *cancel = new QPushButton(tr("Cancel"));
-    connect(cancel, SIGNAL(clicked()), this, SLOT(reject()));
+    connect(cancel, &QPushButton::clicked, this, &InsertLinkDialog::reject);
     button->addWidget(ok, 1, 1);
     button->addWidget(cancel, 1,2);
     grid->addLayout(button, 3, 1);
-    connect(url,SIGNAL(textChanged(QString)), this, SLOT(validateInput()));
+    connect(url, &QLineEdit::textChanged, this, &InsertLinkDialog::validateInput);
 
    // setAttribute(Qt::WA_DeleteOnClose);
     this->setFont(global.getGuiFont(font()));

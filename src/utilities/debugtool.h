@@ -44,7 +44,6 @@ private:
     void dumpField(Optional<long long> field, QString name);
     void dumpField(Optional<QByteArray> field, QString name, bool hexValue=false);
     void dumpField(Optional<QStringList> field, QString name);
-    void dumpField(Optional< QList< QString> > field, QString name);
     void dumpField(Optional<double> field, QString name);
     void dumpResource(Resource resource);           // Dump a resource to the log
 

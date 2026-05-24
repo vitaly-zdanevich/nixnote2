@@ -54,7 +54,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/gui/browserWidgets/dateeditor.h"
 #include "src/gui/browserWidgets/colormenu.h"
 #include "src/gui/browserWidgets/editorbuttonbar.h"
-#include "src/gui/nwebview.h"
 #include "src/xml/xmlhighlighter.h"
 #include "src/gui/browserWidgets/editorbuttonbar.h"
 #include "src/gui/browserWidgets/reminderbutton.h"
@@ -299,6 +298,7 @@ public slots:
     void focusTitle();
     void focusNote();
     void imageContextMenu(QString lid, QString filename);
+    void resourceContextMenu(QString filename);
 
     void insertDatetime();
     void insertDate();

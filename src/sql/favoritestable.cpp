@@ -39,7 +39,7 @@ FavoritesTable::FavoritesTable(DatabaseConnection *db, QObject *parent) :
 
 // Get the LID of all favorites
 void FavoritesTable::getAll(QList<qint32> &lids) {
-    lids.empty();
+    lids.clear();
     db->lockForRead();
     NSqlQuery query(db);
     query.prepare("Select lid from datastore where key=:key");

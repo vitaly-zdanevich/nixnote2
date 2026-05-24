@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "startupconfig.h"
 #include <QDir>
 #include <QString>
+#include <QRegularExpression>
 #include <iostream>
 #include "src/threads/syncrunner.h"
 #include "src/global.h"
@@ -510,7 +511,7 @@ int StartupConfig::init(int argc, char *argv[], bool &guiAvailable) {
         if (command->at(STARTUP_EXPORT)) {
             if (parm.startsWith("--id=", Qt::CaseSensitive)) {
                 parm = parm.mid(5);
-                QRegExp regExp("[ ,;]");
+                QRegularExpression regExp("[ ,;]");
                 QStringList tokens = parm.split(regExp);
                 for (int i = 0; i < tokens.size(); i++) {
                     if (tokens[i].trimmed() != "")
@@ -588,7 +589,7 @@ int StartupConfig::init(int argc, char *argv[], bool &guiAvailable) {
         if (command->at(STARTUP_ALTERNOTE)) {
             if (parm.startsWith("--id=", Qt::CaseSensitive)) {
                 parm = parm.mid(5);
-                QRegExp regExp("[ ,;]");
+                QRegularExpression regExp("[ ,;]");
                 QStringList tokens = parm.split(regExp);
                 for (int i = 0; i < tokens.size(); i++) {
                     if (tokens[i].trimmed() != "")
@@ -779,6 +780,5 @@ bool StartupConfig::closeNotebook() {
 bool StartupConfig::signalOtherGui() {
     return command->at(STARTUP_SIGNALGUI);
 }
-
 
 

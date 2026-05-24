@@ -42,12 +42,12 @@ SmtpClient::SmtpClient(const QString & host, int port, ConnectionType connection
     this->host = host;
     this->port = port;
 
-    connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-            this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
-    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(socketError(QAbstractSocket::SocketError)));
-    connect(socket, SIGNAL(readyRead()),
-            this, SLOT(socketReadyRead()));
+    connect(socket, &QAbstractSocket::stateChanged,
+            this, &SmtpClient::socketStateChanged);
+    connect(socket, &QAbstractSocket::errorOccurred,
+            this, &SmtpClient::socketError);
+    connect(socket, &QAbstractSocket::readyRead,
+            this, &SmtpClient::socketReadyRead);
 }
 
 SmtpClient::~SmtpClient() {
@@ -295,7 +295,12 @@ bool SmtpClient::login(const QString &user, const QString &password, AuthMethod 
         if (method == AuthPlain)
         {
             // Sending command: AUTH PLAIN base64('\0' + username + '\0' + password)
-            sendMessage("AUTH PLAIN " + QByteArray().append((char) 0).append(user).append((char) 0).append(password).toBase64());
+            QByteArray authPlain;
+            authPlain.append('\0');
+            authPlain.append(user.toUtf8());
+            authPlain.append('\0');
+            authPlain.append(password.toUtf8());
+            sendMessage("AUTH PLAIN " + QString::fromLatin1(authPlain.toBase64()));
 
             // Wait for the server's response
             waitForResponse();
@@ -317,14 +322,14 @@ bool SmtpClient::login(const QString &user, const QString &password, AuthMethod 
             if (responseCode != 334) { emit smtpError(AuthenticationFailedError); return false; }
 
             // Send the username in base64
-            sendMessage(QByteArray().append(user).toBase64());
+            sendMessage(QString::fromLatin1(user.toUtf8().toBase64()));
 
             // Wait for 334
             waitForResponse();
             if (responseCode != 334) { emit smtpError(AuthenticationFailedError); return false; }
 
             // Send the password in base64
-            sendMessage(QByteArray().append(password).toBase64());
+            sendMessage(QString::fromLatin1(password.toUtf8().toBase64()));
 
             // Wait for the server's response
             waitForResponse();
@@ -493,7 +498,4 @@ void SmtpClient::socketReadyRead()
 }
 
 /* [5] --- */
-
-
-
 

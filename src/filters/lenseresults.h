@@ -9,7 +9,7 @@ class LenseResults : public QObject
     Q_OBJECT
 public:
     explicit LenseResults(QObject *parent = 0);
-    Note note;
+    qevercloud::Note note;
 
 signals:
 

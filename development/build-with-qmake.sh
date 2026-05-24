@@ -51,7 +51,8 @@ if [ -z "${OAUTH_BACKEND}" ] || [ "${OAUTH_BACKEND}" == "browser" ]; then
 elif [ "${OAUTH_BACKEND}" == "webengine" ]; then
    OAUTH_CONFIG="CONFIG+=oauth_webengine"
 else
-   OAUTH_CONFIG="CONFIG+=oauth_webkit"
+   echo "Unsupported OAuth backend: ${OAUTH_BACKEND}. Use browser or webengine."
+   exit 1
 fi
 
 if [ ! -d "${BUILD_DIR}" ]; then
@@ -66,7 +67,7 @@ if [ -d "${APPDIR}" ]; then
   rm *.AppImage 2>/dev/null || echo "failed to remove"
 fi
 
-QMAKE_BINARY=qmake
+QMAKE_BINARY=${QMAKE_BINARY:-qmake6}
 
 if [ "${TIDY_LIB_DIR}" == "/usr/lib" ] ; then
   # at least on ubuntu pkgconfig for "libtidy-dev" is not installed - so we provide default

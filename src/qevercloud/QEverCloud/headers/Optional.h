@@ -12,6 +12,7 @@
 #include "EverCloudException.h"
 
 #include <algorithm>
+#include <utility>
 
 namespace qevercloud {
 
@@ -384,29 +385,33 @@ public:
         swap(first.m_value, second.m_value);
     }
 
-    Optional(Optional && other)
+    Optional(Optional && other) :
+        m_isSet(other.m_isSet),
+        m_value(std::move(other.m_value))
     {
-        swap(*this, other);
+        other.clear();
     }
 
     Optional & operator=(Optional && other)
     {
-        swap(*this, other);
+        if (this != &other) {
+            m_value = std::move(other.m_value);
+            m_isSet = other.m_isSet;
+            other.clear();
+        }
         return *this;
     }
 
-    Optional(T && other)
+    Optional(T && other) :
+        m_isSet(true),
+        m_value(std::move(other))
     {
-        using std::swap;
-        m_isSet = true;
-        swap(m_value, other);
     }
 
     Optional & operator=(T && other)
     {
-        using std::swap;
+        m_value = std::move(other);
         m_isSet = true;
-        swap(m_value, other);
         return *this;
     }
 

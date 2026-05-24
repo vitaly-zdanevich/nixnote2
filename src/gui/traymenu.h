@@ -21,7 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define TRAYMENU_H
 
 #include <QMenu>
-#include <QSignalMapper>
 
 class TrayMenu : public QMenu
 {
@@ -32,7 +31,6 @@ private:
     QMenu *pinnedMenu;
     QMenu *favoriteNotesMenu;
     QMenu *recentlyUpdatedMenu;
-    QSignalMapper *signalMapper;
     void buildMenu(QString debugInfo, QMenu *actionMenu, QList<QPair<qint32, QString> > records);
 
 public:

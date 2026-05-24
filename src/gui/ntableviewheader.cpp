@@ -29,11 +29,7 @@ extern Global global;
 NTableViewHeader::NTableViewHeader(Qt::Orientation orientation, QWidget *parent) :
     QHeaderView(orientation, parent) {
 
-#if QT_VERSION < 0x050000
-    setClickable(true);
-#else
     setSectionsClickable(true);
-#endif
     setSortIndicatorShown(true);
     setContextMenuPolicy(Qt::ActionsContextMenu);
 
@@ -151,30 +147,30 @@ NTableViewHeader::NTableViewHeader(Qt::Orientation orientation, QWidget *parent)
 
     this->setMouseTracking(true);
 
-    connect(this, SIGNAL(sortIndicatorChanged(int, Qt::SortOrder)), this, SLOT(saveSort(int, Qt::SortOrder)));
+    connect(this, &QHeaderView::sortIndicatorChanged, this, &NTableViewHeader::saveSort);
 
-    connect(createdDateAction, SIGNAL(toggled(bool)), this, SLOT(createdDateChecked(bool)));
-    connect(titleAction, SIGNAL(toggled(bool)), this, SLOT(titleChecked(bool)));
-    connect(changedDateAction, SIGNAL(toggled(bool)), this, SLOT(changedDateChecked(bool)));
-    connect(subjectDateAction, SIGNAL(toggled(bool)), this, SLOT(subjectDateChecked(bool)));
-    connect(notebookAction, SIGNAL(toggled(bool)), this, SLOT(notebookChecked(bool)));
-    connect(tagsAction, SIGNAL(toggled(bool)), this, SLOT(tagsChecked(bool)));
-    connect(urlAction, SIGNAL(toggled(bool)), this, SLOT(urlChecked(bool)));
-    connect(authorAction, SIGNAL(toggled(bool)), this, SLOT(authorChecked(bool)));
-    connect(hasTodoAction, SIGNAL(toggled(bool)), this, SLOT(hasTodoChecked(bool)));
-    connect(hasEncryptionAction, SIGNAL(toggled(bool)), this, SLOT(hasEncryptionChecked(bool)));
-    connect(sizeAction, SIGNAL(toggled(bool)), this, SLOT(sizeChecked(bool)));
-    connect(thumbnailAction, SIGNAL(toggled(bool)), this, SLOT(thumbnailChecked(bool)));
-    connect(relevanceAction, SIGNAL(toggled(bool)), this, SLOT(relevanceChecked(bool)));
-    connect(latitudeAction, SIGNAL(toggled(bool)), this, SLOT(latitudeChecked(bool)));
-    connect(longitudeAction, SIGNAL(toggled(bool)), this, SLOT(longitudeChecked(bool)));
-    connect(altitudeAction, SIGNAL(toggled(bool)), this, SLOT(altitudeChecked(bool)));
-    connect(synchronizedAction, SIGNAL(toggled(bool)), this, SLOT(synchronizedChecked(bool)));
-    connect(sourceAction, SIGNAL(toggled(bool)), this, SLOT(sourceChecked(bool)));
-    connect(reminderTimeAction, SIGNAL(toggled(bool)), this, SLOT(reminderTimeChecked(bool)));
-    connect(reminderTimeDoneAction, SIGNAL(toggled(bool)), this, SLOT(reminderTimeDoneChecked(bool)));
-    connect(reminderOrderAction, SIGNAL(toggled(bool)), this, SLOT(reminderOrderChecked(bool)));
-    connect(pinnedAction, SIGNAL(toggled(bool)), this, SLOT(pinnedChecked(bool)));
+    connect(createdDateAction, &QAction::toggled, this, &NTableViewHeader::createdDateChecked);
+    connect(titleAction, &QAction::toggled, this, &NTableViewHeader::titleChecked);
+    connect(changedDateAction, &QAction::toggled, this, &NTableViewHeader::changedDateChecked);
+    connect(subjectDateAction, &QAction::toggled, this, &NTableViewHeader::subjectDateChecked);
+    connect(notebookAction, &QAction::toggled, this, &NTableViewHeader::notebookChecked);
+    connect(tagsAction, &QAction::toggled, this, &NTableViewHeader::tagsChecked);
+    connect(urlAction, &QAction::toggled, this, &NTableViewHeader::urlChecked);
+    connect(authorAction, &QAction::toggled, this, &NTableViewHeader::authorChecked);
+    connect(hasTodoAction, &QAction::toggled, this, &NTableViewHeader::hasTodoChecked);
+    connect(hasEncryptionAction, &QAction::toggled, this, &NTableViewHeader::hasEncryptionChecked);
+    connect(sizeAction, &QAction::toggled, this, &NTableViewHeader::sizeChecked);
+    connect(thumbnailAction, &QAction::toggled, this, &NTableViewHeader::thumbnailChecked);
+    connect(relevanceAction, &QAction::toggled, this, &NTableViewHeader::relevanceChecked);
+    connect(latitudeAction, &QAction::toggled, this, &NTableViewHeader::latitudeChecked);
+    connect(longitudeAction, &QAction::toggled, this, &NTableViewHeader::longitudeChecked);
+    connect(altitudeAction, &QAction::toggled, this, &NTableViewHeader::altitudeChecked);
+    connect(synchronizedAction, &QAction::toggled, this, &NTableViewHeader::synchronizedChecked);
+    connect(sourceAction, &QAction::toggled, this, &NTableViewHeader::sourceChecked);
+    connect(reminderTimeAction, &QAction::toggled, this, &NTableViewHeader::reminderTimeChecked);
+    connect(reminderTimeDoneAction, &QAction::toggled, this, &NTableViewHeader::reminderTimeDoneChecked);
+    connect(reminderOrderAction, &QAction::toggled, this, &NTableViewHeader::reminderOrderChecked);
+    connect(pinnedAction, &QAction::toggled, this, &NTableViewHeader::pinnedChecked);
 
     this->setFont(global.getGuiFont(font()));
 

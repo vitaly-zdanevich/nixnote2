@@ -73,25 +73,11 @@ void ReplyFetcher::start(
         this,
         &ReplyFetcher::onFinished);
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QObject::connect(
         m_pReply.get(),
         &QNetworkReply::errorOccurred,
         this,
         &ReplyFetcher::onError);
-#elif QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
-    QObject::connect(
-        m_pReply.get(),
-        qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error),
-        this,
-        &ReplyFetcher::onError);
-#else
-    QObject::connect(
-        m_pReply.get(),
-        SIGNAL(error(QNetworkReply::NetworkError)),
-        this,
-        SLOT(onError(QNetworkReply::NetworkError)));
-#endif
 
     QObject::connect(
         m_pReply.get(),
@@ -226,7 +212,7 @@ QByteArray simpleDownload(
         timeoutMsec,
         postData);
 
-    QTimer::singleShot(0, fetcherLauncher, SLOT(start()));
+    QTimer::singleShot(0, fetcherLauncher, &ReplyFetcherLauncher::start);
     loop.exec(QEventLoop::ExcludeUserInputEvents);
 
     fetcherLauncher->deleteLater();
@@ -264,6 +250,8 @@ QNetworkRequest createEvernoteRequest(
         .arg(qevercloudVersionPatch()));
 
     request.setRawHeader("Accept", "application/x-thrift");
+
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
 
     if (!cookies.isEmpty()) {
         request.setHeader(

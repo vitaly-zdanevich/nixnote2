@@ -54,7 +54,7 @@ fi
 mkdir ${TEMP_DIR}
 
 
-QMAKE_BINARY=qmake
+QMAKE_BINARY=${QMAKE_BINARY:-qmake6}
 
 if [ "${TIDY_LIB_DIR}" == "/usr/lib" ] ; then
   # at least on ubuntu pkgconfig for "libtidy-dev" is not installed - so we provide default
@@ -72,4 +72,3 @@ fi
    && make \
    && ./${BUILD_DIR}/tests -platform offscreen \
 ) || error_exit "tests"
-

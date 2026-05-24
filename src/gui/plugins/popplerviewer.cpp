@@ -18,17 +18,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ***********************************************************************************/
 
 #include "popplerviewer.h"
+#include <QFile>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QVBoxLayout>
 
-#if QT_VERSION < 0x050000
-#include <poppler-qt4.h>
-#else
-
-#include <poppler-qt5.h>
-
-#endif
+#include <poppler-qt6.h>
 
 #include <QGraphicsPixmapItem>
 #include <QImage>
@@ -45,16 +41,29 @@ PopplerViewer::PopplerViewer(const QString &mimeType, const QString &reslid, QWi
     this->lid = reslid.toInt();
     printImageFile = global.fileManager.getTmpDirPath() + QString::number(lid) + QString("-print.png");
     QString file = global.fileManager.getDbaDirPath() + reslid + ".pdf";
-    doc = Poppler::Document::load(file);
-    if (doc == nullptr || doc->isLocked())
+    if (!QFile::exists(file)) {
+        pageLabel->setText(tr("PDF file is not available locally."));
+        auto *layout = new QVBoxLayout(this);
+        layout->addWidget(pageLabel);
+        setLayout(layout);
         return;
+    }
+
+    doc = Poppler::Document::load(file);
+    if (doc == nullptr || doc->isLocked()) {
+        pageLabel->setText(tr("PDF file cannot be opened."));
+        auto *layout = new QVBoxLayout(this);
+        layout->addWidget(pageLabel);
+        setLayout(layout);
+        return;
+    }
 
     currentPage = 0;
 
     totalPages = doc->numPages();
 
     FilterCriteria *criteria = global.getCurrentCriteria();
-    searchHits.empty();
+    searchHits.clear();
     QList<QRectF> searchLocations;
     if (criteria->isSearchStringSet() && criteria->getSearchString() != "") {
         FilterEngine engine;
@@ -100,8 +109,8 @@ PopplerViewer::PopplerViewer(const QString &mimeType, const QString &reslid, QWi
     this->setLayout(layout);
 
 
-    connect(pageRight, SIGNAL(clicked()), this, SLOT(pageRightPressed()));
-    connect(pageLeft, SIGNAL(clicked()), this, SLOT(pageLeftPressed()));
+    connect(pageRight, &QPushButton::clicked, this, &PopplerViewer::pageRightPressed);
+    connect(pageLeft, &QPushButton::clicked, this, &PopplerViewer::pageLeftPressed);
     if (totalPages == 1) {
         pageRight->setEnabled(false);
     }
@@ -201,12 +210,7 @@ QPixmap PopplerViewer::highlightImage() {
 
     QList<QRectF> searchLocations;
     for (int i = 0; i < searchHits.size(); i++) {
-//        searchLocations.append(doc->page(currentPage)->search(searchHits[i], Poppler::Page::CaseInsensitive));
-//#if QT_VERSION < 0x050000
-//        searchLocations.append(doc->page(currentPage)->search(searchHits[i], Poppler::Page::CaseInsensitive));
-//#else
         searchLocations.append(doc->page(currentPage)->search(searchHits[i], Poppler::Page::IgnoreCase));
-//#endif
     }
     for (int i = 0; i < searchLocations.size(); i++) {
         QRectF highlightRect = searchLocations[i];

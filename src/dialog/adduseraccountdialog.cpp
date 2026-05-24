@@ -39,13 +39,13 @@ AddUserAccountDialog::AddUserAccountDialog(QWidget *parent) :
     okButton->setText(tr("OK"));
     okButton->setEnabled(false);
     cancelButton->setText(tr("Cancel"));
-    connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelClicked()));
-    connect(okButton, SIGNAL(clicked()), this, SLOT(okClicked()));
+    connect(cancelButton, &QPushButton::clicked, this, &AddUserAccountDialog::cancelClicked);
+    connect(okButton, &QPushButton::clicked, this, &AddUserAccountDialog::okClicked);
     setLayout(mainLayout);
 
     newAccountLabel = new QLabel(tr("Account Name"));
     newAccountName = new QLineEdit();
-    connect(newAccountName, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
+    connect(newAccountName, &QLineEdit::textChanged, this, &AddUserAccountDialog::textChanged);
 
     labelLayout->addWidget(newAccountLabel,0,0);
     labelLayout->addWidget(newAccountName, 0, 1);

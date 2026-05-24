@@ -62,7 +62,7 @@ void ResourceTable::updateGuid(qint32 lid, Guid &guid) {
 // just delete the old one & give it a new entry
 void ResourceTable::sync(Resource &resource) {
     QLOG_TRACE() << "Leaving ResourceTable::sync()";
-    sync(0, resource);
+    sync(0, resource, 0);
     QLOG_TRACE() << "Leaving ResourceTable::sync()";
 }
 
@@ -70,25 +70,39 @@ void ResourceTable::sync(Resource &resource) {
 // Synchronize a new resource with what is in the database.  We basically
 // just delete the old one & give it a new entry
 void ResourceTable::sync(qint32 lid, Resource &resource) {
+    sync(lid, resource, 0);
+}
+
+
+// Synchronize a new resource with what is in the database.  We basically
+// just delete the old one & give it a new entry
+void ResourceTable::sync(qint32 lid, Resource &resource, qint32 noteLid) {
     QLOG_TRACE() << "Leaving ResourceTable::sync()";
 
-    if (lid > 0) {
+    bool resourceHasBody = false;
+    if (resource.data.isSet()) {
+        Data data = resource.data;
+        resourceHasBody = data.body.isSet();
+    }
+
+    if (lid > 0 && resourceHasBody) {
         expunge(lid);
+    } else if (lid > 0) {
         NSqlQuery query(db);
-        // Delete the old record
+        // Replace metadata, but keep the existing sidecar file if the sync
+        // chunk did not include replacement binary data.
         db->lockForWrite();
         query.prepare("Delete from DataStore where lid=:lid");
         query.bindValue(":lid", lid);
         query.exec();
         query.finish();
         db->unlock();
-
     } else {
         ConfigStore cs(db);
         lid = cs.incrementLidCounter();
     }
 
-    add(lid, resource, false);
+    add(lid, resource, false, noteLid, false);
 
     QLOG_TRACE() << "Leaving ResourceTable::sync()";
 }
@@ -195,14 +209,16 @@ bool ResourceTable::get(Resource &resource, qint32 lid, bool withBinary) {
             filename = attributes.fileName;
         QString fileExt = ref.getExtensionFromMime(mimetype, filename);
         QFile tfile(global.fileManager.getDbaDirPath() + QString::number(lid) + fileExt);
-        tfile.open(QIODevice::ReadOnly);
-        QByteArray b = tfile.readAll();
+        QByteArray b;
+        if (tfile.open(QIODevice::ReadOnly)) {
+            b = tfile.readAll();
+            tfile.close();
+        }
         Data d;
         if (resource.data.isSet())
             d = resource.data;
         d.body = b;
         resource.data = d;
-        tfile.close();
     }
 
     return true;
@@ -408,7 +424,7 @@ bool ResourceTable::exists(string noteGuid, string guid) {
 
 
 // Add a resource to the database
-qint32 ResourceTable::add(qint32 l, Resource &t, bool isDirty, int noteLid) {
+qint32 ResourceTable::add(qint32 l, Resource &t, bool isDirty, int noteLid, bool expungeExisting) {
     QString resourceHash("");
     if (t.data.isSet()) {
         Data d = t.data;
@@ -425,7 +441,7 @@ qint32 ResourceTable::add(qint32 l, Resource &t, bool isDirty, int noteLid) {
     qint32 lid = l;
     if (lid <= 0)
         lid = cs.incrementLidCounter();
-    else
+    else if (expungeExisting)
         expunge(lid);
 
     NSqlQuery query(db);
@@ -498,8 +514,7 @@ qint32 ResourceTable::add(qint32 l, Resource &t, bool isDirty, int noteLid) {
             QString tfileName(global.fileManager.getDbaDirPath() + QString::number(lid) + fileExt);
             QFile tfile(tfileName);
             QLOG_DEBUG() << "Adding resource to database tfileName=" << tfileName;
-            tfile.open(QIODevice::WriteOnly);
-            if (d.size > 0)
+            if (tfile.open(QIODevice::WriteOnly) && d.size > 0)
                 tfile.write(d.body);
             tfile.close();
         }
@@ -760,8 +775,6 @@ qint32 ResourceTable::getLidByHashHex(QString noteGuid, QString hash) {
     while (query.next()) {
         NSqlQuery query2(db);
         qint32 lid = query.value(0).toInt();
-        QByteArray b;
-        b.append(hash);
         query2.prepare("Select lid from DataStore where upper(data) like upper(:hash) and key=:key and lid=:lid");
         query2.bindValue(":hash", hash);
         query2.bindValue(":key", RESOURCE_DATA_HASH);
@@ -771,7 +784,8 @@ qint32 ResourceTable::getLidByHashHex(QString noteGuid, QString hash) {
             db->unlock();
             return query2.value(0).toInt();
         } else {
-            QLOG_ERROR() << "Resource not found for lid:" << lid << " key:" << RESOURCE_DATA_HASH << " hash:" << hash;
+            QLOG_WARN() << "Resource hash did not match candidate lid:" << lid
+                        << "key:" << RESOURCE_DATA_HASH << "hash:" << hash;
             QLOG_DEBUG() << query2.lastError();
         }
     }
@@ -786,7 +800,8 @@ bool ResourceTable::getInkNote(QByteArray &value, qint32 lid) {
     QLOG_DEBUG() << "getInkNote fileName=" << fileName;
 
     QFile f(fileName);
-    f.open(QIODevice::ReadOnly);
+    if (!f.open(QIODevice::ReadOnly))
+        return false;
     value = f.readAll();
     if (value.size() > 0)
         return true;
@@ -857,6 +872,24 @@ bool ResourceTable::getResourceList(QList<qint32> &resourceList, qint32 noteLid)
         return true;
     else
         return false;
+}
+
+// Get all known resource LIDs.
+bool ResourceTable::getAllResourceLids(QList<qint32> &resourceList) {
+
+    resourceList.clear();
+    db->lockForRead();
+    NSqlQuery query(db);
+    query.prepare("Select lid from DataStore where key=:key order by lid");
+    query.bindValue(":key", RESOURCE_GUID);
+    query.exec();
+    while (query.next()) {
+        resourceList.append(query.value(0).toInt());
+    }
+    query.finish();
+    db->unlock();
+
+    return resourceList.size() > 0;
 }
 
 
@@ -1215,7 +1248,8 @@ void ResourceTable::getAllResources(QList<Resource> &list, qint32 noteLid, bool 
                     QString fileName(global.fileManager.getDbaDirPath() + list[0]);
                     tfile.setFileName(fileName);
                     QLOG_DEBUG() << "getAllResources fileName=" << fileName;
-                    tfile.open(QIODevice::ReadOnly);
+                    if (!tfile.open(QIODevice::ReadOnly))
+                        continue;
                 }
             }
             QByteArray b = tfile.readAll();

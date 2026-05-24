@@ -39,67 +39,71 @@ ExternalBrowse::ExternalBrowse(qint32 lid, QWidget *parent) :
     focusTitleShortcut = new QShortcut(this);
     focusTitleShortcut->setContext(Qt::WidgetShortcut);
     global.setupShortcut(focusTitleShortcut, "Focus_Title");
-    connect(focusTitleShortcut, SIGNAL(activated()), &browser->noteTitle, SLOT(setFocus()));
+    connect(focusTitleShortcut, &QShortcut::activated, this, [this]() {
+        browser->noteTitle.setFocus();
+    });
 
     focusNoteShortcut = new QShortcut(this);
     focusNoteShortcut->setContext(Qt::WidgetShortcut);
     global.setupShortcut(focusNoteShortcut, "Focus_Note");
-    connect(focusNoteShortcut, SIGNAL(activated()), browser->editor, SLOT(setFocus()));
+    connect(focusNoteShortcut, &QShortcut::activated, this, [this]() {
+        browser->editor->setFocus();
+    });
 
     fileSaveShortcut = new QShortcut(this);
     fileSaveShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusNoteShortcut, "File_Save_Content");
-    connect(fileSaveShortcut, SIGNAL(activated()), browser, SLOT(saveNoteContent()));
+    connect(fileSaveShortcut, &QShortcut::activated, browser, &NBrowserWindow::saveNoteContent);
 
     focusTagShortcut = new QShortcut(this);
     focusTagShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusTagShortcut, "Focus_Tag");
-    connect(focusTagShortcut, SIGNAL(activated()), browser, SLOT(newTagFocusShortcut()));
+    connect(focusTagShortcut, &QShortcut::activated, browser, &NBrowserWindow::newTagFocusShortcut);
 
     focusUrlShortcut = new QShortcut(this);
     focusUrlShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusUrlShortcut, "Focus_Url");
-    connect(focusUrlShortcut, SIGNAL(activated()), browser, SLOT(urlFocusShortcut()));
+    connect(focusUrlShortcut, &QShortcut::activated, browser, &NBrowserWindow::urlFocusShortcut);
 
     focusAuthorShortcut = new QShortcut(this);
     focusAuthorShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusAuthorShortcut, "Focus_Author");
-    connect(focusAuthorShortcut, SIGNAL(activated()), browser, SLOT(authorFocusShortcut()));
+    connect(focusAuthorShortcut, &QShortcut::activated, browser, &NBrowserWindow::authorFocusShortcut);
 
     focusNotebookShortcut = new QShortcut(this);
     focusNotebookShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusNotebookShortcut, "Focus_Notebook");
-    connect(focusNotebookShortcut, SIGNAL(activated()), browser, SLOT(notebookFocusShortcut()));
+    connect(focusNotebookShortcut, &QShortcut::activated, browser, &NBrowserWindow::notebookFocusShortcut);
 
     focusFontShortcut = new QShortcut(this);
     focusFontShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusFontShortcut, "Focus_Font");
-    connect(focusFontShortcut, SIGNAL(activated()), browser, SLOT(fontFocusShortcut()));
+    connect(focusFontShortcut, &QShortcut::activated, browser, &NBrowserWindow::fontFocusShortcut);
 
     focusFontSizeShortcut = new QShortcut(this);
     focusFontSizeShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusFontSizeShortcut, "Focus_Font_Size");
-    connect(focusFontSizeShortcut, SIGNAL(activated()), browser, SLOT(fontSizeFocusShortcut()));
+    connect(focusFontSizeShortcut, &QShortcut::activated, browser, &NBrowserWindow::fontSizeFocusShortcut);
 
     findShortcut = new QShortcut(this);
     findShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(findShortcut, "Edit_Search_Find");
-    connect(findShortcut, SIGNAL(activated()), browser, SLOT(findShortcut()));
+    connect(findShortcut, &QShortcut::activated, browser, &NBrowserWindow::findShortcut);
 
     findReplaceShortcut = new QShortcut(this);
     findReplaceShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(findReplaceShortcut, "Edit_Search_Find_Replace");
-    connect(findReplaceShortcut, SIGNAL(activated()), browser, SLOT(findReplaceShortcut()));
+    connect(findReplaceShortcut, &QShortcut::activated, browser, &NBrowserWindow::findReplaceShortcut);
 
     findNextShortcut = new QShortcut(this);
     findNextShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(findNextShortcut, "Edit_Search_Find_Next");
-    connect(findNextShortcut, SIGNAL(activated()), browser, SLOT(findNextShortcut()));
+    connect(findNextShortcut, &QShortcut::activated, browser, &NBrowserWindow::findNextShortcut);
 
     findPrevShortcut = new QShortcut(this);
     findPrevShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(findPrevShortcut, "Edit_Search_Find_Prev");
-    connect(findPrevShortcut, SIGNAL(activated()), browser, SLOT(findPrevShortcut()));
+    connect(findPrevShortcut, &QShortcut::activated, browser, &NBrowserWindow::findPrevShortcut);
 
     QString css = global.getThemeCss("externalNoteWindowCss");
     if (css!="")
@@ -125,7 +129,6 @@ void ExternalBrowse::closeEvent(QCloseEvent *closeEvent) {
 void ExternalBrowse::setTitle(QString text) {
     this->setWindowTitle(tr(NN_APP_DISPLAY_NAME_GUI " - ") +text);
 }
-
 
 
 

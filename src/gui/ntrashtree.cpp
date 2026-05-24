@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/global.h"
 #include <QHeaderView>
 #include <QMouseEvent>
+#include <QAction>
 #include "src/sql/notetable.h"
 #include "src/gui/ntrashviewdelegate.h"
 #include <QMessageBox>
@@ -58,15 +59,15 @@ NTrashTree::NTrashTree(QWidget *parent) :
     this->addTopLevelItem(root);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(buildSelection()));
+    connect(this, &QTreeWidget::itemExpanded, this, &NTrashTree::calculateHeight);
+    connect(this, &QTreeWidget::itemCollapsed, this, &NTrashTree::calculateHeight);
+    connect(this, &QTreeWidget::itemSelectionChanged, this, &NTrashTree::buildSelection);
 
     restoreAction = contextMenu.addAction(tr("Restore Deleted Notes"));
-    connect(restoreAction, SIGNAL(triggered()), SLOT(restoreAll()));
+    connect(restoreAction, &QAction::triggered, this, &NTrashTree::restoreAll);
     contextMenu.addSeparator();
     expungeAction = contextMenu.addAction(tr("Empty Trash"));
-    connect(expungeAction, SIGNAL(triggered()), this, SLOT(expungeAll()));
+    connect(expungeAction, &QAction::triggered, this, &NTrashTree::expungeAll);
 
     setItemDelegate(new NTrashViewDelegate());
     this->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
@@ -280,7 +281,7 @@ void NTrashTree::updateTotals(qint32 total) {
 
 
 
-QSize NTrashTree::sizeHint() {
+QSize NTrashTree::sizeHint() const {
     return QTreeView::sizeHint();
 //    QSize sz = QTreeView::sizeHint();
 //    QFontMetrics fm(root->font(0));

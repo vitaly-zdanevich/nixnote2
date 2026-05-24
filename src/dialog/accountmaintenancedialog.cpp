@@ -62,12 +62,16 @@ AccountMaintenanceDialog::AccountMaintenanceDialog(NMainMenuBar *menubar, QWidge
     this->setLayout(mainLayout);
     this->setWindowTitle(tr("User Account Maintenance"));
 
-    connect(okButton, SIGNAL(clicked()), this, SLOT(close()));
-    connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
-    connect(addButton, SIGNAL(clicked()), this, SLOT(addAccount()));
-    connect(removeAuthButton, SIGNAL(clicked()), this, SLOT(removeOAuth()));
-    connect(deleteButton, SIGNAL(clicked()), this, SLOT(deleteAccount()));
-    connect(renameButton, SIGNAL(clicked()), this, SLOT(renameAccount()));
+    connect(okButton, &QPushButton::clicked, this, [this]() {
+        close();
+    });
+    connect(closeButton, &QPushButton::clicked, this, [this]() {
+        close();
+    });
+    connect(addButton, &QPushButton::clicked, this, &AccountMaintenanceDialog::addAccount);
+    connect(removeAuthButton, &QPushButton::clicked, this, &AccountMaintenanceDialog::removeOAuth);
+    connect(deleteButton, &QPushButton::clicked, this, &AccountMaintenanceDialog::deleteAccount);
+    connect(renameButton, &QPushButton::clicked, this, &AccountMaintenanceDialog::renameAccount);
     this->loadData();
     this->setFont(global.getGuiFont(font()));
 }
@@ -193,7 +197,10 @@ void AccountMaintenanceDialog::addAccount() {
     newAction->setCheckable(true);
     newAction->setData(newid);
     menuBar->addUserAccount(newAction);
-    connect(newAction, SIGNAL(triggered()), (NixNote *) parent, SLOT(switchUser()));
+    connect(newAction, &QAction::triggered, this, [target = this->parent]() {
+        if (target != nullptr)
+            QMetaObject::invokeMethod(target, "switchUser");
+    });
     loadData();
 }
 
@@ -203,19 +210,20 @@ bool AccountMaintenanceDialog::removeDir(const QString &dirName) {
     QDir dir(dirName);
 
     if (dir.exists(dirName)) {
-        Q_FOREACH(QFileInfo info,
-                  dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden | QDir::AllDirs | QDir::Files,
-                                    QDir::DirsFirst)) {
-                if (info.isDir()) {
-                    result = removeDir(info.absoluteFilePath());
-                } else {
-                    result = QFile::remove(info.absoluteFilePath());
-                }
-
-                if (!result) {
-                    return result;
-                }
+        const QFileInfoList entries = dir.entryInfoList(
+            QDir::NoDotAndDotDot | QDir::System | QDir::Hidden | QDir::AllDirs | QDir::Files,
+            QDir::DirsFirst);
+        for (const QFileInfo &info : entries) {
+            if (info.isDir()) {
+                result = removeDir(info.absoluteFilePath());
+            } else {
+                result = QFile::remove(info.absoluteFilePath());
             }
+
+            if (!result) {
+                return result;
+            }
+        }
         result = dir.rmdir(dirName);
     }
     return result;

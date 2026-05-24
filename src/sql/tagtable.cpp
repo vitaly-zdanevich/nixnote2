@@ -790,7 +790,7 @@ void TagTable::getGuidMap(QHash<QString,QString> &guidMap) {
     QList<qint32> tags;
     Tag t;
     getAll(tags);
-    guidMap.empty();
+    guidMap.clear();
     for (int i=0; i<tags.size(); i++) {
         get(t,tags[i]);
         QString guid = "";
@@ -810,7 +810,7 @@ void TagTable::getNameMap(QHash<QString,QString> &nameMap) {
     QList<qint32> tags;
     Tag t;
     getAll(tags);
-    nameMap.empty();
+    nameMap.clear();
     for (int i=0; i<tags.size(); i++) {
         get(t,tags[i]);
         nameMap.insert(t.name, t.guid);

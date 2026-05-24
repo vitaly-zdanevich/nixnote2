@@ -22,8 +22,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <string>
 #include <limits.h>
 #include <unistd.h>
-#include <QWebSettings>
-#include <QDesktopWidget>
+#include <QScreen>
+#include <QUrl>
+#include <QWebEngineProfile>
+#include <QWebEngineSettings>
 #include <QApplication>
 
 // The following include is needed for demangling names on a backtrace
@@ -39,6 +41,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #endif  // End Windows Check
 
 #include "src/sql/usertable.h"
+
+namespace {
+qreal editorLogicalDpiX()
+{
+    QScreen *screen = QApplication::primaryScreen();
+    return screen != nullptr ? screen->logicalDotsPerInchX() : 96.0;
+}
+
+QWebEngineSettings *defaultWebEngineSettings()
+{
+    return QWebEngineProfile::defaultProfile()->settings();
+}
+}
 
 //******************************************
 //* Global settings used by the program
@@ -168,18 +183,17 @@ void Global::setup(StartupConfig startupConfig, bool guiAvailable) {
     settings->endGroup();
 
     if (defaultFont != "" && defaultFontSize > 0 && this->guiAvailable) {
-        QWebSettings *settings = QWebSettings::globalSettings();
-        settings->setFontFamily(QWebSettings::StandardFont, defaultFont);
-        // QWebkit DPI is hard coded to 96. Hence, we calculate the correct
-        // font size based on desktop logical DPI.
-        settings->setFontSize(QWebSettings::DefaultFontSize,
-                              (4.0/3.0) * defaultFontSize *
-                              (QApplication::desktop()->logicalDpiX() / 96.0)
+        QWebEngineSettings *webSettings = defaultWebEngineSettings();
+        webSettings->setFontFamily(QWebEngineSettings::StandardFont, defaultFont);
+        // Keep the old editor font scaling behavior while using Qt 6 screens.
+        webSettings->setFontSize(
+                              QWebEngineSettings::DefaultFontSize,
+                              (4.0/3.0) * defaultFontSize * (editorLogicalDpiX() / 96.0)
         );
     }
     if (defaultFont != "" && defaultFontSize <= 0 && this->guiAvailable) {
-        QWebSettings *settings = QWebSettings::globalSettings();
-        settings->setFontFamily(QWebSettings::StandardFont, defaultFont);
+        QWebEngineSettings *webSettings = defaultWebEngineSettings();
+        webSettings->setFontFamily(QWebEngineSettings::StandardFont, defaultFont);
     }
 
     settings->beginGroup(INI_GROUP_APPEARANCE);
@@ -662,8 +676,8 @@ QString Global::getUsername() {
         return user.name;
 // Windows Check
 #ifndef _WIN32
-    register struct passwd *pw;
-    register uid_t uid;
+    struct passwd *pw;
+    uid_t uid;
     QString username = "";
 
     uid = geteuid();
@@ -1036,13 +1050,10 @@ void Global::loadThemeFile(QHash<QString, QString> &resourceList, QHash<QString,
 // Get all available themes
 QStringList Global::getThemeNames() {
     QStringList values;
-    values.empty();
+    values.clear();
     this->getThemeNamesFromFile(fileManager.getProgramDataDir() + THEME_FILE, values);
     this->getThemeNamesFromFile(fileManager.getConfigDir() + THEME_FILE, values);
 
-    // leave in order how they were defined in the file (this makes sure DEFAULT theme will be first)
-    //if (!nonAsciiSortBug)
-    //    qSort(values.begin(), values.end(), caseInsensitiveLessThan);
     if (values.size() == 0) {
         values.append("Default");
     }
@@ -1602,12 +1613,7 @@ void Global::clearResourceList() {
 QString Global::getCheckboxImageUrl(bool checked) {
     QString fileName = checked ? "checkbox_checked.png": "checkbox.png";
     QString filePath = global.fileManager.getImageDirPath("").append(fileName);
-
-    QString prefix = QString("file://");
-#ifdef _WIN32
-    prefix.append("/");
-#endif
-    return prefix + filePath;
+    return QUrl::fromLocalFile(filePath).toString();
 }
 
 QString Global::getCheckboxElement(bool checked, bool escapeTwice) {

@@ -58,18 +58,14 @@ NTableView::NTableView(QWidget *parent) :
 
     tableViewHeader = new NTableViewHeader(Qt::Horizontal, this);
     this->setHorizontalHeader(tableViewHeader);
-#if QT_VERSION < 0x050000
-    this->horizontalHeader()->setMovable(true);
-#else
     this->horizontalHeader()->setSectionsMovable(true);
-#endif
 
     QLOG_TRACE() << "Setting up edit triggers";
     this->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Set the default column height
     QLOG_TRACE() << "Setting up font metrics";
-    this->verticalHeader()->setDefaultSectionSize(QApplication::fontMetrics().height());
+    this->verticalHeader()->setDefaultSectionSize(QFontMetrics(qApp->font()).height());
 
     QLOG_TRACE() << "Initializing proxy";
     this->proxy = new NoteSortFilterProxyModel();
@@ -174,7 +170,7 @@ NTableView::NTableView(QWidget *parent) :
     if (!isColumnHidden(NOTE_TABLE_REMINDER_ORDER_POSITION))
         tableViewHeader->reminderOrderAction->setChecked(true);
 
-    connect(tableViewHeader, SIGNAL(setColumnVisible(int, bool)), this, SLOT(toggleColumnVisible(int, bool)));
+    connect(tableViewHeader, &NTableViewHeader::setColumnVisible, this, &NTableView::toggleColumnVisible);
 
     blockSignals(false);
 
@@ -212,35 +208,35 @@ NTableView::NTableView(QWidget *parent) :
 
     openNoteExternalWindowAction = new QAction(tr("Open Note"), this);
     contextMenu->addAction(openNoteExternalWindowAction);
-    connect(openNoteExternalWindowAction, SIGNAL(triggered()), this, SLOT(openNoteExternalWindowTriggered()));
+    connect(openNoteExternalWindowAction, &QAction::triggered, this, &NTableView::openNoteExternalWindowTriggered);
     openNoteExternalWindowAction->setFont(guiFont);
 
     openNoteNewTabAction = new QAction(tr("Open Note In New Tab"), this);
     contextMenu->addAction(openNoteNewTabAction);
-    connect(openNoteNewTabAction, SIGNAL(triggered()), this, SLOT(openNoteNewTabTriggered()));
+    connect(openNoteNewTabAction, &QAction::triggered, this, &NTableView::openNoteNewTabTriggered);
     openNoteNewTabAction->setFont(guiFont);
 
     contextMenu->addSeparator();
 
     addNoteAction = new QAction(tr("Add Note"), this);
     contextMenu->addAction(addNoteAction);
-    connect(addNoteAction, SIGNAL(triggered()), this, SLOT(createNewNote()));
+    connect(addNoteAction, &QAction::triggered, this, &NTableView::createNewNote);
     addNoteAction->setFont(guiFont);
 
     deleteNoteAction = new QAction(tr("Delete Note"), this);
     contextMenu->addAction(deleteNoteAction);
-    connect(deleteNoteAction, SIGNAL(triggered()), this, SLOT(deleteSelectedNotes()));
+    connect(deleteNoteAction, &QAction::triggered, this, &NTableView::deleteSelectedNotes);
     deleteNoteAction->setFont(guiFont);
     deleteNoteAction->setShortcut(QKeySequence::Delete);
 
     QShortcut *deleteShortcut = new QShortcut(this);
     deleteShortcut->setKey(QKeySequence(Qt::Key_Delete));
     deleteShortcut->setContext(Qt::WidgetShortcut);
-    connect(deleteShortcut, SIGNAL(activated()), this, SLOT(deleteSelectedNotes()));
+    connect(deleteShortcut, &QShortcut::activated, this, &NTableView::deleteSelectedNotes);
 
     restoreNoteAction = new QAction(tr("Restore Note"), this);
     contextMenu->addAction(restoreNoteAction);
-    connect(restoreNoteAction, SIGNAL(triggered()), this, SLOT(restoreSelectedNotes()));
+    connect(restoreNoteAction, &QAction::triggered, this, &NTableView::restoreSelectedNotes);
     restoreNoteAction->setFont(guiFont);
     restoreNoteAction->setVisible(false);
 
@@ -248,18 +244,18 @@ NTableView::NTableView(QWidget *parent) :
     global.setupShortcut(copyInAppNoteLinkAction, "Edit_Copy_Note_Url");
     contextMenu->addAction(copyInAppNoteLinkAction);
     copyInAppNoteLinkAction->setFont(guiFont);
-    connect(copyInAppNoteLinkAction, SIGNAL(triggered()), this, SLOT(copyInAppNoteLink()));
+    connect(copyInAppNoteLinkAction, &QAction::triggered, this, &NTableView::copyInAppNoteLink);
 
     QAction *copyNoteLinkAction = new QAction(tr("Copy Note Link"), this);
     //global.setupShortcut(copyNoteLinkAction, "Edit_Copy_Note_Url");
     contextMenu->addAction(copyNoteLinkAction);
     copyNoteLinkAction->setFont(guiFont);
-    connect(copyNoteLinkAction, SIGNAL(triggered()), this, SLOT(copyNoteLink()));
+    connect(copyNoteLinkAction, &QAction::triggered, this, &NTableView::copyNoteLink);
 
     copyNoteAction = new QAction(tr("Duplicate Note"), this);
     contextMenu->addAction(copyNoteAction);
     copyNoteAction->setFont(guiFont);
-    connect(copyNoteAction, SIGNAL(triggered()), this, SLOT(copyNote()));
+    connect(copyNoteAction, &QAction::triggered, this, &NTableView::copyNote);
 
     reminderMenu = new QMenu(tr("Reminders"));
     reminderMenu->setFont(guiFont);
@@ -268,34 +264,34 @@ NTableView::NTableView(QWidget *parent) :
     reminderRemoveAction = new QAction(tr("Remove"), this);
     reminderMenu->addAction(reminderRemoveAction);
     reminderRemoveAction->setFont(guiFont);
-    connect(reminderRemoveAction, SIGNAL(triggered()), this, SLOT(removeReminder()));
+    connect(reminderRemoveAction, &QAction::triggered, this, &NTableView::removeReminder);
 
     reminderMarkCompletedAction = new QAction(tr("Mark Completed"), this);
     reminderMenu->addAction(reminderMarkCompletedAction);
     reminderMarkCompletedAction->setFont(guiFont);
-    connect(reminderMarkCompletedAction, SIGNAL(triggered()), this, SLOT(markReminderCompleted()));
+    connect(reminderMarkCompletedAction, &QAction::triggered, this, &NTableView::markReminderCompleted);
 
 
     pinNoteAction = new QAction(tr("Pin Note"), this);
     contextMenu->addAction(pinNoteAction);
     pinNoteAction->setFont(guiFont);
-    connect(pinNoteAction, SIGNAL(triggered()), this, SLOT(pinNote()));
+    connect(pinNoteAction, &QAction::triggered, this, &NTableView::pinNote);
 
     unpinNoteAction = new QAction(tr("Unpin Note"), this);
     contextMenu->addAction(unpinNoteAction);
     unpinNoteAction->setFont(guiFont);
-    connect(unpinNoteAction, SIGNAL(triggered()), this, SLOT(unpinNote()));
+    connect(unpinNoteAction, &QAction::triggered, this, &NTableView::unpinNote);
 
     mergeNotesAction = new QAction(tr("Merge Notes"), this);
     contextMenu->addAction(mergeNotesAction);
     mergeNotesAction->setFont(guiFont);
-    connect(mergeNotesAction, SIGNAL(triggered()), this, SLOT(mergeNotes()));
+    connect(mergeNotesAction, &QAction::triggered, this, &NTableView::mergeNotes);
 
 
     createTableOfContentsAction = new QAction(tr("Create Table of Contents"), this);
     contextMenu->addAction(createTableOfContentsAction);
     createTableOfContentsAction->setFont(guiFont);
-    connect(createTableOfContentsAction, SIGNAL(triggered()), this, SLOT(createTableOfContents()));
+    connect(createTableOfContentsAction, &QAction::triggered, this, &NTableView::createTableOfContents);
 
     contextMenu->addSeparator();
     colorMenu = new QMenu(tr("Title Color"));
@@ -306,35 +302,35 @@ NTableView::NTableView(QWidget *parent) :
     propertiesAction = new QAction(tr("Properties"), this);
     contextMenu->addAction(propertiesAction);
     propertiesAction->setFont(guiFont);
-    connect(propertiesAction, SIGNAL(triggered()), this, SLOT(showPropertiesDialog()));
+    connect(propertiesAction, &QAction::triggered, this, &NTableView::showPropertiesDialog);
 
     noteTitleColorWhiteAction = new QAction(tr("White"), colorMenu);
     colorMenu->addAction(noteTitleColorWhiteAction);
-    connect(noteTitleColorWhiteAction, SIGNAL(triggered()), this, SLOT(setTitleColorWhite()));
+    connect(noteTitleColorWhiteAction, &QAction::triggered, this, &NTableView::setTitleColorWhite);
     noteTitleColorRedAction = new QAction(tr("Red"), colorMenu);
     colorMenu->addAction(noteTitleColorRedAction);
-    connect(noteTitleColorRedAction, SIGNAL(triggered()), this, SLOT(setTitleColorRed()));
+    connect(noteTitleColorRedAction, &QAction::triggered, this, &NTableView::setTitleColorRed);
     noteTitleColorBlueAction = new QAction(tr("Blue"), colorMenu);
     colorMenu->addAction(noteTitleColorBlueAction);
-    connect(noteTitleColorBlueAction, SIGNAL(triggered()), this, SLOT(setTitleColorBlue()));
+    connect(noteTitleColorBlueAction, &QAction::triggered, this, &NTableView::setTitleColorBlue);
     noteTitleColorGreenAction = new QAction(tr("Green"), colorMenu);
     colorMenu->addAction(noteTitleColorGreenAction);
-    connect(noteTitleColorGreenAction, SIGNAL(triggered()), this, SLOT(setTitleColorGreen()));
+    connect(noteTitleColorGreenAction, &QAction::triggered, this, &NTableView::setTitleColorGreen);
     noteTitleColorYellowAction = new QAction(tr("Yellow"), colorMenu);
     colorMenu->addAction(noteTitleColorYellowAction);
-    connect(noteTitleColorYellowAction, SIGNAL(triggered()), this, SLOT(setTitleColorYellow()));
+    connect(noteTitleColorYellowAction, &QAction::triggered, this, &NTableView::setTitleColorYellow);
     noteTitleColorBlackAction = new QAction(tr("Black"), colorMenu);
     colorMenu->addAction(noteTitleColorBlackAction);
-    connect(noteTitleColorBlackAction, SIGNAL(triggered()), this, SLOT(setTitleColorBlack()));
+    connect(noteTitleColorBlackAction, &QAction::triggered, this, &NTableView::setTitleColorBlack);
     noteTitleColorGrayAction = new QAction(tr("Gray"), colorMenu);
     colorMenu->addAction(noteTitleColorGrayAction);
-    connect(noteTitleColorGrayAction, SIGNAL(triggered()), this, SLOT(setTitleColorGray()));
+    connect(noteTitleColorGrayAction, &QAction::triggered, this, &NTableView::setTitleColorGray);
     noteTitleColorCyanAction = new QAction(tr("Cyan"), colorMenu);
     colorMenu->addAction(noteTitleColorCyanAction);
-    connect(noteTitleColorCyanAction, SIGNAL(triggered()), this, SLOT(setTitleColorCyan()));
+    connect(noteTitleColorCyanAction, &QAction::triggered, this, &NTableView::setTitleColorCyan);
     noteTitleColorMagentaAction = new QAction(tr("Magenta"), colorMenu);
     colorMenu->addAction(noteTitleColorMagentaAction);
-    connect(noteTitleColorMagentaAction, SIGNAL(triggered()), this, SLOT(setTitleColorMagenta()));
+    connect(noteTitleColorMagentaAction, &QAction::triggered, this, &NTableView::setTitleColorMagenta);
 
     repositionColumns();
     resizeColumns();
@@ -457,7 +453,7 @@ void NTableView::refreshCell(qint32 lid, int cell, QVariant data) {
                 // as the data is not really saved anywhere from the table itself, it will not matter
                 // buts really wild :(
                 QVariant originalData = model()->sourceData(modelIndex, Qt::DisplayRole);
-                if (originalData.type() == QVariant::String) {
+                if (originalData.typeId() == QMetaType::QString) {
                     originalData = originalData.toString() + QString(" ");
                 }
 
@@ -600,7 +596,7 @@ void NTableView::mouseReleaseEvent(QMouseEvent *e) {
     if (e->button() == Qt::RightButton) {
     } else if (e->button() == Qt::LeftButton) {
         this->openSelectedLids(false);
-    } else if (e->button() == Qt::MidButton) {
+    } else if (e->button() == Qt::MiddleButton) {
         //int v = global.getMiddleClickAction();
         //if (v == MOUSE_MIDDLE_CLICK_NEW_WINDOW)
             this->openNoteExternalWindowTriggered();
@@ -973,7 +969,7 @@ void NTableView::toggleColumnVisible(int position, bool visible) {
     if (this->tableViewHeader->isThumbnailVisible())
         verticalHeader()->setDefaultSectionSize(100);
     else
-        verticalHeader()->setDefaultSectionSize(QApplication::fontMetrics().height());
+        verticalHeader()->setDefaultSectionSize(QFontMetrics(qApp->font()).height());
 }
 
 
@@ -1589,7 +1585,7 @@ void NTableView::mouseMoveEvent(QMouseEvent *event) {
 
     QByteArray ba;
     for (int i = 0; i < lids.size(); i++) {
-        ba.append(QString().number(lids[i]) + " ");
+        ba.append((QString::number(lids[i]) + " ").toUtf8());
     }
     mimeData->setData("application/x-nixnote-note", ba);
     drag->setMimeData(mimeData);
@@ -1698,23 +1694,17 @@ void NTableView::showPropertiesDialog() {
         QString sourceURL = l.at(0).sibling(l.at(0).row(), NOTE_TABLE_SOURCE_URL_POSITION).data().toString();
 
 
-        QDateTime dateCreated;
-        dateCreated.setTime_t(
+        QDateTime dateCreated = QDateTime::fromSecsSinceEpoch(
             l.at(0).sibling(l.at(0).row(), NOTE_TABLE_DATE_CREATED_POSITION).data().toLongLong() / 1000);
-        QDateTime dateDeleted;
-        dateDeleted.setTime_t(
+        QDateTime dateDeleted = QDateTime::fromSecsSinceEpoch(
             l.at(0).sibling(l.at(0).row(), NOTE_TABLE_DATE_DELETED_POSITION).data().toLongLong() / 1000);
-        QDateTime dateUpdated;
-        dateUpdated.setTime_t(
+        QDateTime dateUpdated = QDateTime::fromSecsSinceEpoch(
             l.at(0).sibling(l.at(0).row(), NOTE_TABLE_DATE_UPDATED_POSITION).data().toLongLong() / 1000);
-        QDateTime dateSubject;
-        dateSubject.setTime_t(
+        QDateTime dateSubject = QDateTime::fromSecsSinceEpoch(
             l.at(0).sibling(l.at(0).row(), NOTE_TABLE_DATE_SUBJECT_POSITION).data().toLongLong() / 1000);
-        QDateTime reminderDue;
-        dateSubject.setTime_t(
+        QDateTime reminderDue = QDateTime::fromSecsSinceEpoch(
             l.at(0).sibling(l.at(0).row(), NOTE_TABLE_REMINDER_TIME_POSITION).data().toLongLong() / 1000);
-        QDateTime reminderCompleted;
-        dateSubject.setTime_t(
+        QDateTime reminderCompleted = QDateTime::fromSecsSinceEpoch(
             l.at(0).sibling(l.at(0).row(), NOTE_TABLE_REMINDER_TIME_DONE_POSITION).data().toLongLong() / 1000);
 
         int row = 0;

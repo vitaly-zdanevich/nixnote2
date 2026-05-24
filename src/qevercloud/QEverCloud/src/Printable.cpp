@@ -7,6 +7,8 @@
 
 #include <Printable.h>
 
+#include <QIODevice>
+
 namespace qevercloud {
 
 QString Printable::toString() const

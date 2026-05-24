@@ -35,8 +35,8 @@ macro(update_translation SOURCES TRANSLATIONS)
   file(APPEND "${fake_pro_file}"
     "\n")
 
-  set(LUPDATE ${Qt5_LUPDATE_EXECUTABLE})
-  set(LRELEASE ${Qt5_LRELEASE_EXECUTABLE})
+  set(LUPDATE ${Qt6_LUPDATE_EXECUTABLE})
+  set(LRELEASE ${Qt6_LRELEASE_EXECUTABLE})
 
   add_custom_target(lupdate COMMAND ${LUPDATE} -verbose -noobsolete \"${fake_pro_file}\" DEPENDS ${fake_pro_file})
 

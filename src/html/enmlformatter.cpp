@@ -19,10 +19,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include <QFileIconProvider>
-#include <QWebPage>
-#include <QWebFrame>
 #include <QIcon>
 #include <QMessageBox>
+#if __has_include(<tidy/tidy.h>)
+#include <tidy/tidy.h>
+#include <tidy/tidybuffio.h>
+#else
+#include <tidy.h>
+#include <tidybuffio.h>
+#endif
+
 #include <iostream>
 #include <QtCore/QStringList>
 #include <QtCore/QString>
@@ -34,17 +40,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/logger/qslog.h"
 #include "src/utilities/NixnoteStringUtils.h"
 
-#ifdef Q_OS_MACOS
-#include <tidy.h>
-#include <tidybuffio.h>
-#else
-#include <tidy/tidy.h>
-#include <tidy/tidybuffio.h>
-#endif
-
 #define ENML_MODULE_LOGPREFIX "enml-cleanup: "
 
 using namespace std;
+
+namespace {
+
+QString enMediaXml(const QString &type, const QString &hash) {
+    return QStringLiteral(HTML_COMMENT_START "<en-media type=\"%1\" hash=\"%2\"></en-media>" HTML_COMMENT_END)
+            .arg(type.toHtmlEscaped(), hash.toHtmlEscaped());
+}
+
+}
 
 /* Constructor. */
 EnmlFormatter::EnmlFormatter(
@@ -363,7 +370,7 @@ void EnmlFormatter::removeHtmlCommentsInclContent() {
 
 
 /**
- * Take the WebKit HTML and transform it into ENML
+ * Take the editor HTML and transform it into ENML.
  * */
 void EnmlFormatter::rebuildNoteEnml() {
     qint64 timeStart = QDateTime::currentMSecsSinceEpoch();
@@ -384,6 +391,7 @@ void EnmlFormatter::rebuildNoteEnml() {
 
     content.prepend(DEFAULT_HTML_HEAD);
     content.prepend(DEFAULT_HTML_TYPE);
+    content.append("</html>");
 
     // Tidy puts this in place, but we don't really need it.
     content.replace("<form>", "");
@@ -395,13 +403,10 @@ void EnmlFormatter::rebuildNoteEnml() {
     QLOG_DEBUG_FILE("fmt-pre-dt-check.html", getContent());
     QLOG_DEBUG() << ENML_MODULE_LOGPREFIX " rebuildNoteEnml guiAvailable=" << guiAvailable;
     if (guiAvailable) {
-        QWebPage page;
-        QEventLoop loop;
-        page.mainFrame()->setContent(getContentBytes());
-        QObject::connect(&page, SIGNAL(loadFinished(bool)), &loop, SLOT(quit()));
-        loop.exit();
+        HtmlDomDocument page;
+        page.setContent(getContentBytes());
 
-        QWebElement bodyElement = page.mainFrame()->documentElement().findFirst("body");
+        HtmlDomElement bodyElement = page.documentElement().findFirst("body");
         removeInvalidAttributes(bodyElement);
         recursiveTreeCleanup(bodyElement, 0);
         QString xml = bodyElement.toOuterXml();
@@ -444,8 +449,8 @@ void EnmlFormatter::rebuildNoteEnml() {
     QLOG_INFO() << ENML_MODULE_LOGPREFIX "===== finished rebuilding note ENML in " << (timeEnd - timeStart) << " ms";
 }
 
-void EnmlFormatter::recursiveTreeCleanup(QWebElement &elementRoot, int level) {
-    QWebElement element = elementRoot.firstChild();
+void EnmlFormatter::recursiveTreeCleanup(HtmlDomElement &elementRoot, int level) {
+    HtmlDomElement element = elementRoot.firstChild();
     while (true) {
         // if there a no childs we are done
         if (element.isNull()) {
@@ -454,7 +459,7 @@ void EnmlFormatter::recursiveTreeCleanup(QWebElement &elementRoot, int level) {
 
         QString tagname = element.tagName().toLower();
         // we need to query sibling *before* we are modifying "element"
-        QWebElement next = element.nextSibling();
+        HtmlDomElement next = element.nextSibling();
         // recursive cleanup (this may update element)
         recursiveTreeCleanup(element, level + 1);
 
@@ -481,7 +486,7 @@ void EnmlFormatter::recursiveTreeCleanup(QWebElement &elementRoot, int level) {
     }
 }
 
-void EnmlFormatter::fixInputNode(QWebElement &e) {
+void EnmlFormatter::fixInputNode(HtmlDomElement &e) {
     QString type = e.attribute("type", "");
     if (type != "checkbox") {
         QLOG_WARN() << ENML_MODULE_LOGPREFIX "fixed unknown <input> node by removing it";
@@ -503,15 +508,16 @@ void EnmlFormatter::fixInputNode(QWebElement &e) {
         e.setAttribute("checked", "true");
     }
 
-    // quite a hack
-    QRegularExpression reInput("<input([^>]*)>");
-    QString markup = e.toOuterXml();
-    markup = markup.replace(reInput, HTML_COMMENT_START "<en-todo\\1/>" HTML_COMMENT_END);
-    e.setOuterXml(markup);
+    QString xml = QStringLiteral(HTML_COMMENT_START "<en-todo");
+    if (checked) {
+        xml += QStringLiteral(" checked=\"true\"");
+    }
+    xml += QStringLiteral("/>" HTML_COMMENT_END);
+    e.setOuterXml(xml);
 }
 
 
-void EnmlFormatter::fixObjectNode(QWebElement &e) {
+void EnmlFormatter::fixObjectNode(HtmlDomElement &e) {
     QString type = e.attribute("type", "");
     QString hash = e.attribute("hash", "");
     if (type == "application/pdf") {
@@ -530,10 +536,7 @@ void EnmlFormatter::fixObjectNode(QWebElement &e) {
 
         if (lid > 0) {
             resources.append(lid);
-            const QString xml = e.toOuterXml()
-                    // temp hack for tidy call
-                    .replace("<object", HTML_COMMENT_START "<en-media")
-                    .replace("</object>", "</en-media>" HTML_COMMENT_END);
+            const QString xml = enMediaXml(type, hash);
             QLOG_DEBUG() << ENML_MODULE_LOGPREFIX "fixed object node holding pdf to " << xml;
             e.setOuterXml(xml);
         }
@@ -544,7 +547,7 @@ void EnmlFormatter::fixObjectNode(QWebElement &e) {
 }
 
 // this is a temporary quick solution
-void EnmlFormatter::fixTableNode(QWebElement &e) {
+void EnmlFormatter::fixTableNode(HtmlDomElement &e) {
     QString className = e.attribute("class", "").toLower();
     removeInvalidAttributes(e);
     if (className == HTML_TEMP_TABLE_CLASS) { ;
@@ -558,7 +561,7 @@ void EnmlFormatter::fixTableNode(QWebElement &e) {
 }
 
 
-void EnmlFormatter::fixImgNode(QWebElement &e) {
+void EnmlFormatter::fixImgNode(HtmlDomElement &e) {
     QString enType = e.attribute("en-tag", "").toLower();
 
     // Check if we have an en-crypt tag.  Change it from an img to en-crypt
@@ -614,26 +617,14 @@ void EnmlFormatter::fixImgNode(QWebElement &e) {
         resources.append(lid);
         removeInvalidAttributes(e);
 
-        // temp hack for tidy call
-        // Replace the img nodes displaying local images with en-media node,
-        // and leave the ones displaying web images alone, because the latter ones
-        // are not real media objects, and their contents will not be save locally
-        // and have a hash, which is needed when rebuilding the html.
-        // <img> is permitted according to evernote developer document:
-        // https://dev.evernote.com/doc/articles/enml.php.
-        // QWebView always adds </img> and </en-media> automatically,
-        // which should be processed later.
-        const QString xml = e.toOuterXml().
-            replace("<img", HTML_COMMENT_START "<en-media").
-            append("</en-media>" HTML_COMMENT_END).
-            replace("<en-media src", "<img src");
+        const QString xml = enMediaXml(type, hash);
         e.setOuterXml(xml);
         QLOG_DEBUG() << ENML_MODULE_LOGPREFIX "fixed img node to: " << xml;
     }
 }
 
 
-void EnmlFormatter::fixANode(QWebElement &e) {
+void EnmlFormatter::fixANode(HtmlDomElement &e) {
     QLOG_TRACE() << ENML_MODULE_LOGPREFIX " fixANode";
     QString enTag = e.attribute("en-tag", "").toLower();
     QString lid = e.attribute("lid");
@@ -646,10 +637,9 @@ void EnmlFormatter::fixANode(QWebElement &e) {
         e.removeAttribute("href");
         e.removeAttribute("title");
 
-        e.removeAllChildren();
-        QString xml = e.toOuterXml();
-        xml.replace("<a", HTML_COMMENT_START "<en-media");
-        xml.replace("</a>", "</en-media>" HTML_COMMENT_END);
+        const QString type = e.attribute(QStringLiteral("type"));
+        const QString hash = e.attribute(QStringLiteral("hash"));
+        QString xml = enMediaXml(type, hash);
         QLOG_TRACE() << ENML_MODULE_LOGPREFIX "fixed link node to " << xml;
         e.setOuterXml(xml);
     } else if (href.startsWith("latex:///")) {
@@ -703,7 +693,7 @@ bool EnmlFormatter::isAttributeValid(QString attribute) {
 }
 
 
-bool EnmlFormatter::checkAndFixElement(QWebElement &e) {
+bool EnmlFormatter::checkAndFixElement(HtmlDomElement &e) {
     QString tagName = e.tagName().toLower();
     //QLOG_DEBUG() << "Checking tag " << element;
 
@@ -854,7 +844,7 @@ bool EnmlFormatter::checkAndFixElement(QWebElement &e) {
 }
 
 
-void EnmlFormatter::removeInvalidAttributes(QWebElement &e) {
+void EnmlFormatter::removeInvalidAttributes(HtmlDomElement &e) {
     // Remove any invalid attributes
     QStringList attributes = e.attributeNames();
     for (int i = 0; i < attributes.size(); i++) {
@@ -924,7 +914,7 @@ void EnmlFormatter::removeInvalidUnicode() {
  * Look through all attributes of the node.  If it isn't in the list of
  * valid attributes, we remove it.
  */
-void EnmlFormatter::checkAttributes(QWebElement &element, QStringList valid) {
+void EnmlFormatter::checkAttributes(HtmlDomElement &element, QStringList valid) {
     QStringList attrs = element.attributeNames();
     for (int i = 0; i < attrs.size(); i++) {
         if (!valid.contains(attrs[i])) {

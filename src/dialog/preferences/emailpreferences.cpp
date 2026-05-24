@@ -33,7 +33,7 @@ EmailPreferences::EmailPreferences(QWidget *parent) :
     smtpConnectionType.addItem(tr("TLS Connection"), "TlsConnection");
 
     testEmail = new QPushButton(tr("Send Test Email"));
-    connect(testEmail, SIGNAL(pressed()), this, SLOT(sendTestEmail()));
+    connect(testEmail, &QPushButton::pressed, this, &EmailPreferences::sendTestEmail);
 
     int row = 0;
     mainLayout->addWidget(&smtpServerLabel, row, 0);

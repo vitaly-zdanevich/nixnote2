@@ -108,7 +108,7 @@
 
  Qt::Orientations FlowLayout::expandingDirections() const
  {
-     return 0;
+     return Qt::Orientations();
  }
 
  bool FlowLayout::hasHeightForWidth() const
@@ -137,7 +137,8 @@
  {
      QSize size;
      QLayoutItem *item=nullptr;
-     foreach (item, itemList) {
+     for (QLayoutItem *currentItem : itemList) {
+         item = currentItem;
          if (item->widget()->isVisible())
             size = size.expandedTo(item->minimumSize());
      }
@@ -145,7 +146,8 @@
      if (item != nullptr) {
         size = item->minimumSize();
 
-        size += QSize(2*margin(), 2*margin());
+        const QMargins margins = contentsMargins();
+        size += QSize(margins.left() + margins.right(), margins.top() + margins.bottom());
      }
      return size;
  }
@@ -159,8 +161,7 @@
      int y = effectiveRect.y();
      int lineHeight = 0;
 
-     QLayoutItem *item;
-     foreach (item, itemList) {
+     for (QLayoutItem *item : itemList) {
          QWidget *wid = item->widget();
          int spaceX = horizontalSpacing();
          if (!wid->isVisible())

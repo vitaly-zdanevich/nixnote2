@@ -45,16 +45,16 @@ InsertLatexDialog::InsertLatexDialog(QWidget *parent) :
     grid->addLayout(input, 1,1);
 
     ok.setText(tr("OK"));
-    connect(&ok, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(&ok, &QPushButton::clicked, this, &InsertLatexDialog::accept);
     ok.setEnabled(false);
     ok.setDefault(true);
 
     QPushButton *cancel = new QPushButton(tr("Cancel"), this);
-    connect(cancel, SIGNAL(clicked()), this, SLOT(reject()));
+    connect(cancel, &QPushButton::clicked, this, &InsertLatexDialog::reject);
     button->addWidget(&ok, 1, 1);
     button->addWidget(cancel, 1,2);
     grid->addLayout(button, 3, 1);
-    connect(&url, SIGNAL(textChanged()), this, SLOT(validateInput()));
+    connect(&url, &QTextEdit::textChanged, this, &InsertLatexDialog::validateInput);
 
     //setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose);
     this->setFont(global.getGuiFont(font()));

@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QMessageBox>
 #include <QPushButton>
+#include <QTimeZone>
 
 
 extern Global global;
@@ -83,7 +84,7 @@ void ImportEnex::import(QString file) {
     mb.setWindowTitle(tr("Scanning File"));
     mb.setText(QString::number(recCnt) + tr(" notes found."));
     QPushButton *cancelButton = mb.addButton(QMessageBox::Cancel);
-    connect(cancelButton, SIGNAL(clicked()), this, SLOT(canceled()));
+    connect(cancelButton, &QPushButton::clicked, this, &ImportEnex::canceled);
     mb.show();
     QCoreApplication::processEvents();
 
@@ -101,7 +102,7 @@ void ImportEnex::import(QString file) {
     progress->setWindowTitle(tr("Importing Notes"));
     progress->setLabelText(tr("Importing Notes"));
     progress->setWindowModality(Qt::ApplicationModal);
-    connect(progress, SIGNAL(canceled()), this, SLOT(canceled()));
+    connect(progress, &QProgressDialog::canceled, this, &ImportEnex::canceled);
     progress->setVisible(true);
     mb.close();
     progress->show();
@@ -326,11 +327,10 @@ void ImportEnex::processResource(Resource &resource) {
 //* Process any type of data node
 //***********************************************************
 void ImportEnex::processData(QString nodeName, Data &data) {
-    nodeName.toLower();
+    Q_UNUSED(nodeName);
 
     QString x = textValue();
-    QByteArray ba;
-    ba.append(x);
+    QByteArray ba = x.toLatin1();
     QByteArray bin = QByteArray::fromBase64(ba);
     data.body.clear();
     data.body = bin;
@@ -487,7 +487,7 @@ double ImportEnex::doubleValue() {
 //***********************************************************
 bool ImportEnex::booleanValue() {
     QString value = textValue();
-    value.toLower();
+    value = value.toLower();
     if (value == "1" || value == "true")
         return true;
     else
@@ -521,10 +521,7 @@ qlonglong ImportEnex::datetimeValue() {
     QTime time;
     time.setHMS(hour.toInt(), minute.toInt(), second.toInt());
 
-    QDateTime dt;
-    dt.setDate(date);
-    dt.setTime(time);
-    dt.setTimeSpec(Qt::UTC);
+    QDateTime dt(date, time, QTimeZone(QTimeZone::UTC));
 
     return dt.toMSecsSinceEpoch();
 }

@@ -171,7 +171,7 @@ public:
     void updateSelection();
     void resetSize();
     void mousePressEvent(QMouseEvent *event);
-    QSize sizeHint();
+    QSize sizeHint() const override;
     void drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const;
     void reloadIcons();
 

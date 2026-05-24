@@ -1,17 +1,20 @@
-QT += core gui widgets printsupport webkit webkitwidgets sql network xml dbus qml concurrent
+lessThan(QT_MAJOR_VERSION, 6) {
+    error("NixNote now requires Qt 6; use qmake6 to build it.")
+}
 
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+QT += core gui widgets printsupport webenginewidgets webchannel sql network xml dbus qml concurrent
+
 unix {
     CONFIG += link_pkgconfig
-    PKGCONFIG += poppler-qt5 libcurl tidy hunspell
+    PKGCONFIG += poppler-qt6 libcurl tidy hunspell
 }
 
 unix:!mac:LIBS += -lpthread -g -rdynamic
 
-win32:INCLUDEPATH += "$$PWD/winlib/includes/poppler/qt5"
+win32:INCLUDEPATH += "$$PWD/winlib/includes/poppler/qt6"
 win32:INCLUDEPATH += "$$PWD/winlib/includes"
 win32:INCLUDEPATH += "$$PWD/winlib/includes/hunspell"
-win32:LIBS += -L"$$PWD/winlib" -lpoppler-qt5
+win32:LIBS += -L"$$PWD/winlib" -lpoppler-qt6
 win32:LIBS += -L"$$PWD/winlib" -ltidy
 win32:LIBS += -L"$$PWD/winlib" -lhunspell-$$[HUNSPELL_VERSION]
 win32:RC_ICONS += "$$PWD/resources/images/windowIcon.ico"
@@ -43,10 +46,6 @@ OBJECTS_DIR = $${DESTDIR}
 MOC_DIR = $${DESTDIR}
 
 oauth_webengine {
-    oauth_webkit {
-        error("oauth_webengine and oauth_webkit are mutually exclusive!")
-    }
-
     win32-g++ {
         error("Cannot use QtWebEngine with MinGW build")
     }
@@ -58,20 +57,11 @@ oauth_webengine {
     DEFINES += QEVERCLOUD_USE_QT_WEB_ENGINE=1
     DEFINES += QEVERCLOUD_USE_SYSTEM_BROWSER=0
 } else {
-    oauth_webkit {
-        message("Using QtWebKit for OAuth")
-        warning("QtWebKit has known problems with OAuth, it might not work well!")
-        QEVERCLOUD_USE_QT_WEB_ENGINE = 0
-        QEVERCLOUD_USE_SYSTEM_BROWSER = 0
-        DEFINES += QEVERCLOUD_USE_QT_WEB_ENGINE=0
-        DEFINES += QEVERCLOUD_USE_SYSTEM_BROWSER=0
-    } else {
-        message("Using system browser for OAuth")
-        QEVERCLOUD_USE_QT_WEB_ENGINE = 0
-        QEVERCLOUD_USE_SYSTEM_BROWSER = 1
-        DEFINES += QEVERCLOUD_USE_QT_WEB_ENGINE=0
-        DEFINES += QEVERCLOUD_USE_SYSTEM_BROWSER=1
-    }
+    message("Using system browser for OAuth")
+    QEVERCLOUD_USE_QT_WEB_ENGINE = 0
+    QEVERCLOUD_USE_SYSTEM_BROWSER = 1
+    DEFINES += QEVERCLOUD_USE_QT_WEB_ENGINE=0
+    DEFINES += QEVERCLOUD_USE_SYSTEM_BROWSER=1
 }
 
 qevercloud_version_info.input = src/qevercloud/QEverCloud/headers/VersionInfo.h.in
@@ -260,6 +250,7 @@ SOURCES += \
     src/sql/usertable.cpp \
     src/html/attachmenticonbuilder.cpp \
     src/html/enmlformatter.cpp \
+    src/html/htmldom.cpp \
     src/html/NoteFormatterBase.cpp \
     src/html/noteformatter.cpp \
     src/html/tagscanner.cpp \
@@ -291,13 +282,8 @@ oauth_webengine {
         src/qevercloud/QEverCloud/src/oauth/NetworkCookieJar.cpp \
         src/qevercloud/QEverCloud/src/oauth/OAuthWebEngine.cpp
 } else {
-    oauth_webkit {
-        SOURCES += \
-            src/qevercloud/QEverCloud/src/oauth/OAuthWebKit.cpp
-    } else {
-        SOURCES += \
-            src/qevercloud/QEverCloud/src/oauth/OAuthSystemBrowser.cpp
-    }
+    SOURCES += \
+        src/qevercloud/QEverCloud/src/oauth/OAuthSystemBrowser.cpp
 }
 
 HEADERS  += \
@@ -491,6 +477,7 @@ HEADERS  += \
     src/sql/usertable.h \
     src/html/attachmenticonbuilder.h \
     src/html/enmlformatter.h \
+    src/html/htmldom.h \
     src/html/NoteFormatterBase.h \
     src/html/noteformatter.h \
     src/html/tagscanner.h \
@@ -521,16 +508,11 @@ oauth_webengine {
     HEADERS += \
         src/qevercloud/QEverCloud/src/oauth/OAuthWebEngine.h
 } else {
-    oauth_webkit {
-        HEADERS += \
-            src/qevercloud/QEverCloud/src/oauth/OAuthWebKit.h
-    } else {
-        HEADERS += \
-            src/qevercloud/QEverCloud/src/oauth/OAuthSystemBrowser.h
-    }
+    HEADERS += \
+        src/qevercloud/QEverCloud/src/oauth/OAuthSystemBrowser.h
 }
 
-# http://doc.qt.io/qt-5/qmake-function-reference.html#str-member-arg-start-end
+# https://doc.qt.io/qt-6/qmake-function-reference.html#str-member-arg-start-end
 # $$left(VAR, len)
 #left = $$str_member(VAR, 0, $$num_add($$len, -1))
 
@@ -545,7 +527,7 @@ gcc {
     CONFIG += $$COMPILER_CONFIG
 }
 
-QMAKE_CXXFLAGS += -std=c++14 -g -O2  -Wformat -Werror=format-security
+QMAKE_CXXFLAGS += -std=c++17 -g -O2  -Wformat -Werror=format-security
 linux:QMAKE_LFLAGS += -Wl,-Bsymbolic-functions -Wl,-z,relro
 
 g++4 {

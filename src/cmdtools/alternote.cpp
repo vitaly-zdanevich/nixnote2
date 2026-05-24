@@ -128,7 +128,6 @@ QString AlterNote::wrap() {
     QString returnValue;
     QXmlStreamWriter *writer = new QXmlStreamWriter(&returnValue);
     writer->setAutoFormatting(true);
-    writer->setCodec("UTF-8");
     writer->writeStartDocument();
     writer->writeDTD("<!DOCTYPE NixNote-Query>");
     writer->writeStartElement("nixnote-alternote");

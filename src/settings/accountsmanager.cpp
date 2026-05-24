@@ -33,26 +33,27 @@ AccountsManager::AccountsManager(int id, QObject *parent) :
     configFile = global.fileManager.getConfigDir() + NN_ACCOUNTS_CONFIG_FILE_PREFIX + ".conf";
     if (!QFile(configFile).exists()) {
         QFile xmlFile(configFile);
-        xmlFile.open(QIODevice::WriteOnly | QIODevice::Text);
-        QXmlStreamWriter writer(&xmlFile);
-        writer.setAutoFormatting(true);
-        writer.setCodec("UTF-8");
-        writer.writeStartDocument();
-        writer.writeDTD("<!DOCTYPE NixNote-Accounts>");
-        writer.writeStartElement("user-accounts");
-        writer.writeStartElement("account");
-        writer.writeTextElement("name", "Default Account");
-        writer.writeTextElement("id", "1");
-        writer.writeEndElement();
-        writer.writeEndElement();
-        writer.writeEndDocument();
-        xmlFile.close();
+        if (xmlFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QXmlStreamWriter writer(&xmlFile);
+            writer.setAutoFormatting(true);
+            writer.writeStartDocument();
+            writer.writeDTD("<!DOCTYPE NixNote-Accounts>");
+            writer.writeStartElement("user-accounts");
+            writer.writeStartElement("account");
+            writer.writeTextElement("name", "Default Account");
+            writer.writeTextElement("id", "1");
+            writer.writeEndElement();
+            writer.writeEndElement();
+            writer.writeEndDocument();
+            xmlFile.close();
+        }
     }
 
     QFile file(configFile);
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-    doc.setContent(&file);
-    file.close();
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        doc.setContent(&file);
+        file.close();
+    }
     QDomNodeList nodes = doc.elementsByTagName("account");
     for (int i = 0; i < nodes.size(); i++) {
         QDomElement element = nodes.at(i).toElement();
@@ -237,9 +238,10 @@ int AccountsManager::addId(int id, QString name, QString oauth, QString server) 
 //********************************************
 void AccountsManager::save() {
     QFile xmlFile(configFile);
-    xmlFile.open(QIODevice::WriteOnly | QIODevice::Text);
-    xmlFile.write(doc.toByteArray());
-    xmlFile.close();
+    if (xmlFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        xmlFile.write(doc.toByteArray());
+        xmlFile.close();
+    }
 }
 
 

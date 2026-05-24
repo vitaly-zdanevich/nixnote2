@@ -172,9 +172,9 @@ void CmdLineQuery::write(QList<qint32> lids, QString filename) {
                     notebook = query.value(0).toString();
                     title = query.value(1).toString();
                     dateValue = query.value(2).toLongLong()/1000;
-                    created.setTime_t(dateValue);
+                    created = QDateTime::fromSecsSinceEpoch(dateValue);
                     dateValue = query.value(3).toLongLong()/1000;
-                    updated.setTime_t(dateValue);
+                    updated = QDateTime::fromSecsSinceEpoch(dateValue);
                     tags = query.value(4).toString();
                     boolValue = query.value(5).toBool();
                     if (boolValue)
@@ -189,9 +189,9 @@ void CmdLineQuery::write(QList<qint32> lids, QString filename) {
                     else
                         hasTodo=tr("No");
                     dateValue = query.value(9).toLongLong()/1000;
-                    reminderTime.setTime_t(dateValue);
+                    reminderTime = QDateTime::fromSecsSinceEpoch(dateValue);
                     dateValue = query.value(10).toLongLong()/1000;
-                    reminderDoneTime.setTime_t(dateValue);
+                    reminderDoneTime = QDateTime::fromSecsSinceEpoch(dateValue);
                 }
                 if (formats[j].startsWith("i"))
                     line = line + lineBuilder(QString::number(lids[i]), formats[j], 7);
@@ -281,7 +281,6 @@ QString CmdLineQuery::wrap() {
     QString returnValue;
     QXmlStreamWriter *writer = new QXmlStreamWriter(&returnValue);
     writer->setAutoFormatting(true);
-    writer->setCodec("UTF-8");
     writer->writeStartDocument();
     writer->writeDTD("<!DOCTYPE NixNote-Query>");
     writer->writeStartElement("nixnote-query");

@@ -24,8 +24,10 @@ FaderDialog::FaderDialog( QWidget * parent ) : QDialog( parent ), mResult( 0 ) {
     mpFadeOut->setStartValue( 1.0 );
     mpFadeOut->setEndValue( 0.0 );
 
-    connect( mpFadeIn, SIGNAL(finished()), this, SLOT(done()));
-    connect( mpFadeOut, SIGNAL( finished() ), this, SLOT( onFadeOutFinished() ) );
+    connect(mpFadeIn, &QPropertyAnimation::finished, this, [this]() {
+        done();
+    });
+    connect(mpFadeOut, &QPropertyAnimation::finished, this, &FaderDialog::onFadeOutFinished);
 }
 
 

@@ -6,6 +6,7 @@
 
 #include "tests.h"
 #include "../src/html/enmlformatter.h"
+#include "../src/html/htmldom.h"
 #include "../src/logger/qslog.h"
 #include "../src/logger/qslogdest.h"
 #include "../src/utilities/NixnoteStringUtils.h"
@@ -15,6 +16,14 @@
 
 #define SET_LOGLEVEL_DEBUG QsLogging::Logger &logger = QsLogging::Logger::instance(); logger.setLoggingLevel(QsLogging::DebugLevel);
 #define TESTDATADIR "testsrc/testdata/"
+
+#ifndef QTEST_ADD_GPU_BLACKLIST_SUPPORT_DEFS
+#define QTEST_ADD_GPU_BLACKLIST_SUPPORT_DEFS
+#endif
+
+#ifndef QTEST_ADD_GPU_BLACKLIST_SUPPORT
+#define QTEST_ADD_GPU_BLACKLIST_SUPPORT
+#endif
 
 // note use string as params, not expressions
 #define QCOMPAREX(r1, r2) if (QString::compare(r1,r2) != 0) { QLOG_WARN() << "DIFF r1: " << r1 << ", r2: " << r2; } QCOMPARE(r1, r2);
@@ -237,10 +246,10 @@ void Tests::enmlNixnoteLinkTest() {
 
         QString resourceUrl(NixnoteStringUtils::createLatexResourceUrl(formula));
 
-        QString result(R"R(<a title=")R");
+        QString result(R"R(<a href=")R");
         result.append(resourceUrl);
-        // note that here intentionally space is missing, as this is currently the fucked up output of xml rendering
-        result.append(R"R("href=")R");
+        // note that here intentionally space is missing, as this is currently the output of xml rendering
+        result.append(R"R("title=")R");
         result.append(resourceUrl);
         result.append(
                 R"R("><en-media type="image/gif" hash="69cb83339ee2fb3f008492f82f98cbbc"/></a><br />)R");
@@ -439,6 +448,38 @@ style="box-sizing:border-box;" /></map>)R");
                 R"R()R");
         QCOMPARE(formatToEnml(src), addEnmlEnvelope(result));
     }
+}
+
+void Tests::htmlDomAdapterTest() {
+    HtmlDomDocument doc;
+    QVERIFY(doc.setContent(QByteArray(
+            R"R(<html><body><div id="first"><span>one</span></div><img src="x.png"/></body></html>)R")));
+
+    HtmlDomElement body = doc.findFirst("body");
+    QVERIFY(!body.isNull());
+
+    HtmlDomElement div = body.findFirst("div");
+    QVERIFY(!div.isNull());
+    QCOMPARE(div.attribute("id"), QStringLiteral("first"));
+
+    div.setAttribute(QStringLiteral("lid"), QStringLiteral("42"));
+    QVERIFY(div.attributeNames().contains(QStringLiteral("lid")));
+    QCOMPARE(doc.findAllElements(QStringLiteral("img")).size(), 1);
+
+    HtmlDomElement span = div.findFirst("span");
+    QVERIFY(!span.isNull());
+    span.setOuterXml(QStringLiteral("<p class=\"replacement\">two</p><p>three</p>"));
+
+    QCOMPARE(doc.findAllElements(QStringLiteral("p")).size(), 2);
+    QVERIFY(div.toInnerXml().contains(QStringLiteral("<p class=\"replacement\">two</p>")));
+    QVERIFY(div.toInnerXml().contains(QStringLiteral("<p>three</p>")));
+
+    HtmlDomElement firstParagraph = div.findFirst(QStringLiteral("p"));
+    firstParagraph.setPlainText(QStringLiteral("a < b"));
+    QCOMPARE(firstParagraph.toInnerXml(), QStringLiteral("a &lt; b"));
+
+    firstParagraph.removeFromDocument();
+    QCOMPARE(doc.findAllElements(QStringLiteral("p")).size(), 1);
 }
 
 void Tests::enmlHtmlSvgTest() {

@@ -8,7 +8,7 @@ class DatabaseUpgrade : public QObject
     Q_OBJECT
 public:
     explicit DatabaseUpgrade(QObject *parent = 0);
-    void fixSql(bool toQt5=true);
+    void fixSql(bool toNumericBooleans=true);
 
 signals:
 

@@ -48,5 +48,7 @@ NoteProperties::NoteProperties()
 
     layout->addLayout(buttonLayout);
     setLayout(layout);
-    connect(okButton, SIGNAL(pressed()), this, SLOT(close()));
+    connect(okButton, &QPushButton::pressed, this, [this]() {
+        close();
+    });
 }

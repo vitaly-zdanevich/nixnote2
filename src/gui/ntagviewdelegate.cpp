@@ -71,7 +71,7 @@ void NTagViewDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
             f.setBold(false);
             painter->setFont(f);
             painter->setPen(Qt::darkGray);
-            painter->drawText(10 + fm.width(index.data().toString() + QString(" ")), fm.ascent(), countString);
+            painter->drawText(10 + fm.horizontalAdvance(index.data().toString() + QString(" ")), fm.ascent(), countString);
         }
     }
     painter->restore();
@@ -88,12 +88,12 @@ bool NTagViewDelegate::helpEvent(QHelpEvent *e, QAbstractItemView *view, const Q
         QRect rect = view->visualRect( index );
         QSize size = sizeHint( option, index );
         if ( rect.width() < size.width() ) {
-            QVariant tooltip = index.data( Qt::DisplayRole );
-            if ( tooltip.canConvert<QString>() ) {
-                QToolTip::showText( e->globalPos(), QString( "<div>%1</div>" )
-                    .arg( Qt::escape( tooltip.toString() ) ), view );
-                return true;
-            }
+                QVariant tooltip = index.data( Qt::DisplayRole );
+                if ( tooltip.canConvert<QString>() ) {
+                    QToolTip::showText( e->globalPos(), QString( "<div>%1</div>" )
+                    .arg( tooltip.toString().toHtmlEscaped() ), view );
+                    return true;
+                }
         }
         if ( !QStyledItemDelegate::helpEvent( e, view, option, index ) )
             QToolTip::hideText();

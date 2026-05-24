@@ -47,7 +47,7 @@ NotebookProperties::NotebookProperties(QWidget *parent) :
     defaultNotebook.setChecked(false);
     defaultNotebook.setEnabled(true);
 
-    connect(&name, SIGNAL(textChanged(const QString&)), this, SLOT(validateInput()));
+    connect(&name, &QLineEdit::textChanged, this, &NotebookProperties::validateInput);
 
     nameLabel.setText(tr("Name"));
     queryGrid.addWidget(&nameLabel, 1,1);
@@ -58,9 +58,9 @@ NotebookProperties::NotebookProperties(QWidget *parent) :
     grid.addLayout(&queryGrid,1,1);
 
     ok.setText(tr("OK"));
-    connect(&ok, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
+    connect(&ok, &QPushButton::clicked, this, &NotebookProperties::okButtonPressed);
     cancel.setText(tr("Cancel"));
-    connect(&cancel, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
+    connect(&cancel, &QPushButton::clicked, this, &NotebookProperties::cancelButtonPressed);
     buttonGrid.addWidget(&ok, 1, 1);
     buttonGrid.addWidget(&cancel, 1,2);
     grid.addLayout(&buttonGrid,2,1);

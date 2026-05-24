@@ -37,7 +37,7 @@ TagProperties::TagProperties(QWidget *parent) :
     setWindowIcon(global.getIconResource(":tagIcon"));
     setLayout(&grid);
 
-    connect(&name, SIGNAL(textChanged(const QString&)), this, SLOT(validateInput()));
+    connect(&name, &QLineEdit::textChanged, this, &TagProperties::validateInput);
 
     nameLabel.setText(tr("Name"));
     queryGrid.addWidget(&nameLabel, 1,1);
@@ -46,9 +46,9 @@ TagProperties::TagProperties(QWidget *parent) :
     grid.addLayout(&queryGrid,1,1);
 
     ok.setText(tr("OK"));
-    connect(&ok, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
+    connect(&ok, &QPushButton::clicked, this, &TagProperties::okButtonPressed);
     cancel.setText(tr("Cancel"));
-    connect(&cancel, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
+    connect(&cancel, &QPushButton::clicked, this, &TagProperties::cancelButtonPressed);
     buttonGrid.addWidget(&ok, 1, 1);
     buttonGrid.addWidget(&cancel, 1,2);
     grid.addLayout(&buttonGrid,2,1);

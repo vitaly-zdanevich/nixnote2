@@ -14,6 +14,7 @@
 **
 ****************************************************************************/
 #include "xmlhighlighter.h"
+#include <QRegularExpression>
 
 static const QColor DEFAULT_SYNTAX_CHAR		= Qt::blue;
 static const QColor DEFAULT_ELEMENT_NAME	= Qt::darkRed;
@@ -114,13 +115,14 @@ void XmlHighlighter::highlightBlock(const QString& text)
     if (previousBlockState() == InComment)
     {
         // search for the end of the comment
-        QRegExp expression(EXPR_COMMENT_END);
-        pos = expression.indexIn(text, i);
+        QRegularExpression expression(EXPR_COMMENT_END);
+        QRegularExpressionMatch match = expression.match(text, i);
+        pos = match.capturedStart();
 
         if (pos >= 0)
         {
             // end comment found
-            const int iLength = expression.matchedLength();
+            const int iLength = match.capturedLength();
             setFormat(0, iLength - 3, fmtComment);
             setFormat(iLength - 3, 3, fmtSyntaxChar);
             i += iLength; // skip comment
@@ -136,11 +138,7 @@ void XmlHighlighter::highlightBlock(const QString& text)
 
     for (; i < text.length(); i++)
     {
-#if QT_VERSION < 0x050000
-        switch (text.at(i).toAscii())
-#else
         switch (text.at(i).toLatin1())
-#endif
         {
         case '<':
             brackets++;
@@ -206,12 +204,13 @@ void XmlHighlighter::highlightBlock(const QString& text)
             if (state == ExpectAttributeValue)
             {
                 // search attribute value
-                QRegExp expression(EXPR_ATTRIBUTE_VALUE);
-                pos = expression.indexIn(text, i);
+                QRegularExpression expression(EXPR_ATTRIBUTE_VALUE);
+                QRegularExpressionMatch match = expression.match(text, i);
+                pos = match.capturedStart();
 
                 if (pos == i) // attribute value found ?
                 {
-                    const int iLength = expression.matchedLength();
+                    const int iLength = match.capturedLength();
 
                     setFormat(i, 1, fmtOther);
                     setFormat(i + 1, iLength - 2, fmtAttributeValue);
@@ -235,12 +234,13 @@ void XmlHighlighter::highlightBlock(const QString& text)
             if (state == ExpectElementNameOrSlash)
             {
                 // search comment
-                QRegExp expression(EXPR_COMMENT);
-                pos = expression.indexIn(text, i - 1);
+                QRegularExpression expression(EXPR_COMMENT);
+                QRegularExpressionMatch match = expression.match(text, i - 1);
+                pos = match.capturedStart();
 
                 if (pos == i - 1) // comment found ?
                 {
-                    const int iLength = expression.matchedLength();
+                    const int iLength = match.capturedLength();
 
                     setFormat(pos, 4, fmtSyntaxChar);
                     setFormat(pos + 4, iLength - 7, fmtComment);
@@ -252,8 +252,9 @@ void XmlHighlighter::highlightBlock(const QString& text)
                 else
                 {
                     // Try find multiline comment
-                    QRegExp expression(EXPR_COMMENT_BEGIN); // search comment start
-                    pos = expression.indexIn(text, i - 1);
+                    QRegularExpression expression(EXPR_COMMENT_BEGIN); // search comment start
+                    QRegularExpressionMatch match = expression.match(text, i - 1);
+                    pos = match.capturedStart();
 
                     //if (pos == i - 1) // comment found ?
                     if (pos >= i - 1)
@@ -301,12 +302,13 @@ int XmlHighlighter::processDefaultText(int i, const QString& text)
     case ExpectElementName:
         {
             // search element name
-            QRegExp expression(EXPR_NAME);
-            const int pos = expression.indexIn(text, i);
+            QRegularExpression expression(EXPR_NAME);
+            QRegularExpressionMatch match = expression.match(text, i);
+            const int pos = match.capturedStart();
 
             if (pos == i) // found ?
             {
-                iLength = expression.matchedLength();
+                iLength = match.capturedLength();
 
                 setFormat(pos, iLength, fmtElementName);
                 state = ExpectAttributeOrEndOfElement;
@@ -321,12 +323,13 @@ int XmlHighlighter::processDefaultText(int i, const QString& text)
     case ExpectAttributeOrEndOfElement:
         {
             // search attribute name
-            QRegExp expression(EXPR_NAME);
-            const int pos = expression.indexIn(text, i);
+            QRegularExpression expression(EXPR_NAME);
+            QRegularExpressionMatch match = expression.match(text, i);
+            const int pos = match.capturedStart();
 
             if (pos == i) // found ?
             {
-                iLength = expression.matchedLength();
+                iLength = match.capturedLength();
 
                 setFormat(pos, iLength, fmtAttributeName);
                 state = ExpectEqual;
@@ -344,4 +347,3 @@ int XmlHighlighter::processDefaultText(int i, const QString& text)
     }
     return iLength;
 }
-

@@ -94,6 +94,7 @@ public:
     bool getInkNote(QByteArray &value, qint32 lid);              // Get an inknote
     qint32 getIndexNeeded(QList<qint32> &lids);                  // Get a list of all resources needing indexing
     bool getResourceList(QList<qint32> &resourceList, qint32 noteLid);  // Get resources for a note
+    bool getAllResourceLids(QList<qint32> &resourceList);         // Get all resource LIDs
     qint32 getCount();                                           // count of all resources
     qint32 getUnindexedCount();                                  // count of unindexed resources
     qint32 getNoteLid(qint32 resLid);                            // Get the owning note for this resource
@@ -107,7 +108,8 @@ public:
     void updateGuid(qint32 lid, Guid &guid);                     // Update a resource's guid
     void sync(Resource &resource);                               // Sync a resource with a new record
     void sync(qint32 lid, Resource &resource);                   // Sync a resource with a new record
-    qint32 add(qint32 lid, Resource &t, bool isDirty, int noteLid=0);    // Add a new resource
+    void sync(qint32 lid, Resource &resource, qint32 noteLid);   // Sync a resource with a known note LID
+    qint32 add(qint32 lid, Resource &t, bool isDirty, int noteLid=0, bool expungeExisting=true);    // Add a new resource
     void setIndexNeeded(qint32 lid, bool indexNeeded);           // flag if a resource needs reindexing
     void expunge(int lid);                                       // erase a resource
     void expunge(const QList<qint32> &lids);                     // erase a list of resources

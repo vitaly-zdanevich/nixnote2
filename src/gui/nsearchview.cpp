@@ -67,9 +67,9 @@ NSearchView::NSearchView(QWidget *parent) :
     this->loadData();
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(buildSelection()));
+    connect(this, &QTreeWidget::itemExpanded, this, &NSearchView::calculateHeight);
+    connect(this, &QTreeWidget::itemCollapsed, this, &NSearchView::calculateHeight);
+    connect(this, &QTreeWidget::itemSelectionChanged, this, &NSearchView::buildSelection);
 
     addAction = context.addAction(tr("Create Saved Search"));
     addAction->setShortcut(QKeySequence(Qt::Key_Insert));
@@ -93,13 +93,13 @@ NSearchView::NSearchView(QWidget *parent) :
     context.addSeparator();
     propertiesAction = context.addAction(tr("Properties"));
 
-    connect(addAction, SIGNAL(triggered()), this, SLOT(addRequested()));
-    connect(deleteAction, SIGNAL(triggered()), this, SLOT(deleteRequested()));
-    connect(renameAction, SIGNAL(triggered()), this, SLOT(renameRequested()));
-    connect(propertiesAction, SIGNAL(triggered()), this, SLOT(propertiesRequested()));
+    connect(addAction, &QAction::triggered, this, &NSearchView::addRequested);
+    connect(deleteAction, &QAction::triggered, this, &NSearchView::deleteRequested);
+    connect(renameAction, &QAction::triggered, this, &NSearchView::renameRequested);
+    connect(propertiesAction, &QAction::triggered, this, &NSearchView::propertiesRequested);
 
-    connect(addShortcut, SIGNAL(activated()), this, SLOT(addRequested()));
-    connect(deleteShortcut, SIGNAL(activated()), this, SLOT(deleteRequested()));
+    connect(addShortcut, &QShortcut::activated, this, &NSearchView::addRequested);
+    connect(deleteShortcut, &QShortcut::activated, this, &NSearchView::deleteRequested);
     this->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
     this->setFrameShape(QFrame::NoFrame);
 
@@ -183,7 +183,7 @@ void NSearchView::searchUpdated(qint32 lid, QString name) {
     }
     this->sortItems(NAME_POSITION, Qt::AscendingOrder);
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
 }
 
 
@@ -371,7 +371,7 @@ void NSearchView::addRequested() {
     root->addChild(newWidget);
     this->sortItems(NAME_POSITION, Qt::AscendingOrder);
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
 
     dataStore.insert(lid, newWidget);
 }
@@ -430,7 +430,7 @@ void NSearchView::deleteRequested() {
 //*************************************************************
 void NSearchView::renameRequested() {
     editor = new TreeWidgetEditor(this);
-    connect(editor, SIGNAL(editComplete()), this, SLOT(editComplete()));
+    connect(editor, &TreeWidgetEditor::editComplete, this, &NSearchView::editComplete);
 
     QList<QTreeWidgetItem*> items = selectedItems();
     editor->setText(items[0]->text(NAME_POSITION));
@@ -479,12 +479,12 @@ void NSearchView::editComplete() {
     }
     this->sortItems(NAME_POSITION, Qt::AscendingOrder);
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
 }
 
 
 
-QSize NSearchView::sizeHint() {
+QSize NSearchView::sizeHint() const {
     return QTreeView::sizeHint();
 }
 
@@ -494,7 +494,7 @@ QSize NSearchView::sizeHint() {
 // Draw the branches of the tree.
 //*************************************************************
 void NSearchView::drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const {
-    if (!index.child(0,0).isValid())
+    if (!model()->hasChildren(index))
         return;
 
     painter->save();
@@ -552,5 +552,3 @@ void NSearchView::mouseMoveEvent(QMouseEvent *event)
 void NSearchView::reloadIcons() {
     root->setIcon(NAME_POSITION,global.getIconResource(":searchIcon"));
 }
-
-

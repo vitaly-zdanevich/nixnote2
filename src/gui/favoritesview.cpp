@@ -97,11 +97,11 @@ FavoritesView::FavoritesView(QWidget *parent) :
     deleteShortcut = new QShortcut(this);
     deleteShortcut->setKey(QKeySequence(Qt::Key_Delete));
     deleteShortcut->setContext(Qt::WidgetShortcut);
-    connect(deleteAction, SIGNAL(triggered()), this, SLOT(deleteRequested()));
-    connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(buildSelection()));
-    connect(deleteShortcut, SIGNAL(activated()), this, SLOT(deleteRequested()));
+    connect(deleteAction, &QAction::triggered, this, &FavoritesView::deleteRequested);
+    connect(this, &QTreeWidget::itemExpanded, this, &FavoritesView::calculateHeight);
+    connect(this, &QTreeWidget::itemCollapsed, this, &FavoritesView::calculateHeight);
+    connect(this, &QTreeWidget::itemSelectionChanged, this, &FavoritesView::buildSelection);
+    connect(deleteShortcut, &QShortcut::activated, this, &FavoritesView::deleteRequested);
 
     root->setExpanded(true);
     this->setProperty("animated", false);
@@ -305,7 +305,7 @@ void FavoritesView::resetSize() {
 
 
 
-QSize FavoritesView::sizeHint() {
+QSize FavoritesView::sizeHint() const {
     return QTreeView::sizeHint();
 }
 
@@ -323,7 +323,7 @@ void FavoritesView::contextMenuEvent(QContextMenuEvent *event) {
 
 
 void FavoritesView::drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const {
-    if (!index.child(0,0).isValid())
+    if (!model()->hasChildren(index))
         return;
 
     painter->save();
@@ -346,7 +346,7 @@ void FavoritesView::drawBranches(QPainter *painter, const QRect &rect, const QMo
 void FavoritesView::dropEvent(QDropEvent *event) {
     QTreeView::dropEvent(event);
     const QMimeData* data = event->mimeData();
-    QModelIndex droppedIndex = indexAt( event->pos() );
+    QModelIndex droppedIndex = indexAt(event->position().toPoint());
     if (!droppedIndex.isValid())
         return;
     int row = droppedIndex.row();

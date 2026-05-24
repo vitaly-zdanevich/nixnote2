@@ -17,7 +17,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ***********************************************************************************/
 
+#include <QDir>
+#include <QFileInfo>
+#include <QSaveFile>
 #include <QTimer>
+#include <QUuid>
 
 #include "syncrunner.h"
 #include "src/global.h"
@@ -34,8 +38,69 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/communication/communicationmanager.h"
 #include "src/communication/communicationerror.h"
 #include "src/sql/nsqlquery.h"
+#include "src/utilities/mimereference.h"
 
 extern Global global;
+
+namespace {
+QString existingResourceFilePath(qint32 lid)
+{
+    QDir dir(global.fileManager.getDbaDirPath());
+    QStringList filter;
+    filter.append(QString::number(lid) + QString(".*"));
+    QStringList matches = dir.entryList(filter, QDir::Files, QDir::NoSort);
+    if (matches.isEmpty()) {
+        return QString();
+    }
+    return dir.absoluteFilePath(matches.first());
+}
+
+QString resourceTargetFilePath(qint32 lid, const Resource &resource)
+{
+    QString existingPath = existingResourceFilePath(lid);
+    if (!existingPath.isEmpty()) {
+        return existingPath;
+    }
+
+    QString mimetype = resource.mime;
+    QString filename;
+    ResourceAttributes attributes;
+    if (resource.attributes.isSet()) {
+        attributes = resource.attributes;
+    }
+    if (attributes.fileName.isSet()) {
+        filename = attributes.fileName;
+    }
+
+    MimeReference ref;
+    QString extension = ref.getExtensionFromMime(mimetype, filename);
+    if (extension.isEmpty() || extension == QStringLiteral("N/A")) {
+        extension = QStringLiteral(".bin");
+    }
+    if (!extension.startsWith(QLatin1Char('.'))) {
+        extension.prepend(QLatin1Char('.'));
+    }
+
+    return global.fileManager.getDbaDirPath() + QString::number(lid) + extension;
+}
+
+bool isValidEvernoteGuid(const QString &guid)
+{
+    return !guid.isEmpty() && !QUuid::fromString(guid).isNull();
+}
+
+QByteArray resourceBody(const Resource &resource)
+{
+    Data data;
+    if (resource.data.isSet()) {
+        data = resource.data;
+    }
+    if (!data.body.isSet()) {
+        return QByteArray();
+    }
+    return data.body;
+}
+}
 
 SyncRunner::SyncRunner() {
     initialized = false;
@@ -45,15 +110,13 @@ SyncRunner::SyncRunner() {
     error = false;
     updateUserDataOnNextSync = false;
     connectionClosed = false;
+    authExpired = false;
 }
 
 SyncRunner::~SyncRunner() {
 }
 
-
-void SyncRunner::synchronize() {
-    QLOG_DEBUG() << "synchronize";
-
+bool SyncRunner::initialize() {
     if (!initialized) {
         this->setObjectName("SyncRunnerThread");
         initialized = true;
@@ -61,6 +124,7 @@ void SyncRunner::synchronize() {
         secret = "";
         apiRateLimitExceeded = false;
         connectionClosed = false;
+        authExpired = false;
 
         // Setup the user agent
         userAgent = NN_APP_CLIENT_NAME;
@@ -72,8 +136,20 @@ void SyncRunner::synchronize() {
         db = new DatabaseConnection("syncrunner");
         comm = new CommunicationManager(db);
         if (global.guiAvailable) {
-            connect(global.application, SIGNAL(stdException(QString)), this, SLOT(applicationException(QString)));
+            auto *application = qobject_cast<Application *>(global.application);
+            if (application != nullptr)
+                connect(application, &Application::stdException, this, &SyncRunner::applicationException);
         }
+    }
+    return true;
+}
+
+void SyncRunner::synchronize() {
+    QLOG_DEBUG() << "synchronize";
+
+    if (!initialize()) {
+        emit syncComplete();
+        return;
     }
 
     // If we are already connected, we are already synchronizing so there is nothing more to do
@@ -83,6 +159,9 @@ void SyncRunner::synchronize() {
     }
 
     error = false;
+    apiRateLimitExceeded = false;
+    connectionClosed = false;
+    authExpired = false;
     comm->resetError();
 
     if (!comm->enConnect()) {
@@ -100,6 +179,144 @@ void SyncRunner::synchronize() {
     emit syncComplete();
     comm->enDisconnect();
     global.connected = false;
+}
+
+void SyncRunner::repairMissingResources() {
+    QLOG_DEBUG() << "repairMissingResources";
+
+    if (!initialize()) {
+        emit syncComplete();
+        return;
+    }
+
+    if (global.connected) {
+        QLOG_DEBUG() << "repairMissingResources: sync seems to be already running (or stuck someway)";
+        return;
+    }
+
+    error = false;
+    apiRateLimitExceeded = false;
+    connectionClosed = false;
+    authExpired = false;
+    comm->resetError();
+
+    if (!comm->enConnect()) {
+        QLOG_DEBUG() << "repairMissingResources: connect failed";
+        this->communicationErrorHandler();
+        error = true;
+        emit syncComplete();
+        return;
+    }
+    QLOG_DEBUG() << "repairMissingResources: connect OK";
+
+    global.connected = true;
+    keepRunning = true;
+    emit setMessage(tr("Repairing missing resources"), defaultMsgTimeout);
+    const ResourceRepairSummary repairSummary = repairMissingResourceFiles();
+    if (!error) {
+        emit setMessage(tr("Missing resource repair complete: %1 downloaded, %2 skipped")
+                                .arg(repairSummary.downloaded)
+                                .arg(repairSummary.skipped),
+                        10000);
+    }
+    emit syncComplete();
+    comm->enDisconnect();
+    global.connected = false;
+}
+
+SyncRunner::ResourceRepairSummary SyncRunner::repairMissingResourceFiles() {
+    ResourceRepairSummary summary;
+    ResourceTable resourceTable(db);
+    QList<qint32> resourceLids;
+    if (!resourceTable.getAllResourceLids(resourceLids)) {
+        QLOG_INFO() << "No resources found while repairing missing resource files";
+        return summary;
+    }
+
+    for (int i = 0; i < resourceLids.size() && keepRunning; ++i) {
+        qint32 lid = resourceLids.at(i);
+        if (!existingResourceFilePath(lid).isEmpty()) {
+            continue;
+        }
+
+        ++summary.missing;
+        if (summary.missing == 1 || summary.missing % 25 == 0) {
+            emit setMessage(tr("Repairing missing resources: %1 downloaded").arg(summary.downloaded),
+                            defaultMsgTimeout);
+        }
+
+        if (repairMissingResourceFile(resourceTable, lid)) {
+            ++summary.downloaded;
+        }
+
+        if (authExpired || apiRateLimitExceeded || connectionClosed) {
+            error = true;
+            break;
+        }
+    }
+
+    summary.skipped = summary.missing - summary.downloaded;
+    QLOG_INFO() << QString("Missing resource repair finished: missing=%1 downloaded=%2 skipped=%3")
+                           .arg(summary.missing)
+                           .arg(summary.downloaded)
+                           .arg(summary.skipped);
+    return summary;
+}
+
+bool SyncRunner::repairMissingResourceFile(ResourceTable &resourceTable, qint32 lid) {
+    Resource localResource;
+    if (!resourceTable.get(localResource, lid, false) || !localResource.guid.isSet()) {
+        QLOG_WARN() << "Unable to resolve missing resource, lid=" << lid;
+        return false;
+    }
+
+    const QString guid = localResource.guid;
+    if (!isValidEvernoteGuid(guid)) {
+        QLOG_WARN() << "Missing resource has invalid Evernote guid, skipping, lid=" << lid
+                    << " guid=" << guid;
+        return false;
+    }
+
+    Resource remoteResource;
+    bool remoteResourceNotFound = false;
+    if (!comm->getResource(remoteResource, guid, true, false, true, false, false,
+                           &remoteResourceNotFound)) {
+        if (remoteResourceNotFound) {
+            QLOG_WARN() << "Missing resource no longer exists on Evernote server, skipping, lid=" << lid
+                        << " guid=" << guid;
+            return false;
+        }
+        QLOG_WARN() << "Unable to download missing resource, lid=" << lid
+                    << " guid=" << guid;
+        this->communicationErrorHandler();
+        return false;
+    }
+
+    QByteArray body = resourceBody(remoteResource);
+    if (body.isEmpty()) {
+        QLOG_WARN() << "Downloaded missing resource has empty body, lid=" << lid
+                    << " guid=" << guid;
+        return false;
+    }
+
+    QString filePath = resourceTargetFilePath(lid, localResource);
+    QDir().mkpath(QFileInfo(filePath).absolutePath());
+    QSaveFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QLOG_WARN() << "Unable to write missing resource:" << filePath << file.errorString();
+        return false;
+    }
+    if (file.write(body) != body.size()) {
+        QLOG_WARN() << "Unable to write complete missing resource:" << filePath << file.errorString();
+        return false;
+    }
+    if (!file.commit()) {
+        QLOG_WARN() << "Unable to commit missing resource:" << filePath << file.errorString();
+        return false;
+    }
+
+    QLOG_INFO() << "Downloaded missing resource:" << filePath;
+    return true;
 }
 
 void SyncRunner::requestAndStoreUserData() {
@@ -1187,6 +1404,13 @@ qint32 SyncRunner::uploadPersonalNotes() {
     for (int i = 0; i < validLids.size(); i++) {
         Note note;
         noteTable.get(note, validLids[i], true, true);
+        if (!note.title.isSet() || QString(note.title).trimmed().isEmpty()) {
+            const QString fallbackTitle = tr("Untitled note");
+            QLOG_WARN() << "Uploading note with an empty title; using fallback title. lid="
+                        << validLids[i];
+            note.title = fallbackTitle;
+            noteTable.updateTitle(validLids[i], fallbackTitle, false);
+        }
 
         qint32 oldUsn = 0;
         if (note.updateSequenceNum.isSet())
@@ -1236,6 +1460,7 @@ void SyncRunner::communicationErrorHandler() {
     }
     if (type == CommunicationError::EDAMUserException) {
         if (comm->getLastErrorCode() == static_cast<int>(EDAMErrorCode::AUTH_EXPIRED)) {
+            authExpired = true;
             global.accountsManager->setOAuthToken("");
         }
     }
@@ -1247,4 +1472,3 @@ void SyncRunner::setUpdateUserDataOnNextSync(bool updateUserDataOnNextSync) {
     QLOG_INFO() << "Setting updateUserDataOnNextSync to " << updateUserDataOnNextSync;
     SyncRunner::updateUserDataOnNextSync = updateUserDataOnNextSync;
 }
-

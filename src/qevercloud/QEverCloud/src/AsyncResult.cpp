@@ -14,7 +14,6 @@
 #include <EventLoopFinisher.h>
 
 #include <QEventLoop>
-#include <QSignalMapper>
 
 #include <typeinfo>
 

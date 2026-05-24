@@ -22,6 +22,22 @@
 #include "quotedprintable.h"
 #include <typeinfo>
 
+namespace {
+
+QString encodedWordBase64(const QString &value)
+{
+    return QString::fromLatin1(value.toUtf8().toBase64());
+}
+
+QString encodedWordQuotedPrintable(const QString &value)
+{
+    return QuotedPrintable::encode(value.toUtf8())
+        .replace(' ', "_")
+        .replace(':', "=3A");
+}
+
+}
+
 /* [1] Constructors and Destructors */
 MimeMessage::MimeMessage(bool createAutoMimeContent) :
     hEncoding(MimePart::_8Bit)
@@ -162,10 +178,10 @@ QString MimeMessage::toString()
         switch (hEncoding)
         {
         case MimePart::Base64:
-            mime += " =?utf-8?B?" + QByteArray().append(sender->getName()).toBase64() + "?=";
+            mime += " =?utf-8?B?" + encodedWordBase64(sender->getName()) + "?=";
             break;
         case MimePart::QuotedPrintable:
-            mime += " =?utf-8?Q?" + QuotedPrintable::encode(QByteArray().append(sender->getName())).replace(' ', "_").replace(':',"=3A") + "?=";
+            mime += " =?utf-8?Q?" + encodedWordQuotedPrintable(sender->getName()) + "?=";
             break;
         default:
             mime += " " + sender->getName();
@@ -187,10 +203,10 @@ QString MimeMessage::toString()
             switch (hEncoding)
             {
             case MimePart::Base64:
-                mime += " =?utf-8?B?" + QByteArray().append((*it)->getName()).toBase64() + "?=";
+                mime += " =?utf-8?B?" + encodedWordBase64((*it)->getName()) + "?=";
                 break;
             case MimePart::QuotedPrintable:
-                mime += " =?utf-8?Q?" + QuotedPrintable::encode(QByteArray().append((*it)->getName())).replace(' ', "_").replace(':',"=3A") + "?=";
+                mime += " =?utf-8?Q?" + encodedWordQuotedPrintable((*it)->getName()) + "?=";
                 break;
             default:
                 mime += " " + (*it)->getName();
@@ -214,10 +230,10 @@ QString MimeMessage::toString()
             switch (hEncoding)
             {
             case MimePart::Base64:
-                mime += " =?utf-8?B?" + QByteArray().append((*it)->getName()).toBase64() + "?=";
+                mime += " =?utf-8?B?" + encodedWordBase64((*it)->getName()) + "?=";
                 break;
             case MimePart::QuotedPrintable:
-                mime += " =?utf-8?Q?" + QuotedPrintable::encode(QByteArray().append((*it)->getName())).replace(' ', "_").replace(':',"=3A") + "?=";
+                mime += " =?utf-8?Q?" + encodedWordQuotedPrintable((*it)->getName()) + "?=";
                 break;
             default:
                 mime += " " + (*it)->getName();
@@ -237,10 +253,10 @@ QString MimeMessage::toString()
     switch (hEncoding)
     {
     case MimePart::Base64:
-        mime += "=?utf-8?B?" + QByteArray().append(subject).toBase64() + "?=";
+        mime += "=?utf-8?B?" + encodedWordBase64(subject) + "?=";
         break;
     case MimePart::QuotedPrintable:
-        mime += "=?utf-8?Q?" + QuotedPrintable::encode(QByteArray().append(subject)).replace(' ', "_").replace(':',"=3A") + "?=";
+        mime += "=?utf-8?Q?" + encodedWordQuotedPrintable(subject) + "?=";
         break;
     default:
         mime += subject;

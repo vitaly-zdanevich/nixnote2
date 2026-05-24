@@ -54,7 +54,7 @@ public:
     explicit WidgetPanel(QWidget *parent = 0);
     ~WidgetPanel();
     void paintEvent(QPaintEvent *);
-    QSize sizeHint();
+    QSize sizeHint() const override;
     QScrollArea *scroll;
     void dragMoveHandler(QDragMoveEvent *event);
     void dragEnterHandler(QDragEnterEvent *event);

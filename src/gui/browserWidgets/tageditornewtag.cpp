@@ -25,9 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QListView>
 #include <QStringListModel>
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QScrollBar>
 #include <QStandardItem>
+#include <algorithm>
 
 extern Global global;
 
@@ -58,14 +58,15 @@ TagEditorNewTag::TagEditorNewTag(QWidget *parent) :
     this->setStyleSheet(inactiveColor);
 
     this->setPlaceholderText(tr("Click to add tag..."));
-    connect(this, SIGNAL(textChanged(QString)), this, SLOT(textModified(QString)));
+    connect(this, &QLineEdit::textChanged, this, &TagEditorNewTag::textModified);
 
-//    connect(this, SIGNAL(focussed(bool)), this, SLOT(gainedFocus(bool)));
+//    connect(this, &TagEditorNewTag::focussed, this, &TagEditorNewTag::gainedFocus);
     completer = new QCompleter(this);
     //completer->popup()->setItemDelegate(new TagEditorNewTagCompleterPopupDelegate());
-    connect(completer, SIGNAL(activated(QString)), this, SLOT(mouseCompleterSelection(QString)));
+    connect(completer, qOverload<const QString &>(&QCompleter::activated),
+            this, &TagEditorNewTag::mouseCompleterSelection);
     loadCompleter();
-    connect(this, SIGNAL(returnPressed()), this, SLOT(enterPressed()));
+    connect(this, &QLineEdit::returnPressed, this, &TagEditorNewTag::enterPressed);
     hide();
     QLOG_TRACE_OUT() << typeid(*this).name();
 }
@@ -109,12 +110,10 @@ void TagEditorNewTag::loadCompleter() {
             completerEntries.insert(tagList[i], name);
         }
     }
-    qSort(tagNames.begin(), tagNames.end(), caseInsensitiveLessThan);
+    std::sort(tagNames.begin(), tagNames.end(), caseInsensitiveLessThan);
     completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
     completer->setCaseSensitivity(Qt::CaseInsensitive);
-#if QT_VERSION >= 0x050000
     completer->setFilterMode(Qt::MatchContains);
-#endif
     setCompleter(completer);
 
     QStringListModel *model;

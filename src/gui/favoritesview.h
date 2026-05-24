@@ -47,7 +47,6 @@ private:
 private slots:
     int calculateHeightRec(QTreeWidgetItem * item);
     void calculateHeight();
-    void updateShortcutName(QString uuid, qint32 lid, QString content);
 
 public:
     explicit FavoritesView(QWidget *parent = 0);
@@ -62,7 +61,7 @@ public:
     void contextMenuEvent(QContextMenuEvent *event);
     QHash<qint32, FavoritesViewItem*> dataStore;
     QHash<qint32, FavoritesViewItem*> targetStore;
-    QSize sizeHint();
+    QSize sizeHint() const override;
     void dropEvent(QDropEvent *event);
     void drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const;
     void mouseMoveEvent(QMouseEvent *event);
@@ -76,6 +75,7 @@ signals:
 
 public slots:
     void deleteRequested();
+    void updateShortcutName(QString uuid, qint32 lid, QString content);
     void itemRenamed(qint32 lid, QString oldName, QString newName);
     void buildSelection();
     void updateTotals(qint32 lid, qint32 subTotal, qint32 total);

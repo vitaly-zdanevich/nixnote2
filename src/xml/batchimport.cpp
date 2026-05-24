@@ -98,7 +98,7 @@ void BatchImport::import(QString file) {
         return;
 
     QString response = QString::number(newLid);
-    sharedMemory.write(response.toAscii());
+    sharedMemory.write(response.toUtf8());
     sharedMemory.detach();
 }
 
@@ -237,7 +237,8 @@ qint32 BatchImport::addNoteNode() {
                     QString filename = resourceList[i];
                     QFile file(filename);
                     if (file.exists()) {
-                        file.open(QIODevice::ReadOnly);
+                        if (!file.open(QIODevice::ReadOnly))
+                            continue;
                         QByteArray ba = file.readAll();
                         file.close();
                         MimeReference mimeRef;
@@ -294,7 +295,8 @@ qint32 BatchImport::addNoteNode() {
                     QString filename = resourceList[i];
                     QFile file(filename);
                     if (file.exists()) {
-                        file.open(QIODevice::ReadOnly);
+                        if (!file.open(QIODevice::ReadOnly))
+                            continue;
                         QByteArray ba = file.readAll();
                         file.close();
                         MimeReference mimeRef;
@@ -362,7 +364,7 @@ double BatchImport::doubleValue() {
 
 bool BatchImport::booleanValue() {
     QString value = textValue();
-    value.toLower();
+    value = value.toLower();
     if (value == "1" || value == "true")
         return true;
     else

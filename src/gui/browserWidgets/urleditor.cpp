@@ -41,7 +41,7 @@ UrlEditor::UrlEditor(QWidget *parent) :
     this->setStyleSheet(inactiveColor);
 
     this->setPlaceholderText(tr("Click to set source URL..."));
-    connect(this, SIGNAL(textChanged(QString)), this, SLOT(textModified(QString)));
+    connect(this, &QLineEdit::textChanged, this, &UrlEditor::textModified);
     hide();
 
     QString css = global.getThemeCss("urlEditorCss");
@@ -114,7 +114,7 @@ QString UrlEditor::getText() {
 // Listen for mouse press events.  This tells us if
 // we need to open based on a middle click.
 void UrlEditor::mouseReleaseEvent(QMouseEvent *e) {
-    if ( e->button() == Qt::MidButton) {
+    if ( e->button() == Qt::MiddleButton) {
         if (text().trimmed() != "") {
             QString url = text().trimmed();
             if (!url.toLower().startsWith("http://") &&

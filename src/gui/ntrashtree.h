@@ -39,7 +39,7 @@ public:
     explicit NTrashTree(QWidget *parent = 0);
     void updateSelection();
     void resetSize();
-    QSize sizeHint();
+    QSize sizeHint() const override;
     qint32 count;
     void drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const;
     void reloadIcons();

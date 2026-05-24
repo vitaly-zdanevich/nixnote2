@@ -278,17 +278,3 @@ void DebugTool::dumpField(Optional<QStringList> field, QString name) {
     }
 }
 
-
-void DebugTool::dumpField(Optional<QList<QString> > field, QString name) {
-    if (!field.isSet()) {
-        QLOG_DEBUG() << name << " is empty (QList<QString>)";
-        return;
-    }
-
-    QList<QString> fields = field;
-    QLOG_DEBUG() << name << " has " << fields.size() << " entries.";
-    for (int i = 0; i < fields.size(); i++) {
-        QLOG_DEBUG() << "#" << i << ":" << fields[i];
-    }
-}
-

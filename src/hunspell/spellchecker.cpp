@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFile>
 #include <QDir>
 #include <QLocale>
+#include <QRegularExpression>
 #include <QTextStream>
 #include <hunspell.hxx>
 #include "src/logger/qslog.h"
@@ -81,15 +82,16 @@ bool SpellChecker::setup(QString customDictionaryPath, QString locale) {
 
     int count = 0;
     if (f.exists()) {
-        f.open(QIODevice::ReadOnly);
-        QTextStream in(&f);
-        while (!in.atEnd()) {
-            QString word = in.readLine();
-            hunspell->add(word.toStdString().c_str());
-            QLOG_DEBUG() << SPELLCHECKER_MODULE ": adding word: " << word;
-            count++;
+        if (f.open(QIODevice::ReadOnly)) {
+            QTextStream in(&f);
+            while (!in.atEnd()) {
+                QString word = in.readLine();
+                hunspell->add(word.toStdString().c_str());
+                QLOG_DEBUG() << SPELLCHECKER_MODULE ": adding word: " << word;
+                count++;
+            }
+            f.close();
         }
-        f.close();
     }
     QLOG_DEBUG() << SPELLCHECKER_MODULE ": " << count << " words added";
     return true;
@@ -105,26 +107,16 @@ bool SpellChecker::spellCheck(QString word, QStringList &suggestions) {
     if (!hunspell) {
         return false;
     }
-    int isValid = hunspell->spell(word.toStdString().c_str());
+    const std::string wordString = word.toStdString();
+    bool isValid = hunspell->spell(wordString);
     if (isValid) {
         return true;
     }
 
-#ifdef HUNSPELL_16_PLUS
-    // currently not used, as I don't know how to easily detect the version
-
-    const auto suggested = hunspell->suggest(word.toStdString().c_str());
-    for_each(suggested.begin(), suggested.end(), [&suggestions](const std::string &suggestion) {
+    const auto suggested = hunspell->suggest(wordString);
+    for (const std::string &suggestion: suggested) {
         suggestions << QString::fromStdString(suggestion);
-    });
-#else
-    // deprecated in 1.6 - but needed for 1.3
-    char **wlst;
-    int ns = hunspell->suggest(&wlst,word.toStdString().c_str());
-    for (int i=0; i < ns; i++) {
-        suggestions.append(QString::fromStdString(wlst[i]));
     }
-#endif
 
     return false;
 }
@@ -142,7 +134,8 @@ void SpellChecker::addWord(QString word) {
     // Append to the end of the user dictionary
     // Start adding custom words
     QFile f(customDictionaryFile);
-    f.open(QIODevice::Append);
+    if (!f.open(QIODevice::Append))
+        return;
     QTextStream out(&f);
     out << word << "\n";
     f.close();
@@ -152,7 +145,7 @@ QStringList SpellChecker::availableSpellLocales() {
     QStringList dictionaryPath = SpellChecker::dictionaryPaths();
 
     // locale regex
-    QRegExp localeRx("^[a-z]{2}_[A-Z]{2}$");
+    QRegularExpression localeRx("^[a-z]{2}_[A-Z]{2}$");
 
     QStringList values;
     // Start loading available language dictionaries
@@ -169,7 +162,7 @@ QStringList SpellChecker::availableSpellLocales() {
 
             QString lang = fileName;
             lang.chop(4);
-            if (localeRx.indexIn(lang) != 0) {
+            if (!localeRx.match(lang).hasMatch()) {
                 QLOG_DEBUG() << "Ignoring " << lang << " (as unexpected format)";
                 continue;
             }
@@ -182,4 +175,3 @@ QStringList SpellChecker::availableSpellLocales() {
     }
     return values;
 }
-

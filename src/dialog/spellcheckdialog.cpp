@@ -45,8 +45,8 @@ SpellCheckDialog::SpellCheckDialog(QString selectedLocale, QStringList available
     replacementWord = new QLineEdit(this);
     this->suggestions = new QListWidget(this);
 
-    connect(replacementWord, SIGNAL(textChanged(QString)), this, SLOT(validateInput()));
-    connect(this->suggestions, SIGNAL(itemSelectionChanged()), this, SLOT(replacementChosen()));
+    connect(replacementWord, &QLineEdit::textChanged, this, &SpellCheckDialog::validateInput);
+    connect(this->suggestions, &QListWidget::itemSelectionChanged, this, &SpellCheckDialog::replacementChosen);
 
     suggestionGrid->addWidget(currentWord, 1, 1);
     suggestionGrid->addWidget(new QLabel(tr("Suggestion"), this), 2, 1);
@@ -77,12 +77,12 @@ SpellCheckDialog::SpellCheckDialog(QString selectedLocale, QStringList available
 
     suggestionGrid->setAlignment(Qt::AlignTop);
 
-    connect(replace, SIGNAL(clicked()), this, SLOT(replaceButtonPressed()));
-    connect(ignore, SIGNAL(clicked()), this, SLOT(ignoreButtonPressed()));
-    connect(ignoreAll, SIGNAL(clicked()), this, SLOT(ignoreAllButtonPressed()));
-    connect(addToDictionary, SIGNAL(clicked()), this, SLOT(addToDictionaryButtonPressed()));
-    connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
-    //connect(modalityButton, SIGNAL(clicked()), this, SLOT(modalityButtonPressed()));
+    connect(replace, &QPushButton::clicked, this, &SpellCheckDialog::replaceButtonPressed);
+    connect(ignore, &QPushButton::clicked, this, &SpellCheckDialog::ignoreButtonPressed);
+    connect(ignoreAll, &QPushButton::clicked, this, &SpellCheckDialog::ignoreAllButtonPressed);
+    connect(addToDictionary, &QPushButton::clicked, this, &SpellCheckDialog::addToDictionaryButtonPressed);
+    connect(cancelButton, &QPushButton::clicked, this, &SpellCheckDialog::cancelButtonPressed);
+    //connect(modalityButton, &QPushButton::clicked, this, &SpellCheckDialog::modalityButtonPressed);
 
 
     buttonGrid->setColumnStretch(1, 10);
@@ -93,7 +93,8 @@ SpellCheckDialog::SpellCheckDialog(QString selectedLocale, QStringList available
     this->setFont(guiFont);
     loadLanguages(selectedLocale, availableSpellLocales);
 
-    connect(language, SIGNAL(currentIndexChanged(int)), this, SLOT(languageChangeRequested(int)));
+    connect(language, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &SpellCheckDialog::languageChangeRequested);
 
     // block all other windows (e.g. where the same note could be open)
     this->setWindowModality(Qt::ApplicationModal);

@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:noble
 
 ARG wdir="/opt"
 WORKDIR $wdir
@@ -9,11 +9,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y software-properties-common
 #RUN add-apt-repository ppa:nixnote/nixnote2-stable -y && apt-get update -qq
-RUN apt-get update && apt-get install -y git-core qt5-default build-essential ccache p7zip-full libssl1.1 libcrypt1 libnss3 \
+RUN apt-get update && apt-get install -y git-core build-essential ccache p7zip-full libssl3 libcrypt1 libnss3 \
                               wget curl make pkg-config \
-                              qtwebengine5-dev qtwebengine5-dev-tools \
+                              qt6-base-dev qt6-base-dev-tools qt6-declarative-dev qt6-tools-dev-tools \
+                              qt6-webchannel-dev qt6-webengine-dev qt6-webengine-dev-tools libqt6sql6-sqlite \
                               libboost-dev libboost-test-dev libboost-program-options-dev libevent-dev libcurl4-openssl-dev \
-                              libpoppler-qt5-dev libqt5webkit5-dev qt5-qmake qttools5-dev-tools libhunspell-dev libtidy-dev libqt5positioning5-plugins
+                              libpoppler-qt6-dev libhunspell-dev libtidy-dev
 
 # install linuxdeploy
 RUN wget -nv "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" && \

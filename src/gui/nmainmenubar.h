@@ -61,6 +61,7 @@ public:
     QAction *printPreviewAction;
     QAction *emailAction;
     QAction *synchronizeAction;
+    QAction *repairMissingResourcesAction;
     QAction *importFoldersDialogAction;
     QAction *addUserAction;
     QAction *disconnectAction;

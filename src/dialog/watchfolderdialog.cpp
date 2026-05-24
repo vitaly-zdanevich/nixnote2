@@ -36,11 +36,11 @@ WatchFolderDialog::WatchFolderDialog(QWidget *parent) :
 
     okButton = new QPushButton(this);
     okButton->setText(tr("OK"));
-    connect(okButton, SIGNAL(clicked()), this, SLOT(onClicked()));
+    connect(okButton, &QPushButton::clicked, this, &WatchFolderDialog::onClicked);
 
     cancelButton = new QPushButton(this);
     cancelButton->setText(tr("Cancel"));
-    connect(cancelButton, SIGNAL(clicked()), this, SLOT(onCancel()));
+    connect(cancelButton, &QPushButton::clicked, this, &WatchFolderDialog::onCancel);
 
     QHBoxLayout *horizontalLayout = new QHBoxLayout();
     QHBoxLayout *buttonLayout = new QHBoxLayout();
@@ -54,23 +54,23 @@ WatchFolderDialog::WatchFolderDialog(QWidget *parent) :
     FileWatcherTable ft(global.db);
     ft.getAll(lids);
     table = new QTableWidget(lids.size(),4);
-    connect(table, SIGNAL(itemSelectionChanged()), this, SLOT(tableSelection()));
+    connect(table, &QTableWidget::itemSelectionChanged, this, &WatchFolderDialog::tableSelection);
     horizontalLayout->addWidget(table);
 
 
     addButton = new QPushButton(this);
     addButton->setText(tr("Add"));
-    connect(addButton, SIGNAL(clicked()), this, SLOT(addPressed()));
+    connect(addButton, &QPushButton::clicked, this, &WatchFolderDialog::addPressed);
 
     editButton = new QPushButton(this);
     editButton->setText(tr("Edit"));
     editButton->setEnabled(false);
-    connect(editButton, SIGNAL(clicked()), this, SLOT(editPressed()));
+    connect(editButton, &QPushButton::clicked, this, &WatchFolderDialog::editPressed);
 
     deleteButton = new QPushButton(this);
     deleteButton->setText(tr("Delete"));
     deleteButton->setEnabled(false);
-    connect(deleteButton, SIGNAL(clicked()), this, SLOT(deletePressed()));
+    connect(deleteButton, &QPushButton::clicked, this, &WatchFolderDialog::deletePressed);
 
     QVBoxLayout *editLayout = new QVBoxLayout();
     editLayout->addWidget(addButton);
@@ -135,7 +135,7 @@ void WatchFolderDialog::load() {
 }
 
 void WatchFolderDialog::addRow(qint32 lid, int row, QString folder, qint32 notebookLid, FileWatcher::ScanType type, bool includeSubdirs) {
-    QFontMetrics f = QApplication::fontMetrics();
+    QFontMetrics f(qApp->font());
     int fontHeight = f.height();
 
     QTableWidgetItem *dir = new QTableWidgetItem();

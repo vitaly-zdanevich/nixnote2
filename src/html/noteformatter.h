@@ -20,9 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef NOTEFORMATTER_H
 #define NOTEFORMATTER_H
 
-#include <QtWebKit>
-#include <QWebPage>
-#include <QWebFrame>
 #include <QObject>
 #include <QTemporaryFile>
 #include <QThread>
@@ -34,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/qevercloud/QEverCloud/headers/QEverCloud.h"
 #include "NoteFormatterBase.h"
 #include "enmlformatter.h"
+#include "src/html/htmldom.h"
 
 using namespace qevercloud;
 
@@ -41,6 +39,7 @@ using namespace std;
 
 
 class NoteFormatter : public NoteFormatterBase {
+    Q_OBJECT
 
 private:
     Note note;
@@ -53,15 +52,15 @@ private:
 
     QString addImageHighlight(qint32 resLid, QString imgfile);
 
-    void modifyImageTags(QWebElement &enMedia, QString &hash);
+    void modifyImageTags(HtmlDomElement &enMedia, QString &hash);
 
-    void modifyApplicationTags(QWebElement &enmedia, QString &hash, QString appl);
+    void modifyApplicationTags(HtmlDomElement &enmedia, QString &hash, QString appl);
 
-    void modifyPdfTags(qint32 resLid, QWebElement &enmedia);
+    void modifyPdfTags(qint32 resLid, HtmlDomElement &enmedia);
 
-    void modifyTodoTags(QWebElement &todo);
+    void modifyTodoTags(HtmlDomElement &todo);
 
-    void modifyTags(QWebPage &doc);
+    void modifyTags(HtmlDomDocument &doc);
 
     QString findIcon(qint32 lid, Resource r, QString fileExt);
 
@@ -92,7 +91,7 @@ public:
 
     QByteArray rebuildNoteHTML();
 
-    bool buildInkNote(QWebElement &docElem, QString &hash);
+    bool buildInkNote(HtmlDomElement &docElem, QString &hash);
 
     void setHighlightText(QString text);
 

@@ -124,9 +124,10 @@ SyncPreferences::SyncPreferences(QWidget *parent) :
     else
         showGoodSyncMessagesInTray->setEnabled(false);
 
-    connect(syncAutomatically, SIGNAL(stateChanged(int)), this, SLOT(enableSyncStateChange()));
-    connect(enableSyncNotifications, SIGNAL(toggled(bool)), this, SLOT(enableSuccessfulSyncMessagesInTray()));
-    connect(enableProxy, SIGNAL(stateChanged(int)), this, SLOT(proxyCheckboxAltered(int)));
+    connect(syncAutomatically, &QCheckBox::checkStateChanged, this, &SyncPreferences::enableSyncStateChange);
+    connect(enableSyncNotifications, &QCheckBox::toggled,
+            this, &SyncPreferences::enableSuccessfulSyncMessagesInTray);
+    connect(enableProxy, &QCheckBox::checkStateChanged, this, &SyncPreferences::proxyCheckboxAltered);
     if (!global.isProxyEnabled()) {
         proxyCheckboxAltered(Qt::Unchecked);
     }
@@ -187,7 +188,7 @@ void SyncPreferences::saveValues() {
 
 
 
-void SyncPreferences::proxyCheckboxAltered(int state) {
+void SyncPreferences::proxyCheckboxAltered(Qt::CheckState state) {
     bool value = false;
     if (state == Qt::Checked)
         value = true;

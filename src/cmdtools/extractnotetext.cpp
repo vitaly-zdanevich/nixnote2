@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "src/global.h"
 #include <QXmlStreamReader>
+#include <QRegularExpression>
 #include "extractnotetext.h"
 
 extern Global global;
@@ -36,7 +37,6 @@ QString ExtractNoteText::wrap() {
     QString returnValue;
     QXmlStreamWriter *writer = new QXmlStreamWriter(&returnValue);
     writer->setAutoFormatting(true);
-    writer->setCodec("UTF-8");
     writer->writeStartDocument();
     writer->writeDTD("<!DOCTYPE NixNote-NoteTextExtract>");
     writer->writeStartElement("nixnote-text-extract");
@@ -86,5 +86,5 @@ void ExtractNoteText::unwrap(QString data) {
 
 
 QString ExtractNoteText::stripTags(QString content) {
-    return content.remove(QRegExp("<[^>]*>"));
+    return content.remove(QRegularExpression("<[^>]*>"));
 }

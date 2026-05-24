@@ -53,9 +53,9 @@ NAttributeTree::NAttributeTree(QWidget *parent) :
     this->addTopLevelItem(root);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(buildSelection()));
+    connect(this, &QTreeWidget::itemExpanded, this, &NAttributeTree::calculateHeight);
+    connect(this, &QTreeWidget::itemCollapsed, this, &NAttributeTree::calculateHeight);
+    connect(this, &QTreeWidget::itemSelectionChanged, this, &NAttributeTree::buildSelection);
 
     // Allocate memory for everything needed
 
@@ -537,7 +537,7 @@ void NAttributeTree::mousePressEvent(QMouseEvent *event)
 
 
 
-QSize NAttributeTree::sizeHint() {
+QSize NAttributeTree::sizeHint() const {
     return QTreeView::sizeHint();
 //    QSize sz = QTreeView::sizeHint();
 
@@ -554,7 +554,7 @@ QSize NAttributeTree::sizeHint() {
 
 
 void NAttributeTree::drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const {
-    if (!index.child(0,0).isValid())
+    if (!model()->hasChildren(index))
         return;
 
     painter->save();
@@ -574,5 +574,3 @@ void NAttributeTree::drawBranches(QPainter *painter, const QRect &rect, const QM
 void NAttributeTree::reloadIcons() {
     root->setIcon(0,global.getIconResource(":attributesIcon"));
 }
-
-

@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QMessageBox>
 #include <QTextDocument>
 #include <QFontMetrics>
+#include <algorithm>
 
 #include "src/sql/notebooktable.h"
 #include "src/sql/linkednotebooktable.h"
@@ -79,9 +80,9 @@ NNotebookView::NNotebookView(QWidget *parent) :
     this->loadData();
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(buildSelection()));
+    connect(this, &QTreeWidget::itemExpanded, this, &NNotebookView::calculateHeight);
+    connect(this, &QTreeWidget::itemCollapsed, this, &NNotebookView::calculateHeight);
+    connect(this, &QTreeWidget::itemSelectionChanged, this, &NNotebookView::buildSelection);
 
     addAction = context.addAction(tr("Create New Notebook"));
     addAction->setShortcut(QKeySequence(Qt::Key_Insert));
@@ -107,14 +108,14 @@ NNotebookView::NNotebookView(QWidget *parent) :
     table.getStacks(stacks);
     for (int i=0; i<stacks.size(); i++) {
         newAction = stackMenu->addAction(stacks[i]);
-        connect(newAction, SIGNAL(triggered()), this, SLOT(moveToStackRequested()));
+        connect(newAction, &QAction::triggered, this, &NNotebookView::moveToStackRequested);
     }
     sortStackMenu();
     if (stacks.size() > 0) {
         stackMenu->addSeparator();
     }
     newStackAction = stackMenu->addAction(tr("Create New stack"));
-    connect(newStackAction, SIGNAL(triggered()), this, SLOT(moveToNewStackRequested()));
+    connect(newStackAction, &QAction::triggered, this, &NNotebookView::moveToNewStackRequested);
 
     removeFromStackAction = context.addAction(tr("Remove from stack"));
     removeFromStackAction->setShortcutContext(Qt::WidgetShortcut);
@@ -130,15 +131,15 @@ NNotebookView::NNotebookView(QWidget *parent) :
     context.addSeparator();
     propertiesAction = context.addAction(tr("Properties"));
 
-    connect(addAction, SIGNAL(triggered()), this, SLOT(addRequested()));
-    connect(deleteAction, SIGNAL(triggered()), this, SLOT(deleteRequested()));
-    connect(renameAction, SIGNAL(triggered()), this, SLOT(renameRequested()));
-    connect(propertiesAction, SIGNAL(triggered()), this, SLOT(propertiesRequested()));
+    connect(addAction, &QAction::triggered, this, &NNotebookView::addRequested);
+    connect(deleteAction, &QAction::triggered, this, &NNotebookView::deleteRequested);
+    connect(renameAction, &QAction::triggered, this, &NNotebookView::renameRequested);
+    connect(propertiesAction, &QAction::triggered, this, &NNotebookView::propertiesRequested);
 
-    connect(addShortcut, SIGNAL(activated()), this, SLOT(addRequested()));
-    connect(deleteShortcut, SIGNAL(activated()), this, SLOT(deleteRequested()));
-    //connect(renameShortcut, SIGNAL(activated()), this, SLOT(renameRequested()));
-    connect(removeFromStackAction, SIGNAL(triggered()), this, SLOT(removeFromStackRequested()));
+    connect(addShortcut, &QShortcut::activated, this, &NNotebookView::addRequested);
+    connect(deleteShortcut, &QShortcut::activated, this, &NNotebookView::deleteRequested);
+    //connect(renameShortcut, &QShortcut::activated, this, &NNotebookView::renameRequested);
+    connect(removeFromStackAction, &QAction::triggered, this, &NNotebookView::removeFromStackRequested);
 
     this->setAcceptDrops(true);
     this->setItemDelegate(new NNotebookViewDelegate());
@@ -411,7 +412,7 @@ void NNotebookView::notebookUpdated(qint32 lid, QString name, QString stackName,
         }
     }
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
 }
 
 
@@ -605,7 +606,7 @@ void NNotebookView::addRequested() {
     root->addChild(newWidget);
     this->sortItems(NAME_POSITION, Qt::AscendingOrder);
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
     emit(notebookAdded(lid));
 }
 
@@ -660,7 +661,7 @@ void NNotebookView::deleteRequested() {
 //*********************************************************
 void NNotebookView::renameRequested() {
     editor = new TreeWidgetEditor(this);
-    connect(editor, SIGNAL(editComplete()), this, SLOT(editComplete()));
+    connect(editor, &TreeWidgetEditor::editComplete, this, &NNotebookView::editComplete);
     QList<QTreeWidgetItem*> items = selectedItems();
     editor->setText(items[0]->text(NAME_POSITION));
     if (items[0]->data(NAME_POSITION, Qt::UserRole).toString() != "STACK") {
@@ -711,7 +712,7 @@ void NNotebookView::editComplete() {
         //delete editor;
         this->sortItems(NAME_POSITION, Qt::AscendingOrder);
         resetSize();
-        this->sortByColumn(NAME_POSITION);
+        this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
     } else {
         // This is if we are renaming a stack
         QString oldName = editor->stackName;
@@ -746,7 +747,7 @@ void NNotebookView::editComplete() {
                 QAction *newAction = stackMenu->addAction(text);
                 stackMenu->removeAction(newAction);
                 stackMenu->insertAction(stackMenu->actions().at(i), newAction);
-                connect(newAction, SIGNAL(triggered()), this, SLOT(moveToStackRequested()));
+                connect(newAction, &QAction::triggered, this, &NNotebookView::moveToStackRequested);
                 i=stackMenu->actions().size();
                 found = true;
             }
@@ -756,12 +757,12 @@ void NNotebookView::editComplete() {
             stackMenu->removeAction(newAction);
             int endPos = stackMenu->actions().size()-1;
             stackMenu->insertAction(stackMenu->actions().at(endPos), newAction);
-            connect(newAction, SIGNAL(triggered()), this, SLOT(moveToStackRequested()));
+            connect(newAction, &QAction::triggered, this, &NNotebookView::moveToStackRequested);
         }
 
         this->sortItems(NAME_POSITION, Qt::AscendingOrder);
         resetSize();
-        this->sortByColumn(NAME_POSITION);
+        this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
         emit(stackRenamed(oldName, text));
     }
 }
@@ -790,7 +791,7 @@ void NNotebookView::moveToStackRequested() {
 
     this->sortItems(NAME_POSITION, Qt::AscendingOrder);
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
 }
 
 
@@ -828,7 +829,7 @@ void NNotebookView::moveToNewStackRequested() {
 
     // Create a new action item for the menu
     QAction *newAction = stackMenu->addAction(newStackName);
-    connect(newAction, SIGNAL(triggered()), this, SLOT(moveToStackRequested()));
+    connect(newAction, &QAction::triggered, this, &NNotebookView::moveToStackRequested);
     menuData.insert(newStackName, newAction);
     sortStackMenu();
 
@@ -841,7 +842,7 @@ void NNotebookView::moveToNewStackRequested() {
 
     this->sortItems(NAME_POSITION, Qt::AscendingOrder);
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
     newStack->setExpanded(true);
     emit(stackAdded(newStackName));
 }
@@ -875,7 +876,7 @@ void NNotebookView::removeFromStackRequested() {
 
     this->sortItems(NAME_POSITION, Qt::AscendingOrder);
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
 }
 
 
@@ -886,7 +887,7 @@ void NNotebookView::sortStackMenu() {
     }
 
     // Sort the key
-    qSort(keyList);
+    std::sort(keyList.begin(), keyList.end());
 
     for (int i=0; i<keyList.size(); i++) {
         stackMenu->insertAction(stackMenu->actions().at(0), menuData[keyList[i]]);
@@ -1033,7 +1034,7 @@ void NNotebookView::dragMoveEvent(QDragMoveEvent *event) {
 }
 
 
-QSize NNotebookView::sizeHint() {
+QSize NNotebookView::sizeHint() const {
     return parentWidget()->size();
     //return QTreeView::sizeHint();
 }
@@ -1041,7 +1042,7 @@ QSize NNotebookView::sizeHint() {
 
 
 void NNotebookView::drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const {
-    if (!index.child(0,0).isValid())
+    if (!model()->hasChildren(index))
         return;
 
     painter->save();

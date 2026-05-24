@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileIconProvider>
 #include <QDesktopServices>
 #include <QShortcut>
+#include <algorithm>
 
 extern Global global;
 
@@ -58,20 +59,20 @@ void NMainMenuBar::setupFileMenu() {
 
     emailAction = new QAction(tr("Email Note"), this);
     emailAction->setToolTip(tr("Email a copy of this note"));
-    connect(emailAction, SIGNAL(triggered()), parent, SLOT(emailNote()));
+    connect(emailAction, &QAction::triggered, parent, &NixNote::emailNote);
     fileMenu->addAction(emailAction);
 
 
     printPreviewAction = new QAction(tr("Print Preview Note"), this);
     printPreviewAction->setToolTip(tr("Print preview of this note"));
-    connect(printPreviewAction, SIGNAL(triggered()), parent, SLOT(printPreviewNote()));
+    connect(printPreviewAction, &QAction::triggered, parent, &NixNote::printPreviewNote);
     setupShortcut(printPreviewAction, QString("File_Print_Preview"));
     fileMenu->addAction(printPreviewAction);
-    //printPreviewAction->setVisible(false);  // for some reason images don't show up in print preview, so this is useless.  Check again in Qt5
+    //printPreviewAction->setVisible(false);  // for some reason images don't show up in print preview, so this is useless.
 
     printAction = new QAction(tr("&Print Note"), this);
     printAction->setToolTip(tr("Print this note"));
-    connect(printAction, SIGNAL(triggered()), parent, SLOT(printNote()));
+    connect(printAction, &QAction::triggered, parent, &NixNote::printNote);
     setupShortcut(printAction, QString("File_Print"));
     fileMenu->addAction(printAction);
     fileMenu->addSeparator();
@@ -79,13 +80,17 @@ void NMainMenuBar::setupFileMenu() {
 
     backupDatabaseAction = new QAction(tr("&Export all notes"), this);
     backupDatabaseAction->setToolTip(tr("Export all notes to a NNEX file"));
-    connect(backupDatabaseAction, SIGNAL(triggered()), parent, SLOT(exportNotes()));
+    connect(backupDatabaseAction, &QAction::triggered, this, [this]() {
+        parent->exportNotes();
+    });
     setupShortcut(backupDatabaseAction, QString("File_Backup_Database"));
     fileMenu->addAction(backupDatabaseAction);
 
     restoreDatabaseAction = new QAction(tr("&Import all notes"), this);
     restoreDatabaseAction->setToolTip(tr("Import all notes from a file"));
-    connect(restoreDatabaseAction, SIGNAL(triggered()), parent, SLOT(importNotes()));
+    connect(restoreDatabaseAction, &QAction::triggered, this, [this]() {
+        parent->importNotes();
+    });
     setupShortcut(restoreDatabaseAction, QString("File_Restore_Database"));
     fileMenu->addAction(restoreDatabaseAction);
 
@@ -93,13 +98,13 @@ void NMainMenuBar::setupFileMenu() {
 
     exportNoteAction = new QAction(tr("Export &selected notes"), this);
     exportNoteAction->setToolTip(tr("Export selected notes to a NNEX file"));
-    connect(exportNoteAction, SIGNAL(triggered()), parent, SLOT(exportSelectedNotes()));
+    connect(exportNoteAction, &QAction::triggered, parent, &NixNote::exportSelectedNotes);
     setupShortcut(exportNoteAction, QString("File_Note_Export"));
     fileMenu->addAction(exportNoteAction);
 
     importNoteAction = new QAction(tr("&Import notes"), this);
     importNoteAction->setToolTip(tr("Import notes from an export file"));
-    connect(importNoteAction, SIGNAL(triggered()), parent, SLOT(noteImport()));
+    connect(importNoteAction, &QAction::triggered, parent, &NixNote::noteImport);
     setupShortcut(importNoteAction, QString("File_Note_Import"));
     fileMenu->addAction(importNoteAction);
 
@@ -107,7 +112,7 @@ void NMainMenuBar::setupFileMenu() {
 
     exportAsPdfAction = new QAction(tr("&Export notes as PDF"), this);
     exportAsPdfAction->setToolTip(tr("Export selected notes to a PDF file"));
-    connect(exportAsPdfAction, SIGNAL(triggered()), parent, SLOT(onExportAsPdf()));
+    connect(exportAsPdfAction, &QAction::triggered, parent, &NixNote::onExportAsPdf);
     setupShortcut(exportAsPdfAction, QString("File_Note_Export_Pdf"));
     fileMenu->addAction(exportAsPdfAction);
 
@@ -119,7 +124,7 @@ void NMainMenuBar::setupFileMenu() {
     for (int i = 0; i < ids.size(); i++) {
         pairList.append(QPair<int, QString>(ids[i], names[i]));
     }
-    qSort(pairList.begin(), pairList.end(), QPairFirstComparer());
+    std::sort(pairList.begin(), pairList.end(), QPairFirstComparer());
     for (int i = 0; i < ids.size(); i++) {
         QAction *accountAction = new QAction(pairList[i].second + " - (" + QString::number(pairList[i].first) + ")",
                                              this);
@@ -132,23 +137,23 @@ void NMainMenuBar::setupFileMenu() {
                 tr("Switch to ") + pairList[i].second + " - (" + QString::number(pairList[i].first) + ")");
         }
         fileMenu->addAction(accountAction);
-        connect(accountAction, SIGNAL(triggered()), parent, SLOT(switchUser()));
+        connect(accountAction, &QAction::triggered, parent, &NixNote::switchUser);
         userAccountActions.append(accountAction);
     }
 
     addUserAction = new QAction(tr("&Add Another User..."), this);
     fileMenu->addAction(addUserAction);
-    connect(addUserAction, SIGNAL(triggered()), parent, SLOT(addAnotherUser()));
+    connect(addUserAction, &QAction::triggered, parent, &NixNote::addAnotherUser);
 
     userMaintenanceAction = new QAction(tr("&User Account Maintenance"), this);
     fileMenu->addAction(userMaintenanceAction);
-    connect(userMaintenanceAction, SIGNAL(triggered()), parent, SLOT(userMaintenance()));
+    connect(userMaintenanceAction, &QAction::triggered, parent, &NixNote::userMaintenance);
 
     fileMenu->addSeparator();
 
     openCloseAction = new QAction(tr("&Open/Close Notebooks"), this);
     openCloseAction->setToolTip(tr("Open/Close Notebooks"));
-    connect(openCloseAction, SIGNAL(triggered()), parent, SLOT(openCloseNotebooks()));
+    connect(openCloseAction, &QAction::triggered, parent, &NixNote::openCloseNotebooks);
     setupShortcut(quitAction, QString("File_Notebook_OpenClose"));
     fileMenu->addAction(openCloseAction);
 
@@ -156,7 +161,7 @@ void NMainMenuBar::setupFileMenu() {
 
     quitAction = new QAction(tr("Quit"), this);
     quitAction->setToolTip(tr("Quit the program"));
-    connect(quitAction, SIGNAL(triggered()), parent, SLOT(quitNixNote()));
+    connect(quitAction, &QAction::triggered, parent, &NixNote::quitNixNote);
 
     //quitAction->setShortcut(QKeySequence::Close);
     quitAction->setIcon(QIcon::fromTheme("exit"));
@@ -167,7 +172,7 @@ void NMainMenuBar::setupFileMenu() {
     // https://stackoverflow.com/questions/27074722/qt-adding-non-menubar-keyboard-shortcut-to-qmainwindow
     QAction *quitAction2 = new QAction(tr("Quit2"), this);
     setupShortcut(quitAction2, QString("File_Exit2"));
-    connect(quitAction2, SIGNAL(triggered()), parent, SLOT(quitNixNote()));
+    connect(quitAction2, &QAction::triggered, parent, &NixNote::quitNixNote);
     parent->addAction(quitAction2);
 
     QString menuCss = global.getThemeCss("menuCss");
@@ -232,37 +237,39 @@ void NMainMenuBar::setupEditMenu() {
     searchNotesAction = new QAction(tr("&Search Notes"), this);
     setupShortcut(searchNotesAction, QString("Edit_Search_Notes"));
     findReplaceMenu->addAction(searchNotesAction);
-    connect(searchNotesAction, SIGNAL(triggered()), parent->searchText, SLOT(setFocus()));
+    connect(searchNotesAction, &QAction::triggered, this, [this]() {
+        parent->searchText->setFocus(Qt::ShortcutFocusReason);
+    });
 
     resetSearchAction = new QAction(tr("&Reset Search"), this);
     setupShortcut(resetSearchAction, QString("Edit_Reset_Search"));
     findReplaceMenu->addAction(resetSearchAction);
-    connect(resetSearchAction, SIGNAL(triggered()), parent, SLOT(resetView()));
+    connect(resetSearchAction, &QAction::triggered, parent, &NixNote::resetView);
 
     findReplaceMenu->addSeparator();
 
     searchFindAction = new QAction(tr("&Find in Note"), this);
     setupShortcut(searchFindAction, QString("Edit_Search_Find"));
     findReplaceMenu->addAction(searchFindAction);
-    connect(searchFindAction, SIGNAL(triggered()), parent, SLOT(findInNote()));
+    connect(searchFindAction, &QAction::triggered, parent, &NixNote::findInNote);
 
 
     searchFindNextAction = new QAction(tr("Find &Next"), this);
     setupShortcut(searchFindNextAction, QString("Edit_Search_Find_Next"));
     findReplaceMenu->addAction(searchFindNextAction);
-    connect(searchFindNextAction, SIGNAL(triggered()), parent, SLOT(findNextInNote()));
+    connect(searchFindNextAction, &QAction::triggered, parent, &NixNote::findNextInNote);
 
     searchFindPrevAction = new QAction(tr("Find &Previous"), this);
     setupShortcut(searchFindPrevAction, QString("Edit_Search_Find_Prev"));
     findReplaceMenu->addAction(searchFindPrevAction);
-    connect(searchFindPrevAction, SIGNAL(triggered()), parent, SLOT(findPrevInNote()));
+    connect(searchFindPrevAction, &QAction::triggered, parent, &NixNote::findPrevInNote);
 
     findReplaceMenu->addSeparator();
 
     searchFindReplaceAction = new QAction(tr("Replace &Within Note..."), this);
     setupShortcut(searchFindReplaceAction, QString("Edit_Search_Find_Replace"));
     findReplaceMenu->addAction(searchFindReplaceAction);
-    connect(searchFindReplaceAction, SIGNAL(triggered()), parent, SLOT(findReplaceInNote()));
+    connect(searchFindReplaceAction, &QAction::triggered, parent, &NixNote::findReplaceInNote);
 
     editMenu->addSeparator();
 
@@ -272,7 +279,7 @@ void NMainMenuBar::setupEditMenu() {
     preferencesAction->setMenuRole(QAction::PreferencesRole);
     setupShortcut(preferencesAction, QString("Edit_Preferences"));
     editMenu->addAction(preferencesAction);
-    connect(preferencesAction, SIGNAL(triggered()), parent, SLOT(openPreferences()));
+    connect(preferencesAction, &QAction::triggered, parent, &NixNote::openPreferences);
 
 }
 
@@ -290,8 +297,8 @@ void NMainMenuBar::setupViewMenu() {
     setupShortcut(viewNoteListNarrow, "View_Note_List_Narrow");
     viewNoteListNarrow->setCheckable(true);
     viewMenu->addAction(viewNoteListNarrow);
-    connect(viewNoteListNarrow, SIGNAL(triggered()), parent, SLOT(viewNoteListNarrow()));
-    connect(viewNoteListWide, SIGNAL(triggered()), parent, SLOT(viewNoteListWide()));
+    connect(viewNoteListNarrow, &QAction::triggered, parent, &NixNote::viewNoteListNarrow);
+    connect(viewNoteListWide, &QAction::triggered, parent, &NixNote::viewNoteListWide);
 
     viewSourceAction = new QAction(tr("&Show Source"), this);
     setupShortcut(viewSourceAction, "View_Source");
@@ -312,63 +319,63 @@ void NMainMenuBar::setupViewMenu() {
     viewLeftPanel->setCheckable(true);
     viewLeftPanel->setChecked(true);
     viewMenu->addAction(viewLeftPanel);
-    connect(viewLeftPanel, SIGNAL(triggered()), parent, SLOT(toggleLeftPanel()));
+    connect(viewLeftPanel, &QAction::triggered, parent, &NixNote::toggleLeftPanel);
 
     viewFavoritesTree = new QAction(tr("Show &Favorites"), this);
     setupShortcut(viewFavoritesTree, "View_Show_Favorites_List");
     viewFavoritesTree->setCheckable(true);
     viewFavoritesTree->setChecked(true);
     viewMenu->addAction(viewFavoritesTree);
-    connect(viewFavoritesTree, SIGNAL(triggered()), parent, SLOT(toggleFavoritesTree()));
+    connect(viewFavoritesTree, &QAction::triggered, parent, &NixNote::toggleFavoritesTree);
 
     viewNotebookTree = new QAction(tr("Show &Notebooks"), this);
     setupShortcut(viewNotebookTree, "View_Show_Notebook_List");
     viewNotebookTree->setCheckable(true);
     viewNotebookTree->setChecked(true);
     viewMenu->addAction(viewNotebookTree);
-    connect(viewNotebookTree, SIGNAL(triggered()), parent, SLOT(toggleNotebookTree()));
+    connect(viewNotebookTree, &QAction::triggered, parent, &NixNote::toggleNotebookTree);
 
     viewTagTree = new QAction(tr("Show Ta&gs"), this);
     setupShortcut(viewTagTree, "View_Show_Tag_List");
     viewTagTree->setCheckable(true);
     viewTagTree->setChecked(true);
     viewMenu->addAction(viewTagTree);
-    connect(viewTagTree, SIGNAL(triggered()), parent, SLOT(toggleTagTree()));
+    connect(viewTagTree, &QAction::triggered, parent, &NixNote::toggleTagTree);
 
     viewSearchTree = new QAction(tr("Show Sa&ved Searches"), this);
     setupShortcut(viewSearchTree, "View_Show_Saved_Search_List");
     viewSearchTree->setCheckable(true);
     viewSearchTree->setChecked(true);
     viewMenu->addAction(viewSearchTree);
-    connect(viewSearchTree, SIGNAL(triggered()), parent, SLOT(toggleSavedSearchTree()));
+    connect(viewSearchTree, &QAction::triggered, parent, &NixNote::toggleSavedSearchTree);
 
     viewAttributesTree = new QAction(tr("Show &Attribute Filter"), this);
     setupShortcut(viewAttributesTree, "View_Attributes_List");
     viewAttributesTree->setCheckable(true);
     viewAttributesTree->setChecked(true);
     viewMenu->addAction(viewAttributesTree);
-    connect(viewAttributesTree, SIGNAL(triggered()), parent, SLOT(toggleAttributesTree()));
+    connect(viewAttributesTree, &QAction::triggered, parent, &NixNote::toggleAttributesTree);
 
     viewTrashTree = new QAction(tr("Show T&rash"), this);
     setupShortcut(viewTrashTree, "View_Trash");
     viewTrashTree->setCheckable(true);
     viewTrashTree->setChecked(true);
     viewMenu->addAction(viewTrashTree);
-    connect(viewTrashTree, SIGNAL(triggered()), parent, SLOT(toggleTrashTree()));
+    connect(viewTrashTree, &QAction::triggered, parent, &NixNote::toggleTrashTree);
 
     viewNoteList = new QAction(tr("Show N&ote List"), this);
     setupShortcut(viewNoteList, "View_Show_Note_List");
     viewNoteList->setCheckable(true);
     viewNoteList->setChecked(true);
     viewMenu->addAction(viewNoteList);
-    connect(viewNoteList, SIGNAL(triggered()), parent, SLOT(toggleNoteList()));
+    connect(viewNoteList, &QAction::triggered, parent, &NixNote::toggleNoteList);
 
     viewNotePanel = new QAction(tr("Show Note &Panel"), this);
     setupShortcut(viewNotePanel, "View_Show_Note_Panel");
     viewNotePanel->setCheckable(true);
     viewNotePanel->setChecked(true);
     viewMenu->addAction(viewNotePanel);
-    connect(viewNotePanel, SIGNAL(triggered()), parent, SLOT(toggleTabWindow()));
+    connect(viewNotePanel, &QAction::triggered, parent, &NixNote::toggleTabWindow);
 
     viewMenu->addSeparator();
 
@@ -381,13 +388,13 @@ void NMainMenuBar::setupViewMenu() {
     viewMenu->addAction(viewToolbar);
     viewToolbar->setCheckable(true);
     viewToolbar->setChecked(true);
-    connect(viewToolbar, SIGNAL(triggered()), parent, SLOT(toggleToolbar()));
+    connect(viewToolbar, &QAction::triggered, parent, &NixNote::toggleToolbar);
 
     viewStatusbar = new QAction(tr("View Status&bar"), this);
     setupShortcut(viewStatusbar, "View_Statusbar");
     viewMenu->addAction(viewStatusbar);
     viewStatusbar->setCheckable(true);
-    connect(viewStatusbar, SIGNAL(triggered()), parent, SLOT(toggleStatusbar()));
+    connect(viewStatusbar, &QAction::triggered, parent, &NixNote::toggleStatusbar);
 
     createSortMenu(viewMenu);
 }
@@ -402,39 +409,39 @@ void NMainMenuBar::setupNoteMenu() {
     newNoteAction = new QAction(tr("New &Note"), noteMenu);
     setupShortcut(newNoteAction, QString("File_Note_Add"));
     noteMenu->addAction(newNoteAction);
-    connect(newNoteAction, SIGNAL(triggered()), parent, SLOT(newNote()));
+    connect(newNoteAction, &QAction::triggered, parent, &NixNote::newNote);
 
     duplicateNoteAction = new QAction(tr("Dupl&icate Note"), noteMenu);
     setupShortcut(duplicateNoteAction, QString("File_Note_Duplicate"));
     noteMenu->addAction(duplicateNoteAction);
-    connect(duplicateNoteAction, SIGNAL(triggered()), parent, SLOT(duplicateCurrentNote()));
+    connect(duplicateNoteAction, &QAction::triggered, parent, &NixNote::duplicateCurrentNote);
 
     deleteNoteAction = new QAction(tr("&Delete"), noteMenu);
     setupShortcut(deleteNoteAction, QString("File_Note_Delete"));
     noteMenu->addAction(deleteNoteAction);
-    connect(deleteNoteAction, SIGNAL(triggered()), parent, SLOT(deleteCurrentNote()));
+    connect(deleteNoteAction, &QAction::triggered, parent, &NixNote::deleteCurrentNote);
 
     reindexNoteAction = new QAction(tr("Reindex Note"), noteMenu);
     setupShortcut(reindexNoteAction, QString("File_Note_Reindex"));
     noteMenu->addAction(reindexNoteAction);
-    connect(reindexNoteAction, SIGNAL(triggered()), parent, SLOT(reindexCurrentNote()));
+    connect(reindexNoteAction, &QAction::triggered, parent, &NixNote::reindexCurrentNote);
 
     noteMenu->addSeparator();
     spellCheckAction = new QAction(tr("&Spell Check"), noteMenu);
     noteMenu->addAction(spellCheckAction);
-    connect(spellCheckAction, SIGNAL(triggered()), parent, SLOT(spellCheckCurrentNote()));
+    connect(spellCheckAction, &QAction::triggered, parent, &NixNote::spellCheckCurrentNote);
 
     noteMenu->addSeparator();
 
     pinNoteAction = new QAction(tr("&Pin Note"), noteMenu);
     setupShortcut(pinNoteAction, QString("NOTE_PIN"));
     noteMenu->addAction(pinNoteAction);
-    connect(pinNoteAction, SIGNAL(triggered()), parent, SLOT(pinCurrentNote()));
+    connect(pinNoteAction, &QAction::triggered, parent, &NixNote::pinCurrentNote);
 
     unpinNoteAction = new QAction(tr("&UnPin Note"), noteMenu);
     setupShortcut(unpinNoteAction, QString("NOTE_UNPIN"));
     noteMenu->addAction(unpinNoteAction);
-    connect(unpinNoteAction, SIGNAL(triggered()), parent, SLOT(unpinCurrentNote()));
+    connect(unpinNoteAction, &QAction::triggered, parent, &NixNote::unpinCurrentNote);
 
 }
 
@@ -446,12 +453,25 @@ void NMainMenuBar::setupToolsMenu() {
 
     synchronizeAction = new QAction(tr("&Synchronize"), this);
     synchronizeAction->setToolTip(tr("Synchronize with Evernote"));
-    connect(synchronizeAction, SIGNAL(triggered()), parent, SLOT(synchronize()));
+    connect(synchronizeAction, &QAction::triggered, parent, &NixNote::synchronize);
     toolsMenu->addAction(synchronizeAction);
+
+    repairMissingResourcesAction = new QAction(tr("&Repair missing resources"), this);
+    const QString repairMissingResourcesHelp = tr(
+        "Evernote can sync notes with image and attachment metadata but without "
+        "the file contents. This downloads only missing local files without "
+        "resetting or deleting your database.");
+    repairMissingResourcesAction->setToolTip(repairMissingResourcesHelp);
+    repairMissingResourcesAction->setStatusTip(repairMissingResourcesHelp);
+    repairMissingResourcesAction->setWhatsThis(repairMissingResourcesHelp);
+    connect(repairMissingResourcesAction, &QAction::triggered, parent, &NixNote::repairMissingResources);
+    toolsMenu->addAction(repairMissingResourcesAction);
 
     disconnectAction = new QAction(tr("&Disconnect"), this);
     disconnectAction->setToolTip(tr("Disconnect from Evernote"));
-    connect(disconnectAction, SIGNAL(triggered()), parent, SLOT(disconnect()));
+    connect(disconnectAction, &QAction::triggered, this, [this]() {
+        parent->disconnect();
+    });
     setupShortcut(disconnectAction, QString(""));
     toolsMenu->addAction(disconnectAction);
     disconnectAction->setEnabled(false);
@@ -460,7 +480,7 @@ void NMainMenuBar::setupToolsMenu() {
     pauseIndexingAction = new QAction(tr("Pause &indexing"), this);
     pauseIndexingAction->setToolTip(tr("Temporarily pause indexing"));
     setupShortcut(pauseIndexingAction, QString("Tools_Pause_Indexing"));
-    connect(pauseIndexingAction, SIGNAL(triggered()), parent, SLOT(pauseIndexing()));
+    connect(pauseIndexingAction, &QAction::triggered, parent, &NixNote::pauseIndexing);
     pauseIndexingAction->setCheckable(true);
     toolsMenu->addAction(pauseIndexingAction);
     pauseIndexingAction->setVisible(global.enableIndexing);
@@ -470,7 +490,7 @@ void NMainMenuBar::setupToolsMenu() {
     setupShortcut(disableEditingAction, QString("Tools_Disable_Editing"));
     disableEditingAction->setCheckable(true);
     disableEditingAction->setChecked(global.disableEditing);
-    connect(disableEditingAction, SIGNAL(triggered()), parent, SLOT(disableEditing()));
+    connect(disableEditingAction, &QAction::triggered, parent, &NixNote::disableEditing);
     toolsMenu->addAction(disableEditingAction);
 
     toolsMenu->addSeparator();
@@ -478,21 +498,21 @@ void NMainMenuBar::setupToolsMenu() {
     reindexDatabaseAction = new QAction(tr("&Reindex database"), this);
     reindexDatabaseAction->setToolTip(tr("Reindex all notes"));
     setupShortcut(reindexDatabaseAction, QString("Tools_Database_Reindex"));
-    connect(reindexDatabaseAction, SIGNAL(triggered()), parent, SLOT(reindexDatabase()));
+    connect(reindexDatabaseAction, &QAction::triggered, parent, &NixNote::reindexDatabase);
     toolsMenu->addAction(reindexDatabaseAction);
     reindexDatabaseAction->setVisible(global.enableIndexing);
 
     databaseStatusDialogAction = new QAction(tr("&Database status"), this);
     databaseStatusDialogAction->setToolTip(tr("Database Status"));
     setupShortcut(databaseStatusDialogAction, QString("Tools_Database_Status"));
-    connect(databaseStatusDialogAction, SIGNAL(triggered()), parent, SLOT(openDatabaseStatus()));
+    connect(databaseStatusDialogAction, &QAction::triggered, parent, &NixNote::openDatabaseStatus);
     toolsMenu->addAction(databaseStatusDialogAction);
 
     toolsMenu->addSeparator();
 
     accountDialogAction = new QAction(tr("A&ccount / usage"), this);
     accountDialogAction->setToolTip(tr("Account and usage information"));
-    connect(accountDialogAction, SIGNAL(triggered()), parent, SLOT(openAccount()));
+    connect(accountDialogAction, &QAction::triggered, parent, &NixNote::openAccount);
     setupShortcut(accountDialogAction, QString("Tools_Account_Information"));
     toolsMenu->addAction(accountDialogAction);
 
@@ -501,7 +521,7 @@ void NMainMenuBar::setupToolsMenu() {
     importFoldersDialogAction = new QAction(tr("&Import folders"), this);
     importFoldersDialogAction->setToolTip(tr("Import Folders"));
     setupShortcut(importFoldersDialogAction, QString("Tools_Import_Folders"));
-    connect(importFoldersDialogAction, SIGNAL(triggered()), parent, SLOT(openImportFolders()));
+    connect(importFoldersDialogAction, &QAction::triggered, parent, &NixNote::openImportFolders);
     toolsMenu->addAction(importFoldersDialogAction);
 }
 
@@ -512,19 +532,19 @@ void NMainMenuBar::setupHelpMenu() {
 
     openProjectWebPageAction = new QAction(tr("&Project wiki"), this);
     openProjectWebPageAction->setToolTip(tr("Open NixNote wiki page with help/documentation/contact"));
-    connect(openProjectWebPageAction, SIGNAL(triggered()), this, SLOT(onOpenProjectWebPage()));
+    connect(openProjectWebPageAction, &QAction::triggered, this, &NMainMenuBar::onOpenProjectWebPage);
     helpMenu->addAction(openProjectWebPageAction);
 
     QAction *openGettingStartedWebPageAction = new QAction(tr("&Getting started"), this);
     openGettingStartedWebPageAction->setToolTip(tr("Open Getting started wiki page"));
-    connect(openGettingStartedWebPageAction, SIGNAL(triggered()), this, SLOT(onOpenGettingStartedWebPage()));
+    connect(openGettingStartedWebPageAction, &QAction::triggered, this, &NMainMenuBar::onOpenGettingStartedWebPage);
     helpMenu->addAction(openGettingStartedWebPageAction);
 
     helpMenu->addSeparator();
 
     themeInformationAction = new QAction(tr("Theme &Information"), this);
     // themeInformationAction->setToolTip(tr("View information about the current theme."));
-    // connect(themeInformationAction, SIGNAL(triggered()), this, SLOT(openThemeInformation()));
+    // connect(themeInformationAction, &QAction::triggered, this, &NMainMenuBar::openThemeInformation);
     // helpMenu->addAction(themeInformationAction);
     // QString url = global.getResourceFileName(global.resourceList, ":themeInformation");
     // themeInformationAction->setVisible(false);
@@ -543,12 +563,12 @@ void NMainMenuBar::setupHelpMenu() {
 
     openMessageLogAction = new QAction(tr("Data and &log location info"), this);
     openMessageLogAction->setToolTip(tr("View location of program data and log file"));
-    connect(openMessageLogAction, SIGNAL(triggered()), parent, SLOT(openMessageLogInfo()));
+    connect(openMessageLogAction, &QAction::triggered, parent, &NixNote::openMessageLogInfo);
     helpMenu->addAction(openMessageLogAction);
 
     openShortcutsDialogAction = new QAction(tr("Active shortcuts"), this);
     openShortcutsDialogAction->setToolTip(tr("View current shortcuts"));
-    connect(openShortcutsDialogAction, SIGNAL(triggered(bool)), parent, SLOT(openShortcutsDialog()));
+    connect(openShortcutsDialogAction, &QAction::triggered, parent, &NixNote::openShortcutsDialog);
     helpMenu->addAction(openShortcutsDialogAction);
 
     helpMenu->addSeparator();
@@ -556,7 +576,7 @@ void NMainMenuBar::setupHelpMenu() {
     aboutQtAction = new QAction(tr("About &Qt"), this);
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     aboutQtAction->setToolTip(tr("About Qt"));
-    connect(aboutQtAction, SIGNAL(triggered()), parent, SLOT(openQtAbout()));
+    connect(aboutQtAction, &QAction::triggered, parent, &NixNote::openQtAbout);
     helpMenu->addAction(aboutQtAction);
 
     helpMenu->addSeparator();
@@ -564,7 +584,7 @@ void NMainMenuBar::setupHelpMenu() {
     aboutAction = new QAction(tr("&About"), this);
     aboutAction->setToolTip(tr("About"));
     aboutAction->setMenuRole(QAction::AboutRole);
-    connect(aboutAction, SIGNAL(triggered()), parent, SLOT(openAbout()));
+    connect(aboutAction, &QAction::triggered, parent, &NixNote::openAbout);
     helpMenu->addAction(aboutAction);
 }
 
@@ -633,7 +653,7 @@ void NMainMenuBar::addSortAction(QMenu *menu, QActionGroup *menuActionGroup, con
 
     action->setFont(f);
     menuActionGroup->addAction(action);
-    connect(action, SIGNAL(triggered()), this, SLOT(onSortMenuTriggered()));
+    connect(action, &QAction::triggered, this, &NMainMenuBar::onSortMenuTriggered);
     menu->addAction(action);
 }
 
@@ -674,7 +694,7 @@ void NMainMenuBar::createThemeMenu(QMenu *parentMenu) {
         themeAction->setData(themeName);
         themeAction->setCheckable(true);
         themeAction->setFont(f);
-        connect(themeAction, SIGNAL(triggered()), parent, SLOT(reloadIcons()));
+        connect(themeAction, &QAction::triggered, parent, &NixNote::reloadIcons);
         if (themeName == userTheme) {
             themeAction->setChecked(true);
         }

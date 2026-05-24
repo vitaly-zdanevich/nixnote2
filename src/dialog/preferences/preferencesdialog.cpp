@@ -50,8 +50,8 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     cancelButton = new QPushButton(tr("Cancel"), this);
     okButton = new QPushButton(tr("OK"), this);
 
-    connect(okButton, SIGNAL(clicked()), this, SLOT(okButtonClicked()));
-    connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelButtonClicked()));
+    connect(okButton, &QPushButton::clicked, this, &PreferencesDialog::okButtonClicked);
+    connect(cancelButton, &QPushButton::clicked, this, &PreferencesDialog::cancelButtonClicked);
 
     QSpacerItem *spacer1 = new QSpacerItem(0,0,QSizePolicy::MinimumExpanding);
     QSpacerItem *spacer2 = new QSpacerItem(0,0,QSizePolicy::MinimumExpanding);
@@ -68,8 +68,8 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     mainLayout->addLayout(buttonLayout);
     this->resize(this->size().width()*1.2, this->size().height()*1.2);
 
-    connect(appearancePanel->showTrayIcon, SIGNAL(clicked(bool)),
-            syncPanel->enableSyncNotifications, SLOT(setEnabled(bool)));
+    connect(appearancePanel->showTrayIcon, &QCheckBox::clicked,
+            syncPanel->enableSyncNotifications, &QCheckBox::setEnabled);
     syncPanel->enableSyncNotifications->setEnabled(appearancePanel->showTrayIcon->isChecked());
 }
 
@@ -153,4 +153,3 @@ void PreferencesDialog::okButtonClicked() {
     exitPanel->saveValues();
     this->close();
 }
-

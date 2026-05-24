@@ -5877,6 +5877,7 @@ public:
     virtual ~EDAMUserException() noexcept override;
 
     EDAMUserException(const EDAMUserException & other);
+    EDAMUserException & operator=(const EDAMUserException & other);
     const char * what() const noexcept override;
     virtual EverCloudExceptionDataPtr exceptionData() const override;
 
@@ -5971,6 +5972,7 @@ public:
     virtual ~EDAMNotFoundException() noexcept override;
 
     EDAMNotFoundException(const EDAMNotFoundException & other);
+    EDAMNotFoundException & operator=(const EDAMNotFoundException & other);
     const char * what() const noexcept override;
     virtual EverCloudExceptionDataPtr exceptionData() const override;
 

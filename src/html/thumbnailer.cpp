@@ -18,9 +18,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ***********************************************************************************/
 
 #include "thumbnailer.h"
-#include <QtWebKit>
-#include <QWebPage>
-#include <QWebFrame>
 #include <QtSql>
 #include <QTextDocument>
 #include <QPainter>
@@ -39,26 +36,18 @@ Thumbnailer::~Thumbnailer() {
 }
 
 
-void Thumbnailer::capturePage(qint32 lid, QWebPage *page) {
-    qreal zoomFactor = page->mainFrame()->zoomFactor();
-    QSize viewportSize = page->viewportSize();
+void Thumbnailer::capturePage(qint32 lid, QWidget *page) {
+    if (page == nullptr) {
+        return;
+    }
 
-    page->mainFrame()->setZoomFactor(3);
-    page->setViewportSize(QSize(300,300));
-
-    QImage pix(QSize(300,300), QImage::Format_ARGB32);
-    QPainter painter;
-    painter.begin(&pix);
-    QRegion region = QRegion(0, 0, 300, 300);
-    page->mainFrame()->render(&painter, region);
-    painter.end();
+    QPixmap pix = page->grab(QRect(QPoint(0, 0), QSize(300, 300)));
+    if (pix.size() != QSize(300, 300)) {
+        pix = pix.scaled(QSize(300, 300), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
     QString filename = global.fileManager.getThumbnailDirPath() + QString::number(lid) +".png";
     pix.save(filename);
-
-    page->mainFrame()->setZoomFactor(zoomFactor);
-    page->setViewportSize(viewportSize);
 
     NoteTable ntable(db);
     ntable.setThumbnail(lid, filename);
 }
-

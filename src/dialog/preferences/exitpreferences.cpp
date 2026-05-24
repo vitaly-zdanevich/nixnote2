@@ -33,7 +33,7 @@ ExitPreferences::ExitPreferences(QWidget *parent) : QWidget(parent) {
     loadExitButton->setText("...");
     loadExitFileLabel = new QLabel();
     loadExitFileLabel->setText(tr("Note Load Exit"));
-    connect(loadExitButton, SIGNAL(clicked(bool)), this, SLOT(loadExitButtonPressed(bool)));
+    connect(loadExitButton, &QPushButton::clicked, this, &ExitPreferences::loadExitButtonPressed);
 
     loadExitEnabledCombo = new QComboBox();
     loadExitEnabledCombo->addItem(tr("Enabled"), true);
@@ -44,7 +44,7 @@ ExitPreferences::ExitPreferences(QWidget *parent) : QWidget(parent) {
     saveExitButton->setText("...");
     saveExitFileLabel = new QLabel();
     saveExitFileLabel->setText(tr("Note Save Exit"));
-    connect(saveExitButton, SIGNAL(clicked(bool)), this, SLOT(saveExitButtonPressed(bool)));
+    connect(saveExitButton, &QPushButton::clicked, this, &ExitPreferences::saveExitButtonPressed);
 
     saveExitEnabledCombo = new QComboBox();
     saveExitEnabledCombo->addItem(tr("Enabled"), true);
@@ -56,7 +56,7 @@ ExitPreferences::ExitPreferences(QWidget *parent) : QWidget(parent) {
     importKeepButton->setText("...");
     importKeepFileLabel = new QLabel();
     importKeepFileLabel->setText(tr("Import Keep Exit"));
-    connect(importKeepButton, SIGNAL(clicked(bool)), this, SLOT(importKeepExitButtonPressed(bool)));
+    connect(importKeepButton, &QPushButton::clicked, this, &ExitPreferences::importKeepExitButtonPressed);
 
     importKeepEnabledCombo = new QComboBox();
     importKeepEnabledCombo->addItem(tr("Enabled"), true);
@@ -68,7 +68,7 @@ ExitPreferences::ExitPreferences(QWidget *parent) : QWidget(parent) {
     importDeleteButton->setText("...");
     importDeleteFileLabel = new QLabel();
     importDeleteFileLabel->setText(tr("Import Delete Exit"));
-    connect(importDeleteButton, SIGNAL(clicked(bool)), this, SLOT(importDeleteExitButtonPressed(bool)));
+    connect(importDeleteButton, &QPushButton::clicked, this, &ExitPreferences::importDeleteExitButtonPressed);
 
     importDeleteEnabledCombo = new QComboBox();
     importDeleteEnabledCombo->addItem(tr("Enabled"), true);
@@ -109,7 +109,7 @@ ExitPreferences::ExitPreferences(QWidget *parent) : QWidget(parent) {
     saveLayout->addWidget(importDeleteEnabledCombo, row++, 3);
 
     QPushButton *infoButton = new QPushButton(tr("More Info"));
-    connect(infoButton, SIGNAL(pressed()), this, SLOT(showInfo()));
+    connect(infoButton, &QPushButton::pressed, this, &ExitPreferences::showInfo);
 
     QGridLayout *buttonLayout = new QGridLayout();
     mainLayout->addLayout(buttonLayout);

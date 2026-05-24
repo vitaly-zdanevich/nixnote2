@@ -47,8 +47,8 @@ ReminderSetDialog::ReminderSetDialog(QWidget *parent) :
     ok->setText(tr("OK"));
     cancel->setText(tr("Cancel"));
 
-    connect(ok, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
-    connect(cancel, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
+    connect(ok, &QPushButton::clicked, this, &ReminderSetDialog::okButtonPressed);
+    connect(cancel, &QPushButton::clicked, this, &ReminderSetDialog::cancelButtonPressed);
     this->setFont(global.getGuiFont(font()));
 }
 

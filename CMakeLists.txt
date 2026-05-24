@@ -1,30 +1,87 @@
-# trivial cmake project file to enable debugging in clion
-# currently far from perfect and can't really be used to build the project (use qmake to build)
-# but it can be used as starting point for clion to recognise at least some parts of Qt
-# I'll improve later
+# CMake project file for IDEs and alternate builds.
 
 # additional options to be set before use:
 # EXAMPLE:
 # cmake flags:
-# -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/d/dev/Qt/5.5/gcc_64;/d/dev/libs
+# -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/d/dev/Qt/6.10/gcc_64;/d/dev/libs
 # environment:
 # PKG_CONFIG_PATH=/d/dev/libs/lib/pkgconfig
 # where in example "/d/dev/libs" is path where additional libs are installed (e.g. tidy)
-# and "/d/dev/Qt/5.5/gcc_64" is example of QT root
+# and "/d/dev/Qt/6.10/gcc_64" is example of Qt root
 
-cmake_minimum_required (VERSION 3.0.2)
+cmake_minimum_required (VERSION 3.16)
 project (nixnote2)
-add_definitions(-std=c++11)
+add_definitions(-std=c++17)
 
-find_package (Qt5Widgets REQUIRED)
-find_package (Qt5Gui REQUIRED)
-find_package (Qt5Sql REQUIRED)
-find_package (Qt5Network REQUIRED)
-find_package (Qt5WebKit REQUIRED)
-find_package (Qt5WebKitWidgets REQUIRED)
+find_package (Qt6 REQUIRED COMPONENTS
+        Widgets
+        Gui
+        Sql
+        Network
+        WebEngineWidgets
+        WebChannel
+        PrintSupport
+        Xml
+        DBus
+        Qml
+        Concurrent
+        Test
+)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(TIDY REQUIRED tidy)
+pkg_check_modules(POPPLER_QT6 REQUIRED poppler-qt6)
+pkg_check_modules(HUNSPELL REQUIRED hunspell)
+pkg_check_modules(LIBCURL REQUIRED libcurl)
+
+set(QEVERCLOUD_USE_QT_WEB_ENGINE 0 CACHE STRING "Use QtWebEngine OAuth backend")
+set(QEVERCLOUD_USE_SYSTEM_BROWSER 1 CACHE STRING "Use system browser OAuth backend")
+
+if(QEVERCLOUD_USE_QT_WEB_ENGINE AND QEVERCLOUD_USE_SYSTEM_BROWSER)
+        message(FATAL_ERROR "Choose either QtWebEngine OAuth or system browser OAuth, not both")
+endif()
+
+if(NOT QEVERCLOUD_USE_QT_WEB_ENGINE AND NOT QEVERCLOUD_USE_SYSTEM_BROWSER)
+        message(FATAL_ERROR "Choose either QtWebEngine OAuth or system browser OAuth")
+endif()
+
+if(QEVERCLOUD_USE_QT_WEB_ENGINE)
+        set(QEVERCLOUD_USE_QT_WEB_ENGINE_VALUE 1)
+else()
+        set(QEVERCLOUD_USE_QT_WEB_ENGINE_VALUE 0)
+endif()
+
+if(QEVERCLOUD_USE_SYSTEM_BROWSER)
+        set(QEVERCLOUD_USE_SYSTEM_BROWSER_VALUE 1)
+else()
+        set(QEVERCLOUD_USE_SYSTEM_BROWSER_VALUE 0)
+endif()
+
+file(READ
+        ${PROJECT_SOURCE_DIR}/src/qevercloud/QEverCloud/headers/VersionInfo.h.in
+        QEVERCLOUD_VERSION_INFO_H)
+string(REPLACE "$$QEVERCLOUD_USE_QT_WEB_ENGINE" "${QEVERCLOUD_USE_QT_WEB_ENGINE_VALUE}"
+        QEVERCLOUD_VERSION_INFO_H "${QEVERCLOUD_VERSION_INFO_H}")
+string(REPLACE "$$QEVERCLOUD_USE_SYSTEM_BROWSER" "${QEVERCLOUD_USE_SYSTEM_BROWSER_VALUE}"
+        QEVERCLOUD_VERSION_INFO_H "${QEVERCLOUD_VERSION_INFO_H}")
+file(WRITE ${PROJECT_BINARY_DIR}/VersionInfo.h "${QEVERCLOUD_VERSION_INFO_H}")
+
+set(QEVERCLOUD_SERVICES_MOC ${PROJECT_BINARY_DIR}/Services.moc)
+add_custom_command(
+        OUTPUT ${QEVERCLOUD_SERVICES_MOC}
+        COMMAND Qt6::moc
+                -DQEVERCLOUD_USE_QT_WEB_ENGINE=${QEVERCLOUD_USE_QT_WEB_ENGINE_VALUE}
+                -DQEVERCLOUD_USE_SYSTEM_BROWSER=${QEVERCLOUD_USE_SYSTEM_BROWSER_VALUE}
+                -I${PROJECT_SOURCE_DIR}
+                -I${PROJECT_SOURCE_DIR}/src/qevercloud/QEverCloud/headers
+                -I${PROJECT_BINARY_DIR}
+                ${PROJECT_SOURCE_DIR}/src/qevercloud/QEverCloud/src/generated/Services.cpp
+                -o ${QEVERCLOUD_SERVICES_MOC}
+        DEPENDS
+                ${PROJECT_SOURCE_DIR}/src/qevercloud/QEverCloud/src/generated/Services.cpp
+                ${PROJECT_SOURCE_DIR}/src/qevercloud/QEverCloud/headers/generated/Services.h
+        VERBATIM)
+add_custom_target(qevercloud_services_moc DEPENDS ${QEVERCLOUD_SERVICES_MOC})
 
 set (nixnote2_src
         src/application.cpp
@@ -157,17 +214,33 @@ set (nixnote2_src
         src/models/notemodel.cpp
         src/models/ntreemodel.cpp
         src/oauth/oauthtokenizer.cpp
-        src/oauth/oauthwindow.cpp
         src/hunspell/spellchecker.cpp
         src/qevercloud/QEverCloud/src/AsyncResult.cpp
+        src/qevercloud/QEverCloud/src/AsyncResult_p.cpp
+        src/qevercloud/QEverCloud/src/DurableService.cpp
         src/qevercloud/QEverCloud/src/EventLoopFinisher.cpp
-        src/qevercloud/QEverCloud/src/exceptions.cpp
-        src/qevercloud/QEverCloud/src/generated/constants.cpp
-        src/qevercloud/QEverCloud/src/generated/services.cpp
-        src/qevercloud/QEverCloud/src/generated/types.cpp
-        src/qevercloud/QEverCloud/src/http.cpp
-        src/qevercloud/QEverCloud/src/oauth.cpp
-        src/qevercloud/QEverCloud/src/services_nongenerated.cpp
+        src/qevercloud/QEverCloud/src/EverCloudException.cpp
+        src/qevercloud/QEverCloud/src/Exceptions.cpp
+        src/qevercloud/QEverCloud/src/generated/Constants.cpp
+        src/qevercloud/QEverCloud/src/generated/EDAMErrorCode.cpp
+        src/qevercloud/QEverCloud/src/generated/Servers.cpp
+        src/qevercloud/QEverCloud/src/generated/Services.cpp
+        src/qevercloud/QEverCloud/src/generated/Types.cpp
+        src/qevercloud/QEverCloud/src/Globals.cpp
+        src/qevercloud/QEverCloud/src/Http.cpp
+        src/qevercloud/QEverCloud/src/HttpRequestParser.cpp
+        src/qevercloud/QEverCloud/src/HttpUtils.cpp
+        src/qevercloud/QEverCloud/src/InkNoteImageDownloader.cpp
+        src/qevercloud/QEverCloud/src/Log.cpp
+        src/qevercloud/QEverCloud/src/Printable.cpp
+        src/qevercloud/QEverCloud/src/RequestContext.cpp
+        src/qevercloud/QEverCloud/src/Thumbnail.cpp
+        src/qevercloud/QEverCloud/src/VersionInfo.cpp
+        src/qevercloud/QEverCloud/src/oauth/AbstractOAuthEngine.cpp
+        src/qevercloud/QEverCloud/src/oauth/NonceGenerator.cpp
+        src/qevercloud/QEverCloud/src/oauth/OAuth.cpp
+        src/qevercloud/QEverCloud/src/oauth/NetworkCookieJar.cpp
+        src/qevercloud/QEverCloud/src/oauth/Utils.cpp
         src/reminders/reminderevent.cpp
         src/reminders/remindermanager.cpp
         src/settings/accountsmanager.cpp
@@ -193,6 +266,8 @@ set (nixnote2_src
         src/sql/usertable.cpp
         src/html/attachmenticonbuilder.cpp
         src/html/enmlformatter.cpp
+        src/html/htmldom.cpp
+        src/html/NoteFormatterBase.cpp
         src/html/noteformatter.cpp
         src/html/tagscanner.cpp
         src/html/thumbnailer.cpp
@@ -217,7 +292,25 @@ set (nixnote2_src
         src/xml/xmlhighlighter.cpp
         src/quentier/utility/StringUtils.cpp
         src/quentier/utility/StringUtils_p.cpp
+)
+
+if(QEVERCLOUD_USE_QT_WEB_ENGINE)
+        list(APPEND nixnote2_src
+                src/qevercloud/QEverCloud/src/oauth/OAuthWebEngine.cpp)
+elseif(QEVERCLOUD_USE_SYSTEM_BROWSER)
+        list(APPEND nixnote2_src
+                src/qevercloud/QEverCloud/src/oauth/OAuthSystemBrowser.cpp)
+endif()
+
+set(nixnote2_test_src
         testsrc/tests.cpp
+        src/html/enmlformatter.cpp
+        src/html/htmldom.cpp
+        src/logger/qslog.cpp
+        src/logger/qslogdest.cpp
+        src/logger/qsdebugoutput.cpp
+        src/utilities/NixnoteStringUtils.cpp
+        src/utilities/encrypt.cpp
 )
 set (nixnote2_hdr
         src/application.h
@@ -350,27 +443,32 @@ set (nixnote2_hdr
         src/models/notemodel.h
         src/models/ntreemodel.h
         src/oauth/oauthtokenizer.h
-        src/oauth/oauthwindow.h
         src/hunspell/spellchecker.h
-        src/qevercloud/QEverCloud/src/AsyncResult.h
-        src/qevercloud/QEverCloud/src/EventLoopFinisher.h
-        src/qevercloud/QEverCloud/src/EverCloudException.h
-        src/qevercloud/QEverCloud/src/exceptions.h
-        src/qevercloud/QEverCloud/src/generated/constants.h
-        src/qevercloud/QEverCloud/src/generated/EDAMErrorCode.h
-        src/qevercloud/QEverCloud/src/generated/services.h
-        src/qevercloud/QEverCloud/src/generated/types.h
-        src/qevercloud/QEverCloud/src/generated/types_impl.h
-        src/qevercloud/QEverCloud/src/http.h
-        src/qevercloud/QEverCloud/src/impl.h
-        src/qevercloud/QEverCloud/src/include/QEverCloud.h
-        src/qevercloud/QEverCloud/src/include/QEverCloudOAuth.h
-        src/qevercloud/QEverCloud/src/oauth.h
-        src/qevercloud/QEverCloud/src/Optional.h
-        src/qevercloud/QEverCloud/src/public.h
-        src/qevercloud/QEverCloud/src/qt4helpers.h
-        src/qevercloud/QEverCloud/src/thrift.h
-        src/qevercloud/tQEverCloud/src/humbnail.h
+        src/qevercloud/QEverCloud/headers/AsyncResult.h
+        src/qevercloud/QEverCloud/src/AsyncResult_p.h
+        src/qevercloud/QEverCloud/headers/DurableService.h
+        src/qevercloud/QEverCloud/headers/EventLoopFinisher.h
+        src/qevercloud/QEverCloud/headers/EverCloudException.h
+        src/qevercloud/QEverCloud/headers/Exceptions.h
+        src/qevercloud/QEverCloud/headers/generated/Constants.h
+        src/qevercloud/QEverCloud/headers/generated/EDAMErrorCode.h
+        src/qevercloud/QEverCloud/headers/generated/Servers.h
+        src/qevercloud/QEverCloud/headers/generated/Services.h
+        src/qevercloud/QEverCloud/headers/generated/Types.h
+        src/qevercloud/QEverCloud/src/generated/Types_io.h
+        src/qevercloud/QEverCloud/src/Http.h
+        src/qevercloud/QEverCloud/src/HttpRequestData.h
+        src/qevercloud/QEverCloud/src/HttpRequestParser.h
+        src/qevercloud/QEverCloud/src/HttpUtils.h
+        src/qevercloud/QEverCloud/src/Impl.h
+        src/qevercloud/QEverCloud/headers/QEverCloud.h
+        src/qevercloud/QEverCloud/headers/QEverCloudOAuth.h
+        src/qevercloud/QEverCloud/headers/OAuth.h
+        src/qevercloud/QEverCloud/src/oauth/NetworkCookieJar.h
+        src/qevercloud/QEverCloud/headers/Optional.h
+        src/qevercloud/QEverCloud/headers/Printable.h
+        src/qevercloud/QEverCloud/headers/Thumbnail.h
+        src/qevercloud/QEverCloud/src/Thrift.h
         src/reminders/reminderevent.h
         src/reminders/remindermanager.h
         src/settings/accountsmanager.h
@@ -396,6 +494,8 @@ set (nixnote2_hdr
         src/sql/usertable.h
         src/html/attachmenticonbuilder.h
         src/html/enmlformatter.h
+        src/html/htmldom.h
+        src/html/NoteFormatterBase.h
         src/html/noteformatter.h
         src/html/tagscanner.h
         src/html/thumbnailer.h
@@ -420,17 +520,76 @@ set (nixnote2_hdr
         src/xml/xmlhighlighter.h
         src/quentier/utility/StringUtils.h
         src/quentier/utility/StringUtils_p.h
-        testsrc/tests.h
 )
 
-qt5_wrap_cpp(nixnote2_hdr_moc ${nixnote2_hdr})
+if(QEVERCLOUD_USE_QT_WEB_ENGINE)
+        list(APPEND nixnote2_hdr
+                src/qevercloud/QEverCloud/src/oauth/OAuthWebEngine.h)
+elseif(QEVERCLOUD_USE_SYSTEM_BROWSER)
+        list(APPEND nixnote2_hdr
+                src/qevercloud/QEverCloud/src/oauth/OAuthSystemBrowser.h)
+endif()
 
-include_directories (${PROJECT_SOURCE_DIR})
+set(nixnote2_test_hdr
+        testsrc/tests.h
+        src/html/enmlformatter.h
+        src/html/htmldom.h
+        src/logger/qslog.h
+        src/logger/qslogdest.h
+        src/logger/qsdebugoutput.h
+        src/utilities/NixnoteStringUtils.h
+        src/utilities/encrypt.h
+)
+
+qt6_wrap_cpp(nixnote2_hdr_moc ${nixnote2_hdr})
+qt6_wrap_cpp(nixnote2_test_hdr_moc ${nixnote2_test_hdr})
+
 include_directories (${PROJECT_BINARY_DIR})
+include_directories (${PROJECT_SOURCE_DIR}/src/qevercloud/QEverCloud/headers)
+include_directories (${PROJECT_SOURCE_DIR})
 include_directories(${TIDY_INCLUDE_DIRS})
+include_directories(${POPPLER_QT6_INCLUDE_DIRS})
+include_directories(${HUNSPELL_INCLUDE_DIRS})
+include_directories(${LIBCURL_INCLUDE_DIRS})
 
 add_executable(nixnote2 ${nixnote2_src} ${nixnote2_hdr_moc})
-add_executable(tests ${nixnote2_src} ${nixnote2_hdr_moc})
+add_executable(tests ${nixnote2_test_src} ${nixnote2_test_hdr_moc})
+add_dependencies(nixnote2 qevercloud_services_moc)
 
-target_link_libraries(nixnote2 Qt5::Widgets Qt5::Sql Qt5::Gui Qt5::Network Qt5:WebKit Qt5:WebKitWidgets)
-target_link_libraries(tests Qt5::Widgets Qt5::Sql Qt5::Gui Qt5::Network Qt5:WebKit Qt5:WebKitWidgets)
+target_compile_definitions(nixnote2 PRIVATE
+        QEVERCLOUD_USE_QT_WEB_ENGINE=${QEVERCLOUD_USE_QT_WEB_ENGINE_VALUE}
+        QEVERCLOUD_USE_SYSTEM_BROWSER=${QEVERCLOUD_USE_SYSTEM_BROWSER_VALUE}
+)
+
+target_link_libraries(nixnote2
+        Qt6::Widgets
+        Qt6::Sql
+        Qt6::Gui
+        Qt6::Network
+        Qt6::WebEngineWidgets
+        Qt6::WebChannel
+        Qt6::PrintSupport
+        Qt6::Xml
+        Qt6::DBus
+        Qt6::Qml
+        Qt6::Concurrent
+        ${TIDY_LIBRARIES}
+        ${POPPLER_QT6_LIBRARIES}
+        ${HUNSPELL_LIBRARIES}
+        ${LIBCURL_LIBRARIES}
+)
+target_link_libraries(tests
+        Qt6::Widgets
+        Qt6::Sql
+        Qt6::Gui
+        Qt6::Network
+        Qt6::WebEngineWidgets
+        Qt6::WebChannel
+        Qt6::PrintSupport
+        Qt6::Xml
+        Qt6::DBus
+        Qt6::Qml
+        Qt6::Concurrent
+        Qt6::Test
+        ${TIDY_LIBRARIES}
+)

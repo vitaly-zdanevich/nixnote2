@@ -211,9 +211,9 @@ public:
 
     /**
      * The dialog adjusts its initial size automatically based on the contained
-     * QWebView preffered size. Use this method to set the size.
+     * OAuth view preferred size. Use this method to set the size.
      *
-     * @param sizeHint will be used as the preffered size of the contained QWebView.
+     * @param sizeHint will be used as the preferred size of the contained OAuth view.
      */
     void setWebViewSizeHint(QSize sizeHint);
 

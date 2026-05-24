@@ -53,7 +53,7 @@ QString AttachmentIconBuilder::buildIcon(qint32 lid, QString fileName) {
        font.setPointSize (global.defaultGuiFontSize);
     font.setFamily("Arial");
     QFontMetrics fm(font);
-    int width =  fm.width(displayName);
+    int width =  fm.horizontalAdvance(displayName);
     if (width < 40)  // steup a minimum width
         width = 40;
     width=width+50;  // Add 10 px for padding & 40 for the icon

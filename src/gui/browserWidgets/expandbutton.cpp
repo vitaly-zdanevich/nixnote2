@@ -30,7 +30,7 @@ ExpandButton::ExpandButton(QWidget *parent) :
     this->resize(5,5);
     currentState = EXPANDBUTTON_1;
 
-    connect(this, SIGNAL(clicked()), this, SLOT(buttonClicked()));
+    connect(this, &QToolButton::clicked, this, &ExpandButton::buttonClicked);
 
     QString css = global.getThemeCss("nodeAttributesExpandButtonCss");
     if (css!="")

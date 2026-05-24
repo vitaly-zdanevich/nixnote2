@@ -76,9 +76,9 @@ NTagView::NTagView(QWidget *parent) :
     this->loadData();
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), this, SLOT(calculateHeight()));
-    connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(buildSelection()));
+    connect(this, &QTreeWidget::itemExpanded, this, &NTagView::calculateHeight);
+    connect(this, &QTreeWidget::itemCollapsed, this, &NTagView::calculateHeight);
+    connect(this, &QTreeWidget::itemSelectionChanged, this, &NTagView::buildSelection);
 
     setAcceptDrops(true);
     setDragEnabled(true);
@@ -113,18 +113,18 @@ NTagView::NTagView(QWidget *parent) :
     hideUnassignedAction = context.addAction(tr("Hide Unassigned"));
     hideUnassignedAction->setCheckable(true);
     hideUnassignedAction->setChecked(hideUnassigned);
-    connect(hideUnassignedAction, SIGNAL(triggered()), this, SLOT(hideUnassignedTags()));
+    connect(hideUnassignedAction, &QAction::triggered, this, &NTagView::hideUnassignedTags);
 
     context.addSeparator();
     propertiesAction = context.addAction(tr("Properties"));
 
-    connect(addAction, SIGNAL(triggered()), this, SLOT(addRequested()));
-    connect(deleteAction, SIGNAL(triggered()), this, SLOT(deleteRequested()));
-    connect(renameAction, SIGNAL(triggered()), this, SLOT(renameRequested()));
-    connect(propertiesAction, SIGNAL(triggered()), this, SLOT(propertiesRequested()));
-    connect(mergeAction, SIGNAL(triggered()), this, SLOT(mergeRequested()));
-    connect(addShortcut, SIGNAL(activated()), this, SLOT(addRequested()));
-    connect(deleteShortcut, SIGNAL(activated()), this, SLOT(deleteRequested()));
+    connect(addAction, &QAction::triggered, this, &NTagView::addRequested);
+    connect(deleteAction, &QAction::triggered, this, &NTagView::deleteRequested);
+    connect(renameAction, &QAction::triggered, this, &NTagView::renameRequested);
+    connect(propertiesAction, &QAction::triggered, this, &NTagView::propertiesRequested);
+    connect(mergeAction, &QAction::triggered, this, &NTagView::mergeRequested);
+    connect(addShortcut, &QShortcut::activated, this, &NTagView::addRequested);
+    connect(deleteShortcut, &QShortcut::activated, this, &NTagView::deleteRequested);
 
     this->setItemDelegate(new NTagViewDelegate());
     this->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
@@ -382,7 +382,7 @@ void NTagView::tagUpdated(qint32 lid, QString name, QString parentGuid, qint32 a
         this->expandAll();
     }
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
 }
 
 
@@ -675,7 +675,7 @@ void NTagView::addRequested() {
     root->addChild(newWidget);
     this->sortItems(NAME_POSITION, Qt::AscendingOrder);
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
 
     // Now add it to the datastore
     dataStore.insert(lid, newWidget);
@@ -702,7 +702,7 @@ void NTagView::propertiesRequested() {
 
         this->sortItems(NAME_POSITION, Qt::AscendingOrder);
         resetSize();
-        this->sortByColumn(NAME_POSITION);
+        this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
         emit(tagRenamed(lid, oldName, newName));
     }
 }
@@ -794,7 +794,7 @@ void NTagView::deleteRequested() {
 // complete the editComplete() function is called so the edit can be validated.
 void NTagView::renameRequested() {
     editor = new TreeWidgetEditor(this);
-    connect(editor, SIGNAL(editComplete()), this, SLOT(editComplete()));
+    connect(editor, &TreeWidgetEditor::editComplete, this, &NTagView::editComplete);
 
     QList<QTreeWidgetItem*> items = selectedItems();
     editor->setText(items[0]->text(NAME_POSITION));
@@ -839,7 +839,7 @@ void NTagView::editComplete() {
     }
     this->sortItems(NAME_POSITION, Qt::AscendingOrder);
     resetSize();
-    this->sortByColumn(NAME_POSITION);
+    this->sortByColumn(NAME_POSITION, Qt::AscendingOrder);
     emit(tagRenamed(lid, oldName, text));
 }
 
@@ -935,13 +935,13 @@ NTagViewItem* NTagView::getItem(qint32 lid) {
 }
 
 
-QSize NTagView::sizeHint() {
+QSize NTagView::sizeHint() const {
     return parentWidget()->size();
 }
 
 
 void NTagView::drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const {
-    if (!index.child(0,0).isValid())
+    if (!model()->hasChildren(index))
         return;
     painter->save();
     if (isExpanded(index)) {

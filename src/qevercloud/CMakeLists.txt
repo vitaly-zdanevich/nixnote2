@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/QEverCloud/cmake/modules")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/QEverCloud/cmake/modules/sanitizers")
@@ -20,6 +20,8 @@ include(QEverCloudDoxygen)
 set(BUILD_DOCUMENTATION ON CACHE BOOL "Build documentation for QEverCloud")
 set(BUILD_QCH_DOCUMENTATION OFF CACHE BOOL "Build documentation for QEverCloud in qch format")
 set(BUILD_WITH_OAUTH_SUPPORT ON CACHE BOOL "Build QEverCloud with OAuth support")
+set(QEVERCLOUD_USE_QT_WEB_ENGINE OFF CACHE BOOL "Use QtWebEngine OAuth backend")
+set(QEVERCLOUD_USE_SYSTEM_BROWSER ON CACHE BOOL "Use system browser OAuth backend")
 set(BUILD_WITH_Q_NAMESPACE ON CACHE BOOL "Use Q_NAMESPACE and Q_ENUM_NS macros for introspection")
 set(BUILD_TRANSLATIONS ON CACHE BOOL "Build translations")
 
@@ -46,7 +48,7 @@ include(QEverCloudCompilerSettings)
 include(QEverCloudSetupQt)
 include(QEverCloudUpdateTranslations)
 
-set(QEVERCLOUD_QT_VERSION "qt5")
+set(QEVERCLOUD_QT_VERSION "qt6")
 
 if(NOT CMAKE_INSTALL_LIBDIR)
   set(CMAKE_INSTALL_LIBDIR "lib")
@@ -105,20 +107,17 @@ configure_file(QEverCloud/cmake/modules/QEverCloudConfig.cmake.in
 configure_file(QEverCloud/cmake/modules/QEverCloudConfigVersion.cmake.in
   ${PROJECT_BINARY_DIR}/QEverCloud-${QEVERCLOUD_QT_VERSION}ConfigVersion.cmake @ONLY)
 
-file(COPY QEverCloud/cmake/modules/QEverCloudFindQt5DependenciesCore.cmake DESTINATION ${PROJECT_BINARY_DIR})
-file(RENAME ${PROJECT_BINARY_DIR}/QEverCloudFindQt5DependenciesCore.cmake ${PROJECT_BINARY_DIR}/QEverCloud-${QEVERCLOUD_QT_VERSION}FindQtDependencies.cmake)
+file(COPY QEverCloud/cmake/modules/QEverCloudFindQt6DependenciesCore.cmake DESTINATION ${PROJECT_BINARY_DIR})
+file(RENAME ${PROJECT_BINARY_DIR}/QEverCloudFindQt6DependenciesCore.cmake ${PROJECT_BINARY_DIR}/QEverCloud-${QEVERCLOUD_QT_VERSION}FindQtDependencies.cmake)
 
 if(BUILD_TRANSLATIONS)
-  file(READ QEverCloud/cmake/modules/QEverCloudFindQt5DependenciesTranslations.cmake TRANSLATIONS_DEPS_FILE)
+  file(READ QEverCloud/cmake/modules/QEverCloudFindQt6DependenciesTranslations.cmake TRANSLATIONS_DEPS_FILE)
   file(APPEND ${PROJECT_BINARY_DIR}/QEverCloud-${QEVERCLOUD_QT_VERSION}FindQtDependencies.cmake "${TRANSLATIONS_DEPS_FILE}")
 endif()
 
 if(BUILD_WITH_OAUTH_SUPPORT)
-  if(USE_QT5_WEBKIT OR Qt5Core_VERSION VERSION_LESS "5.6.0")
-    file(READ QEverCloud/cmake/modules/QEverCloudFindQt5DependenciesWebKit.cmake WEBKIT_DEPS_FILE)
-    file(APPEND ${PROJECT_BINARY_DIR}/QEverCloud-${QEVERCLOUD_QT_VERSION}FindQtDependencies.cmake "${WEBKIT_DEPS_FILE}")
-  elseif(NOT QEVERCLOUD_USE_SYSTEM_BROWSER)
-    file(READ QEverCloud/cmake/modules/QEverCloudFindQt5DependenciesWebEngineCore.cmake WEBENGINE_CORE_DEPS_FILE)
+  if(NOT QEVERCLOUD_USE_SYSTEM_BROWSER)
+    file(READ QEverCloud/cmake/modules/QEverCloudFindQt6DependenciesWebEngineCore.cmake WEBENGINE_CORE_DEPS_FILE)
     file(APPEND ${PROJECT_BINARY_DIR}/QEverCloud-${QEVERCLOUD_QT_VERSION}FindQtDependencies.cmake "${WEBENGINE_CORE_DEPS_FILE}")
   endif()
 endif()

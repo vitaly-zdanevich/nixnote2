@@ -52,7 +52,9 @@ ShortcutDialog::ShortcutDialog()
 
     layout->addLayout(buttonLayout);
     setLayout(layout);
-    connect(okButton, SIGNAL(pressed()), this, SLOT(close()));
+    connect(okButton, &QPushButton::pressed, this, [this]() {
+        close();
+    });
 
     ShortcutKeys *keys = global.shortcutKeys;
     QHashIterator<QString, QString> i(*keys->actionMap);

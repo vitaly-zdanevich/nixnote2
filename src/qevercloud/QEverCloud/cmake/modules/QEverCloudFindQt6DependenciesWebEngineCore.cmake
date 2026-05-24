@@ -1,0 +1,2 @@
+QEverCloudFindPackageWrapper(Qt6WebEngineCore ${QEVERCLOUD_FIND_PACKAGE_ARG})
+QEverCloudFindPackageWrapper(Qt6WebEngineWidgets ${QEVERCLOUD_FIND_PACKAGE_ARG})

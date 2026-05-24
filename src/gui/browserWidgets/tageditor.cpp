@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "tagviewer.h"
 #include "src/sql/notetable.h"
 #include "src/sql/tagtable.h"
+#include <algorithm>
 
 extern Global global;
 
@@ -44,8 +45,8 @@ TagEditor::TagEditor(QWidget *parent) :
 
     tagIcon.setPixmap(global.getPixmapResource(":tagIcon"));
 
-    connect(&newTag, SIGNAL(focussed(bool)), this, SLOT(newTagFocusLost(bool)));
-    connect(&newTag, SIGNAL(tabPressed()), this, SLOT(newTagTabPressed()));
+    connect(&newTag, &TagEditorNewTag::focussed, this, &TagEditor::newTagFocusLost);
+    connect(&newTag, &TagEditorNewTag::tabPressed, this, &TagEditor::newTagTabPressed);
     tagNames.clear();
     layout->addWidget(&newTag);
     account = 0;
@@ -155,7 +156,7 @@ void TagEditor::addTag(QString text) {
 //*******************************************************
 void TagEditor::loadTags() {
     QLOG_TRACE_IN() << typeid(*this).name();
-    qSort(tagNames.begin(), tagNames.end(), caseInsensitiveLessThan);
+    std::sort(tagNames.begin(), tagNames.end(), caseInsensitiveLessThan);
 
     for (qint32 i=0; i<tagNames.size(); i++) {
         TagViewer *tag = new TagViewer();
@@ -166,7 +167,7 @@ void TagEditor::loadTags() {
         layout->addWidget(tag);
 
         tag->setVisible(true);
-        connect(tag, SIGNAL(closeClicked(QString)), this, SLOT(removeTag(QString)));
+        connect(tag, &TagViewer::closeClicked, this, &TagEditor::removeTag);
 
         tags.append(tag);
     }

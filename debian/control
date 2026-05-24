@@ -10,15 +10,15 @@ Build-Depends:
  libboost-dev,
  libcurl4-openssl-dev | libcurl-dev | libcurl4-nss-dev | libcurl4-gnutls-dev,
  libhunspell-dev,
- libpoppler-qt5-dev,
- libqt5webkit5-dev,
- libqt5sql5-sqlite,
- libswscale-dev,
- nixnote2-tidy,
- qml,
- qt5-qmake,
- qtbase5-dev,
- qttools5-dev-tools,
+ libpoppler-qt6-dev,
+ libqt6sql6-sqlite,
+ libtidy-dev,
+ qt6-base-dev,
+ qt6-base-dev-tools,
+ qt6-declarative-dev,
+ qt6-tools-dev-tools,
+ qt6-webchannel-dev,
+ qt6-webengine-dev,
  git
 Standards-Version: 3.9.8
 Homepage: https://github.com/robert7/nixnote2
@@ -26,8 +26,7 @@ Homepage: https://github.com/robert7/nixnote2
 Package: nixnote2
 Architecture: any
 Depends:
- nixnote2-tidy,
- libqt5sql5-sqlite,
+ libqt6sql6-sqlite,
  ${java:Depends},
  ${misc:Depends},
  ${shlibs:Depends},

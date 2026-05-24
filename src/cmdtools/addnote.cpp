@@ -61,7 +61,6 @@ void AddNote::write(QString uuid) {
 
     QXmlStreamWriter *writer = new QXmlStreamWriter(&xmlFile);
     writer->setAutoFormatting(true);
-    writer->setCodec("UTF-8");
     writer->writeStartDocument();
     writer->writeDTD("<!DOCTYPE NixNote-Import>");
     writer->writeStartElement("nixnote-import");

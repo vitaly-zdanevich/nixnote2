@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "emailnote.h"
 #include <QtXml>
 #include <QString>
+#include <QRegularExpression>
 #include "src/global.h"
 #include "src/email/mimehtml.h"
 #include "src/utilities/mimereference.h"
@@ -43,7 +44,6 @@ QString EmailNote::wrap() {
     QString returnValue;
     QXmlStreamWriter *writer = new QXmlStreamWriter(&returnValue);
     writer->setAutoFormatting(true);
-    writer->setCodec("UTF-8");
     writer->writeStartDocument();
     writer->writeDTD("<!DOCTYPE NixNote-Query>");
     writer->writeStartElement("nixnote-email");
@@ -120,7 +120,7 @@ void EmailNote::unwrap(QString data) {
 
 
 QStringList EmailNote::tokenizeString(QString value) {
-    QStringList values =  value.split(QRegExp(",|;|\\s+"), QString::SkipEmptyParts);
+    QStringList values =  value.split(QRegularExpression(",|;|\\s+"), Qt::SkipEmptyParts);
 
     // There is probably an easier way to do this with regular expressions, but
     // I am horrible at regular expressions.
@@ -177,7 +177,7 @@ void EmailNote::prepareEmailMessage(MimeMessage *message, QString note, QString 
     if (note.trimmed() != "") {
         int pos = contents.indexOf("<body");
         int endPos = contents.indexOf(">", pos);
-        contents.insert(endPos+1,  Qt::escape(note)+"<p><p><hr><p>");
+        contents.insert(endPos+1, note.toHtmlEscaped()+"<p><p><hr><p>");
     }
     text->setHtml(contents);
     message->addPart(text);

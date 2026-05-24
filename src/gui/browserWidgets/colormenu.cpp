@@ -91,7 +91,7 @@ void ColorMenu::populateList() {
         newAction->setText(colorNameLocal);
         menu.addAction(newAction);
 
-        connect(newAction, SIGNAL(hovered()), this, SLOT(itemHovered()));
+        connect(newAction, &QAction::hovered, this, &ColorMenu::itemHovered);
     }
     //QLOG_DEBUG() << "Done: populating colormenu";
 }

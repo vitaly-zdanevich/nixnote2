@@ -38,9 +38,9 @@ NoteHistorySelect::NoteHistorySelect(QWidget *parent) :
     replace->setChecked(false);
     replace->setText(tr("Replace current note?"));
 
-    connect(&importButton, SIGNAL(clicked()), this, SLOT(importButtonPressed()));
-    connect(&cancelButton, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
-    connect(&list, SIGNAL(itemSelectionChanged()), this, SLOT(enableImport()));
+    connect(&importButton, &QPushButton::clicked, this, &NoteHistorySelect::importButtonPressed);
+    connect(&cancelButton, &QPushButton::clicked, this, &NoteHistorySelect::cancelButtonPressed);
+    connect(&list, &QListWidget::itemSelectionChanged, this, &NoteHistorySelect::enableImport);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     QHBoxLayout *entryLayout = new QHBoxLayout(this);
@@ -87,12 +87,11 @@ void NoteHistorySelect::loadData(QList<NoteVersionId> &versions) {
         item->setData(Qt::UserRole, versions.at(i).updateSequenceNum);
         QString text;
 
-        QDateTime timestamp;
-        timestamp.setTime_t(versions.at(i).saved/1000);
+        QDateTime timestamp = QDateTime::fromSecsSinceEpoch(versions.at(i).saved/1000);
         if (timestamp.date() == QDate::currentDate())
-            text = tr("Today") +" " + timestamp.time().toString(Qt::SystemLocaleShortDate);
+            text = tr("Today") +" " + QLocale::system().toString(timestamp.time(), QLocale::ShortFormat);
         if (timestamp.date() == QDate::currentDate().addDays(-1))
-            text = tr("Yesterday") +" " + timestamp.time().toString(Qt::SystemLocaleShortDate);
+            text = tr("Yesterday") +" " + QLocale::system().toString(timestamp.time(), QLocale::ShortFormat);
         text = timestamp.toString(global.getDateTimeFormat());
 
         text = text + " : "+ versions.at(i).title;

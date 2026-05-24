@@ -106,7 +106,7 @@ void ImportData::import(QString file) {
         mb->setWindowTitle(tr("Scanning File"));
         mb->setText(QString::number(recCnt) + tr(" notes found."));
         QPushButton *cancelButton = mb->addButton(QMessageBox::Cancel);
-        connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancel()));
+        connect(cancelButton, &QPushButton::clicked, this, &ImportData::cancel);
         mb->show();
         QCoreApplication::processEvents();
     }
@@ -134,7 +134,7 @@ void ImportData::import(QString file) {
             progress->setLabelText(tr("Restoring Notes"));
         }
         progress->setWindowModality(Qt::ApplicationModal);
-        connect(progress, SIGNAL(canceled()), this, SLOT(cancel()));
+        connect(progress, &QProgressDialog::canceled, this, &ImportData::cancel);
         progress->setVisible(true);
         mb->close();
         progress->show();
@@ -445,7 +445,7 @@ void ImportData::processResource(Resource &resource) {
 //***********************************************************
 void ImportData::processData(QString nodeName, Data &data) {
     QLOG_DEBUG() << "Processing Data Node";
-    nodeName.toLower();
+    nodeName = nodeName.toLower();
     bool atEnd = false;
     while(!atEnd) {
         if (reader->isStartElement()) {
@@ -484,7 +484,7 @@ void ImportData::processData(QString nodeName, Data &data) {
         }
         reader->readNext();
         QString nName = reader->name().toString().toLower();
-        if (nName == nodeName.toLower() && reader->isEndElement())
+        if (nName == nodeName && reader->isEndElement())
             atEnd = true;
     }
 }
@@ -1011,7 +1011,7 @@ double ImportData::doubleValue() {
 //***********************************************************
 bool ImportData::booleanValue() {
     QString value = textValue();
-    value.toLower();
+    value = value.toLower();
     if (value == "1" || value == "true")
         return true;
     else

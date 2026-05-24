@@ -33,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QScrollArea>
 #include <QTextEdit>
 #include <QWidget>
-#include <QSignalMapper>
 
 #define ENTITY_BUTTON_WIDTH 45
 #define ENTITY_BUTTON_COLUMNS 4
@@ -55,7 +54,6 @@ private:
     QGridLayout *entitiesGrid;
     //QSize saveSize;
     QGridLayout *grid;
-    QSignalMapper *signalmapper;
     QHBoxLayout *buttonLayout;
     QTextEdit *textEdit;
     QString listSeparator;

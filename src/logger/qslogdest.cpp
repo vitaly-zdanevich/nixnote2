@@ -48,13 +48,16 @@ private:
 FileDestination::FileDestination(const QString& filePath)
 {
    mFile.setFileName(filePath);
-   mFile.open(QFile::WriteOnly | QFile::Text); //fixme: should throw on failure
-   mOutputStream.setDevice(&mFile);
+   if (mFile.open(QFile::WriteOnly | QFile::Text))
+      mOutputStream.setDevice(&mFile);
 }
 
 void FileDestination::write(const QString& message)
 {
-   mOutputStream << message << endl;
+   if (mOutputStream.device() == nullptr)
+      return;
+
+   mOutputStream << message << Qt::endl;
    mOutputStream.flush();
 }
 

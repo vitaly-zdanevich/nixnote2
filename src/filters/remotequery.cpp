@@ -106,11 +106,10 @@ Q_SCRIPTABLE QString RemoteQuery::getNoteDateUpdated() {
         dt = note->updated;
     if (dt==0)
         return "";
-    QDateTime timestamp;
-    timestamp.setTime_t(dt/1000);
+    QDateTime timestamp = QDateTime::fromSecsSinceEpoch(dt/1000);
 
     if (timestamp.date() == QDate::currentDate())
-        return tr("Today") +" " + timestamp.time().toString(Qt::SystemLocaleShortDate);
+        return tr("Today") +" " + QLocale::system().toString(timestamp.time(), QLocale::ShortFormat);
     return timestamp.toString(global.getDateTimeFormat());
 
 }
@@ -123,11 +122,10 @@ Q_SCRIPTABLE QString RemoteQuery::getNoteDateCreated() {
         dt = note->created;
     if (dt==0)
         return "";
-    QDateTime timestamp;
-    timestamp.setTime_t(dt/1000);
+    QDateTime timestamp = QDateTime::fromSecsSinceEpoch(dt/1000);
 
     if (timestamp.date() == QDate::currentDate())
-        return tr("Today") +" " + timestamp.time().toString(Qt::SystemLocaleShortDate);
+        return tr("Today") +" " + QLocale::system().toString(timestamp.time(), QLocale::ShortFormat);
     return timestamp.toString(global.getDateTimeFormat());
 
 }
@@ -147,4 +145,3 @@ Q_SCRIPTABLE QString RemoteQuery::getNoteTags() {
     }
     return taglist;
 }
-

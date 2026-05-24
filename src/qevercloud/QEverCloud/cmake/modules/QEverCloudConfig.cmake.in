@@ -27,7 +27,7 @@ else()
         break()
       endif()
 
-      if(EXISTS "${parent_dir}/@CMAKE_INSTALL_INCLUDEDIR@/qt5qevercloud/QEverCloud.h")
+      if(EXISTS "${parent_dir}/@CMAKE_INSTALL_INCLUDEDIR@/@QEVERCLOUD_QT_VERSION@qevercloud/QEverCloud.h")
         set(_qevercloud_prefix_dir "${parent_dir}" PARENT_SCOPE)
         return()
       endif()

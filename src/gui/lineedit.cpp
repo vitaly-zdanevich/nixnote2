@@ -28,15 +28,13 @@ extern Global global;
      }
      setStyleSheet(css);
 
-#if QT_VERSION > 0x050000
      this->setClearButtonEnabled(true);
      this->setStyleSheet(css);
-#endif
      defaultText = QString(tr("Search"));
      this->setPlaceholderText(defaultText);
 
-     connect(this, SIGNAL(returnPressed()), this, SLOT(buildSelection()));
-     connect(this, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
+     connect(this, &QLineEdit::returnPressed, this, &LineEdit::buildSelection);
+     connect(this, &QLineEdit::textChanged, this, &LineEdit::textChanged);
  }
 
 

@@ -18,7 +18,7 @@
 
 #include "StringUtils_p.h"
 //#include <quentier/logging/QuentierLogger.h>
-#include <QRegExp>
+#include <QRegularExpression>
 
 namespace quentier {
 
@@ -41,7 +41,7 @@ void StringUtilsPrivate::removePunctuation(QString & str, const QVector<QChar> &
         }
     }
 
-    QRegExp punctuationFilter(filterStr);
+    QRegularExpression punctuationFilter(filterStr);
     str.remove(punctuationFilter);
 }
 
@@ -77,7 +77,7 @@ void StringUtilsPrivate::removeDiacritics(QString & str) const
 
 void StringUtilsPrivate::removeNewlines(QString & str) const
 {
-    str.replace(QRegExp(QStringLiteral("[\n\r\v\f]")), QStringLiteral(" "));
+    str.replace(QRegularExpression(QStringLiteral("[\n\r\v\f]")), QStringLiteral(" "));
 }
 
 void StringUtilsPrivate::initialize()

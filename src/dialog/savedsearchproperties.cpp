@@ -36,8 +36,8 @@ SavedSearchProperties::SavedSearchProperties(QWidget *parent) :
     setWindowIcon(global.getIconResource(":searchIcon"));
     setLayout(&grid);
 
-    connect(&name, SIGNAL(textChanged(const QString&)), this, SLOT(validateInput()));
-    connect(&query, SIGNAL(textChanged(const QString&)), this, SLOT(validateInput()));
+    connect(&name, &QLineEdit::textChanged, this, &SavedSearchProperties::validateInput);
+    connect(&query, &QLineEdit::textChanged, this, &SavedSearchProperties::validateInput);
 
     nameLabel.setText(tr("Name"));
     queryLabel.setText(tr("Query"));
@@ -49,9 +49,9 @@ SavedSearchProperties::SavedSearchProperties(QWidget *parent) :
     grid.addLayout(&queryGrid,1,1);
 
     ok.setText(tr("OK"));
-    connect(&ok, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
+    connect(&ok, &QPushButton::clicked, this, &SavedSearchProperties::okButtonPressed);
     cancel.setText(tr("Cancel"));
-    connect(&cancel, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
+    connect(&cancel, &QPushButton::clicked, this, &SavedSearchProperties::cancelButtonPressed);
     buttonGrid.addWidget(&ok, 1, 1);
     buttonGrid.addWidget(&cancel, 1,2);
     grid.addLayout(&buttonGrid,2,1);

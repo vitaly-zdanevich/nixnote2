@@ -21,9 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define USERTABLE_H
 
 #include <QtGlobal>
-#if QT_VERSION < 0x050000
-#include <Q_LONG>
-#endif
 #include <QSqlDatabase>
 #include "src/sql/databaseconnection.h"
 #include "src/qevercloud/QEverCloud/headers/QEverCloud.h"

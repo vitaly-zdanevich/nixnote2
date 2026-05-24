@@ -17,6 +17,8 @@
 #include <QDebug>
 #include <QUuid>
 
+#include <utility>
+
 namespace qevercloud {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -667,7 +669,7 @@ void writeSyncChunk(
             4);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.notes.ref().length());
-        for(const auto & value: qAsConst(s.notes.ref())) {
+        for(const auto & value: std::as_const(s.notes.ref())) {
             writeNote(writer, value);
         }
         writer.writeListEnd();
@@ -682,7 +684,7 @@ void writeSyncChunk(
             5);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.notebooks.ref().length());
-        for(const auto & value: qAsConst(s.notebooks.ref())) {
+        for(const auto & value: std::as_const(s.notebooks.ref())) {
             writeNotebook(writer, value);
         }
         writer.writeListEnd();
@@ -697,7 +699,7 @@ void writeSyncChunk(
             6);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.tags.ref().length());
-        for(const auto & value: qAsConst(s.tags.ref())) {
+        for(const auto & value: std::as_const(s.tags.ref())) {
             writeTag(writer, value);
         }
         writer.writeListEnd();
@@ -712,7 +714,7 @@ void writeSyncChunk(
             7);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.searches.ref().length());
-        for(const auto & value: qAsConst(s.searches.ref())) {
+        for(const auto & value: std::as_const(s.searches.ref())) {
             writeSavedSearch(writer, value);
         }
         writer.writeListEnd();
@@ -727,7 +729,7 @@ void writeSyncChunk(
             8);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.resources.ref().length());
-        for(const auto & value: qAsConst(s.resources.ref())) {
+        for(const auto & value: std::as_const(s.resources.ref())) {
             writeResource(writer, value);
         }
         writer.writeListEnd();
@@ -742,7 +744,7 @@ void writeSyncChunk(
             9);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.expungedNotes.ref().length());
-        for(const auto & value: qAsConst(s.expungedNotes.ref())) {
+        for(const auto & value: std::as_const(s.expungedNotes.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -757,7 +759,7 @@ void writeSyncChunk(
             10);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.expungedNotebooks.ref().length());
-        for(const auto & value: qAsConst(s.expungedNotebooks.ref())) {
+        for(const auto & value: std::as_const(s.expungedNotebooks.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -772,7 +774,7 @@ void writeSyncChunk(
             11);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.expungedTags.ref().length());
-        for(const auto & value: qAsConst(s.expungedTags.ref())) {
+        for(const auto & value: std::as_const(s.expungedTags.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -787,7 +789,7 @@ void writeSyncChunk(
             12);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.expungedSearches.ref().length());
-        for(const auto & value: qAsConst(s.expungedSearches.ref())) {
+        for(const auto & value: std::as_const(s.expungedSearches.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -802,7 +804,7 @@ void writeSyncChunk(
             13);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.linkedNotebooks.ref().length());
-        for(const auto & value: qAsConst(s.linkedNotebooks.ref())) {
+        for(const auto & value: std::as_const(s.linkedNotebooks.ref())) {
             writeLinkedNotebook(writer, value);
         }
         writer.writeListEnd();
@@ -817,7 +819,7 @@ void writeSyncChunk(
             14);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.expungedLinkedNotebooks.ref().length());
-        for(const auto & value: qAsConst(s.expungedLinkedNotebooks.ref())) {
+        for(const auto & value: std::as_const(s.expungedLinkedNotebooks.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -1480,7 +1482,7 @@ void writeSyncChunkFilter(
             15);
 
         writer.writeSetBegin(ThriftFieldType::T_STRING, s.notebookGuids.ref().count());
-        for(const auto & value: qAsConst(s.notebookGuids.ref())) {
+        for(const auto & value: std::as_const(s.notebookGuids.ref())) {
             writer.writeString(value);
         }
         writer.writeSetEnd();
@@ -1896,7 +1898,7 @@ void writeNoteFilter(
             5);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.tagGuids.ref().length());
-        for(const auto & value: qAsConst(s.tagGuids.ref())) {
+        for(const auto & value: std::as_const(s.tagGuids.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -2310,7 +2312,7 @@ void writeNoteList(
         3);
 
     writer.writeListBegin(ThriftFieldType::T_STRUCT, s.notes.length());
-    for(const auto & value: qAsConst(s.notes)) {
+    for(const auto & value: std::as_const(s.notes)) {
         writeNote(writer, value);
     }
     writer.writeListEnd();
@@ -2324,7 +2326,7 @@ void writeNoteList(
             4);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.stoppedWords.ref().length());
-        for(const auto & value: qAsConst(s.stoppedWords.ref())) {
+        for(const auto & value: std::as_const(s.stoppedWords.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -2339,7 +2341,7 @@ void writeNoteList(
             5);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.searchedWords.ref().length());
-        for(const auto & value: qAsConst(s.searchedWords.ref())) {
+        for(const auto & value: std::as_const(s.searchedWords.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -2698,7 +2700,7 @@ void writeNoteMetadata(
             12);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.tagGuids.ref().length());
-        for(const auto & value: qAsConst(s.tagGuids.ref())) {
+        for(const auto & value: std::as_const(s.tagGuids.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -3040,7 +3042,7 @@ void writeNotesMetadataList(
         3);
 
     writer.writeListBegin(ThriftFieldType::T_STRUCT, s.notes.length());
-    for(const auto & value: qAsConst(s.notes)) {
+    for(const auto & value: std::as_const(s.notes)) {
         writeNoteMetadata(writer, value);
     }
     writer.writeListEnd();
@@ -3054,7 +3056,7 @@ void writeNotesMetadataList(
             4);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.stoppedWords.ref().length());
-        for(const auto & value: qAsConst(s.stoppedWords.ref())) {
+        for(const auto & value: std::as_const(s.stoppedWords.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -3069,7 +3071,7 @@ void writeNotesMetadataList(
             5);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.searchedWords.ref().length());
-        for(const auto & value: qAsConst(s.searchedWords.ref())) {
+        for(const auto & value: std::as_const(s.searchedWords.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -4171,7 +4173,7 @@ void writeNoteEmailParameters(
             3);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.toAddresses.ref().length());
-        for(const auto & value: qAsConst(s.toAddresses.ref())) {
+        for(const auto & value: std::as_const(s.toAddresses.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -4186,7 +4188,7 @@ void writeNoteEmailParameters(
             4);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.ccAddresses.ref().length());
-        for(const auto & value: qAsConst(s.ccAddresses.ref())) {
+        for(const auto & value: std::as_const(s.ccAddresses.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -4787,7 +4789,7 @@ void writeRelatedResult(
             1);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.notes.ref().length());
-        for(const auto & value: qAsConst(s.notes.ref())) {
+        for(const auto & value: std::as_const(s.notes.ref())) {
             writeNote(writer, value);
         }
         writer.writeListEnd();
@@ -4802,7 +4804,7 @@ void writeRelatedResult(
             2);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.notebooks.ref().length());
-        for(const auto & value: qAsConst(s.notebooks.ref())) {
+        for(const auto & value: std::as_const(s.notebooks.ref())) {
             writeNotebook(writer, value);
         }
         writer.writeListEnd();
@@ -4817,7 +4819,7 @@ void writeRelatedResult(
             3);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.tags.ref().length());
-        for(const auto & value: qAsConst(s.tags.ref())) {
+        for(const auto & value: std::as_const(s.tags.ref())) {
             writeTag(writer, value);
         }
         writer.writeListEnd();
@@ -4832,7 +4834,7 @@ void writeRelatedResult(
             4);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.containingNotebooks.ref().length());
-        for(const auto & value: qAsConst(s.containingNotebooks.ref())) {
+        for(const auto & value: std::as_const(s.containingNotebooks.ref())) {
             writeNotebookDescriptor(writer, value);
         }
         writer.writeListEnd();
@@ -4857,7 +4859,7 @@ void writeRelatedResult(
             6);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.experts.ref().length());
-        for(const auto & value: qAsConst(s.experts.ref())) {
+        for(const auto & value: std::as_const(s.experts.ref())) {
             writeUserProfile(writer, value);
         }
         writer.writeListEnd();
@@ -4872,7 +4874,7 @@ void writeRelatedResult(
             7);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.relatedContent.ref().length());
-        for(const auto & value: qAsConst(s.relatedContent.ref())) {
+        for(const auto & value: std::as_const(s.relatedContent.ref())) {
             writeRelatedContent(writer, value);
         }
         writer.writeListEnd();
@@ -5305,7 +5307,7 @@ void writeRelatedResultSpec(
             9);
 
         writer.writeSetBegin(ThriftFieldType::T_I32, s.relatedContentTypes.ref().count());
-        for(const auto & value: qAsConst(s.relatedContentTypes.ref())) {
+        for(const auto & value: std::as_const(s.relatedContentTypes.ref())) {
             writer.writeI32(static_cast<qint32>(value));
         }
         writer.writeSetEnd();
@@ -6168,7 +6170,7 @@ void writeShareRelationships(
             1);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.invitations.ref().length());
-        for(const auto & value: qAsConst(s.invitations.ref())) {
+        for(const auto & value: std::as_const(s.invitations.ref())) {
             writeInvitationShareRelationship(writer, value);
         }
         writer.writeListEnd();
@@ -6183,7 +6185,7 @@ void writeShareRelationships(
             2);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.memberships.ref().length());
-        for(const auto & value: qAsConst(s.memberships.ref())) {
+        for(const auto & value: std::as_const(s.memberships.ref())) {
             writeMemberShareRelationship(writer, value);
         }
         writer.writeListEnd();
@@ -6360,7 +6362,7 @@ void writeManageNotebookSharesParameters(
             3);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.membershipsToUpdate.ref().length());
-        for(const auto & value: qAsConst(s.membershipsToUpdate.ref())) {
+        for(const auto & value: std::as_const(s.membershipsToUpdate.ref())) {
             writeMemberShareRelationship(writer, value);
         }
         writer.writeListEnd();
@@ -6375,7 +6377,7 @@ void writeManageNotebookSharesParameters(
             4);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.invitationsToCreateOrUpdate.ref().length());
-        for(const auto & value: qAsConst(s.invitationsToCreateOrUpdate.ref())) {
+        for(const auto & value: std::as_const(s.invitationsToCreateOrUpdate.ref())) {
             writeInvitationShareRelationship(writer, value);
         }
         writer.writeListEnd();
@@ -6390,7 +6392,7 @@ void writeManageNotebookSharesParameters(
             5);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.unshares.ref().length());
-        for(const auto & value: qAsConst(s.unshares.ref())) {
+        for(const auto & value: std::as_const(s.unshares.ref())) {
             writeUserIdentity(writer, value);
         }
         writer.writeListEnd();
@@ -6719,7 +6721,7 @@ void writeManageNotebookSharesResult(
             1);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.errors.ref().length());
-        for(const auto & value: qAsConst(s.errors.ref())) {
+        for(const auto & value: std::as_const(s.errors.ref())) {
             writeManageNotebookSharesError(writer, value);
         }
         writer.writeListEnd();
@@ -6830,7 +6832,7 @@ void writeSharedNoteTemplate(
             2);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.recipientContacts.ref().length());
-        for(const auto & value: qAsConst(s.recipientContacts.ref())) {
+        for(const auto & value: std::as_const(s.recipientContacts.ref())) {
             writeContact(writer, value);
         }
         writer.writeListEnd();
@@ -7008,7 +7010,7 @@ void writeNotebookShareTemplate(
             2);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.recipientContacts.ref().length());
-        for(const auto & value: qAsConst(s.recipientContacts.ref())) {
+        for(const auto & value: std::as_const(s.recipientContacts.ref())) {
             writeContact(writer, value);
         }
         writer.writeListEnd();
@@ -7176,7 +7178,7 @@ void writeCreateOrUpdateNotebookSharesResult(
             2);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.matchingShares.ref().length());
-        for(const auto & value: qAsConst(s.matchingShares.ref())) {
+        for(const auto & value: std::as_const(s.matchingShares.ref())) {
             writeSharedNotebook(writer, value);
         }
         writer.writeListEnd();
@@ -7751,7 +7753,7 @@ void writeNoteShareRelationships(
             1);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.invitations.ref().length());
-        for(const auto & value: qAsConst(s.invitations.ref())) {
+        for(const auto & value: std::as_const(s.invitations.ref())) {
             writeNoteInvitationShareRelationship(writer, value);
         }
         writer.writeListEnd();
@@ -7766,7 +7768,7 @@ void writeNoteShareRelationships(
             2);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.memberships.ref().length());
-        for(const auto & value: qAsConst(s.memberships.ref())) {
+        for(const auto & value: std::as_const(s.memberships.ref())) {
             writeNoteMemberShareRelationship(writer, value);
         }
         writer.writeListEnd();
@@ -7933,7 +7935,7 @@ void writeManageNoteSharesParameters(
             2);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.membershipsToUpdate.ref().length());
-        for(const auto & value: qAsConst(s.membershipsToUpdate.ref())) {
+        for(const auto & value: std::as_const(s.membershipsToUpdate.ref())) {
             writeNoteMemberShareRelationship(writer, value);
         }
         writer.writeListEnd();
@@ -7948,7 +7950,7 @@ void writeManageNoteSharesParameters(
             3);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.invitationsToUpdate.ref().length());
-        for(const auto & value: qAsConst(s.invitationsToUpdate.ref())) {
+        for(const auto & value: std::as_const(s.invitationsToUpdate.ref())) {
             writeNoteInvitationShareRelationship(writer, value);
         }
         writer.writeListEnd();
@@ -7963,7 +7965,7 @@ void writeManageNoteSharesParameters(
             4);
 
         writer.writeListBegin(ThriftFieldType::T_I32, s.membershipsToUnshare.ref().length());
-        for(const auto & value: qAsConst(s.membershipsToUnshare.ref())) {
+        for(const auto & value: std::as_const(s.membershipsToUnshare.ref())) {
             writer.writeI32(value);
         }
         writer.writeListEnd();
@@ -7978,7 +7980,7 @@ void writeManageNoteSharesParameters(
             5);
 
         writer.writeListBegin(ThriftFieldType::T_I64, s.invitationsToUnshare.ref().length());
-        for(const auto & value: qAsConst(s.invitationsToUnshare.ref())) {
+        for(const auto & value: std::as_const(s.invitationsToUnshare.ref())) {
             writer.writeI64(value);
         }
         writer.writeListEnd();
@@ -8354,7 +8356,7 @@ void writeManageNoteSharesResult(
             1);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.errors.ref().length());
-        for(const auto & value: qAsConst(s.errors.ref())) {
+        for(const auto & value: std::as_const(s.errors.ref())) {
             writeManageNoteSharesError(writer, value);
         }
         writer.writeListEnd();
@@ -8611,7 +8613,7 @@ void writeUserAttributes(
             5);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.viewedPromotions.ref().length());
-        for(const auto & value: qAsConst(s.viewedPromotions.ref())) {
+        for(const auto & value: std::as_const(s.viewedPromotions.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -8636,7 +8638,7 @@ void writeUserAttributes(
             7);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.recentMailedAddresses.ref().length());
-        for(const auto & value: qAsConst(s.recentMailedAddresses.ref())) {
+        for(const auto & value: std::as_const(s.recentMailedAddresses.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -12385,7 +12387,7 @@ void writeLazyMap(
             1);
 
         writer.writeSetBegin(ThriftFieldType::T_STRING, s.keysOnly.ref().count());
-        for(const auto & value: qAsConst(s.keysOnly.ref())) {
+        for(const auto & value: std::as_const(s.keysOnly.ref())) {
             writer.writeString(value);
         }
         writer.writeSetEnd();
@@ -14693,7 +14695,7 @@ void writeNote(
             12);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.tagGuids.ref().length());
-        for(const auto & value: qAsConst(s.tagGuids.ref())) {
+        for(const auto & value: std::as_const(s.tagGuids.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -14708,7 +14710,7 @@ void writeNote(
             13);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.resources.ref().length());
-        for(const auto & value: qAsConst(s.resources.ref())) {
+        for(const auto & value: std::as_const(s.resources.ref())) {
             writeResource(writer, value);
         }
         writer.writeListEnd();
@@ -14733,7 +14735,7 @@ void writeNote(
             15);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.tagNames.ref().length());
-        for(const auto & value: qAsConst(s.tagNames.ref())) {
+        for(const auto & value: std::as_const(s.tagNames.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -14748,7 +14750,7 @@ void writeNote(
             16);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.sharedNotes.ref().length());
-        for(const auto & value: qAsConst(s.sharedNotes.ref())) {
+        for(const auto & value: std::as_const(s.sharedNotes.ref())) {
             writeSharedNote(writer, value);
         }
         writer.writeListEnd();
@@ -17678,7 +17680,7 @@ void writeNotebook(
             13);
 
         writer.writeListBegin(ThriftFieldType::T_I64, s.sharedNotebookIds.ref().length());
-        for(const auto & value: qAsConst(s.sharedNotebookIds.ref())) {
+        for(const auto & value: std::as_const(s.sharedNotebookIds.ref())) {
             writer.writeI64(value);
         }
         writer.writeListEnd();
@@ -17693,7 +17695,7 @@ void writeNotebook(
             14);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.sharedNotebooks.ref().length());
-        for(const auto & value: qAsConst(s.sharedNotebooks.ref())) {
+        for(const auto & value: std::as_const(s.sharedNotebooks.ref())) {
             writeSharedNotebook(writer, value);
         }
         writer.writeListEnd();
@@ -19253,7 +19255,7 @@ void writeRelatedContent(
             10);
 
         writer.writeListBegin(ThriftFieldType::T_STRUCT, s.thumbnails.ref().length());
-        for(const auto & value: qAsConst(s.thumbnails.ref())) {
+        for(const auto & value: std::as_const(s.thumbnails.ref())) {
             writeRelatedContentImage(writer, value);
         }
         writer.writeListEnd();
@@ -19318,7 +19320,7 @@ void writeRelatedContent(
             16);
 
         writer.writeListBegin(ThriftFieldType::T_STRING, s.authors.ref().length());
-        for(const auto & value: qAsConst(s.authors.ref())) {
+        for(const auto & value: std::as_const(s.authors.ref())) {
             writer.writeString(value);
         }
         writer.writeListEnd();
@@ -21325,7 +21327,7 @@ void writeBootstrapInfo(
         1);
 
     writer.writeListBegin(ThriftFieldType::T_STRUCT, s.profiles.length());
-    for(const auto & value: qAsConst(s.profiles)) {
+    for(const auto & value: std::as_const(s.profiles)) {
         writeBootstrapProfile(writer, value);
     }
     writer.writeListEnd();
@@ -21405,6 +21407,16 @@ EDAMUserException::EDAMUserException(const EDAMUserException& other) : EvernoteE
 {
    errorCode = other.errorCode;
    parameter = other.parameter;
+}
+EDAMUserException & EDAMUserException::operator=(const EDAMUserException& other)
+{
+   if (this != &other) {
+      m_error = other.m_error;
+      errorCode = other.errorCode;
+      parameter = other.parameter;
+   }
+
+   return *this;
 }
 void writeEDAMUserException(
     ThriftBinaryBufferWriter & writer,
@@ -21632,6 +21644,16 @@ EDAMNotFoundException::EDAMNotFoundException(const EDAMNotFoundException& other)
    identifier = other.identifier;
    key = other.key;
 }
+EDAMNotFoundException & EDAMNotFoundException::operator=(const EDAMNotFoundException& other)
+{
+   if (this != &other) {
+      m_error = other.m_error;
+      identifier = other.identifier;
+      key = other.key;
+   }
+
+   return *this;
+}
 void writeEDAMNotFoundException(
     ThriftBinaryBufferWriter & writer,
     const EDAMNotFoundException & s)
@@ -21747,7 +21769,7 @@ void writeEDAMInvalidContactsException(
         1);
 
     writer.writeListBegin(ThriftFieldType::T_STRUCT, s.contacts.length());
-    for(const auto & value: qAsConst(s.contacts)) {
+    for(const auto & value: std::as_const(s.contacts)) {
         writeContact(writer, value);
     }
     writer.writeListEnd();
@@ -21771,7 +21793,7 @@ void writeEDAMInvalidContactsException(
             3);
 
         writer.writeListBegin(ThriftFieldType::T_I32, s.reasons.ref().length());
-        for(const auto & value: qAsConst(s.reasons.ref())) {
+        for(const auto & value: std::as_const(s.reasons.ref())) {
             writer.writeI32(static_cast<qint32>(value));
         }
         writer.writeListEnd();

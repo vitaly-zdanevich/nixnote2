@@ -21,7 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/dialog/locationdialog.h"
 #include "src/sql/notetable.h"
 #include <QDesktopServices>
-#include <QWeakPointer>
 #include "src/global.h"
 
 extern Global global;
@@ -49,16 +48,16 @@ LocationEditor::LocationEditor(QWidget *parent) : QToolButton(parent) {
     clearAction = actionMenu->addAction(tr("Clear"));
     viewAction = actionMenu->addAction(tr("View on map"));
 
-    connect(editAction, SIGNAL(triggered()), this, SLOT(buttonClicked()));
-    connect(viewAction, SIGNAL(triggered()), this, SLOT(viewClicked()));
-    connect(clearAction, SIGNAL(triggered()), this, SLOT(clearClicked()));
+    connect(editAction, &QAction::triggered, this, &LocationEditor::buttonClicked);
+    connect(viewAction, &QAction::triggered, this, &LocationEditor::viewClicked);
+    connect(clearAction, &QAction::triggered, this, &LocationEditor::clearClicked);
 
     setAutoRaise(false);
     setMenu(actionMenu);
 
     this->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     this->reloadIcons();
-    connect(this, SIGNAL(clicked()), this, SLOT(buttonClicked()));
+    connect(this, &QToolButton::clicked, this, &LocationEditor::buttonClicked);
 
     hide();
 }
@@ -72,33 +71,28 @@ void LocationEditor::setActiveColor() {
 }
 
 void LocationEditor::buttonClicked() {
-    const QWeakPointer<LocationDialog> dialogPtr(new LocationDialog(this));
-    if (LocationDialog *const dialog = dialogPtr.data()) {
-        dialog->setLongitude(this->startLongitude);
-        dialog->setLatitude(this->startLatitude);
-        dialog->setAltitude(this->startAltitude);
-        dialog->exec();
-    }
+    LocationDialog dialog(this);
+    dialog.setLongitude(this->startLongitude);
+    dialog.setLatitude(this->startLatitude);
+    dialog.setAltitude(this->startAltitude);
+    dialog.exec();
 
-    if (LocationDialog *const dialog = dialogPtr.data()) {
-        const double lon = dialog->getLongitude();
-        const double lat = dialog->getLatitude();
-        const double alt = dialog->getAltitude();
+    const double lon = dialog.getLongitude();
+    const double lat = dialog.getLatitude();
+    const double alt = dialog.getAltitude();
 
-        startAltitude = alt;
-        startLongitude = lon;
-        startLatitude = lat;
-        if (dialog->okPressed()) {
-            NoteTable ntable(global.db);
-            if (lon == 0.0 && lat == 0.0) {
-                setText(defaultText);
-                ntable.resetGeography(currentLid, true);
-            } else {
-                setText(dialog->locationText());
-                ntable.setGeography(currentLid, lon, lat, alt, true);
-            }
+    startAltitude = alt;
+    startLongitude = lon;
+    startLatitude = lat;
+    if (dialog.okPressed()) {
+        NoteTable ntable(global.db);
+        if (lon == 0.0 && lat == 0.0) {
+            setText(defaultText);
+            ntable.resetGeography(currentLid, true);
+        } else {
+            setText(dialog.locationText());
+            ntable.setGeography(currentLid, lon, lat, alt, true);
         }
-        delete dialog;
     }
 }
 

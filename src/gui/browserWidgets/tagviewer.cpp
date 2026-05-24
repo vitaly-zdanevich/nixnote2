@@ -32,7 +32,7 @@ TagViewer::TagViewer(QWidget *parent) :
     clearButton->setIcon(global.getIconResource(":filecloseIcon"));
     clearButton->setStyleSheet("QToolButton { border: none; padding: 0px; }");
     clearButton->setCursor(Qt::PointingHandCursor);
-    connect(clearButton, SIGNAL(clicked()), this, SLOT(buttonClicked()));
+    connect(clearButton, &QToolButton::clicked, this, &TagViewer::buttonClicked);
 
     QString css = global.getThemeCss("noteTagViewerCss");
     if (css!="")
@@ -70,7 +70,7 @@ void TagViewer::showEvent(QShowEvent* event) {
 
 void TagViewer::resize() {
     QFontMetrics fm(font());
-    int width = fm.width(text());
+    int width = fm.horizontalAdvance(text());
 
     int x = width + clearButton->minimumWidth()+20;
     setMinimumWidth(x);
@@ -92,4 +92,3 @@ void TagViewer::resize() {
 void TagViewer::buttonClicked() {
     emit(closeClicked(text()));
 }
-

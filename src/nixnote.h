@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QSlider>
 #include <QSplashScreen>
 #include <QNetworkReply>
+#include <QWebEngineView>
 
 
 #include "src/filters/remotequery.h"
@@ -82,7 +83,7 @@ class NixNote : public QMainWindow
 private:
     static NixNote *singleton;  // static pointer to singleton instance of this class
     QTranslator *nixnoteTranslator;
-    QWebView *pdfExportWindow;
+    QWebEngineView *pdfExportWindow;
     DatabaseConnection *db;  // The database connection
     NTableView *noteTableView;
     NSearchView *searchTreeView;
@@ -215,6 +216,7 @@ public slots:
     void quitNixNote();
     void closeShortcut();
     void synchronize();
+    void repairMissingResources();
     void syncTimerExpired();
     void disconnect();
     void updateSyncButton();
@@ -309,6 +311,7 @@ public slots:
 
 signals:
     void syncRequested();
+    void repairMissingResourcesRequested();
     void updateCounts();
 
 

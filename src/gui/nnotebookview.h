@@ -66,7 +66,7 @@ public:
     void contextMenuEvent(QContextMenuEvent *event);
     QHash<qint32, NNotebookViewItem*> dataStore;
     QHash<QString, NNotebookViewItem*> stackStore;
-    QSize sizeHint();
+    QSize sizeHint() const override;
     void drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const;
     void reloadIcons();
 

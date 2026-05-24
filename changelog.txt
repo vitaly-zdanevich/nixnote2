@@ -1,3 +1,12 @@
+NixNote (2.1.12) stable; urgency=low
+  * Migrated the application from Qt 5 to Qt 6, including Qt WebEngine, Qt WebChannel and poppler-qt6 support.
+  * Replaced the legacy WebKit editor path with a Qt WebEngine based editor bridge and resource scheme handler.
+  * Switched OAuth to the system browser flow by default and removed the old Qt5/WebKit OAuth backend.
+  * Added tools to repair missing resource files and inspect database/resource storage usage.
+  * Improved sync robustness around missing, deleted, metadata-only and invalid resources.
+  * Updated build scripts, packaging metadata, documentation and tests for Qt 6.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Sun, 24 May 2026 21:11:21 +0400
+
 NixNote (2.1.11) stable; urgency=low
   * Improved synchronisation logic (rate limit handling)
  -- Robert Spiegel <nightingale7@gmail.com>  Wed, 8 Jul 2024 12:00:00 +0200
@@ -466,4 +475,3 @@ NixNote (2.0-beta-3) stable; urgency=low
 NixNote (2.0-beta-2) stable; urgency=low
   * Beta 2.  Lots of bug fixes and removal of Thrift.
 -- Randy Baumgarte <randy@fbn.cx> Sat, 26 Apr 2014 14:00:00 -0400
-

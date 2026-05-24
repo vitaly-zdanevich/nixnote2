@@ -36,9 +36,9 @@ declare -a runtime_libs qt_libs third_party_libs
 
 runtime_libs=(libssp-*.dll libstdc++-*.dll libwinpthread-*.dll libgcc_s_dw*.dll)
 
-qt_libs=(freetype*.dll Qt*Network.dll icudt*.dll Qt*OpenGL.dll icuin*.dll Qt*Positioning.dll icuuc*.dll Qt*PrintSupport.dll libxml*.dll Qt*Qml.dll liblcms*.dll libxslt*.dll Qt*Sensors.dll libpng*.dll openjpeg.dll Qt*Sql.dll Qt*Core.dll Qt*Widgets.dll Qt*Gui.dll Qt*Xml.dll libQt*WebKit.dll Qt*Multimedia.dll zlib1.dll libQt*WebKitWidgets.dll Qt*MultimediaWidgets.dll libeay32.dll ssleay32.dll)
+qt_libs=(freetype*.dll Qt6Network.dll icudt*.dll Qt6OpenGL*.dll icuin*.dll icuuc*.dll Qt6PrintSupport.dll libxml*.dll Qt6Qml*.dll liblcms*.dll libxslt*.dll Qt6WebChannel.dll Qt6WebEngine*.dll Qt6Quick*.dll libpng*.dll openjpeg*.dll Qt6Sql.dll Qt6Core.dll Qt6Widgets.dll Qt6Gui.dll Qt6Xml.dll zlib1.dll libssl*.dll libcrypto*.dll)
 
-third_party_libs=(libtidy.dll libpoppler.dll libpoppler-qt5.dll libhunspell*.dll)
+third_party_libs=(libtidy*.dll libpoppler*.dll libpoppler-qt6*.dll libhunspell*.dll)
 
 for lib in ${runtime_libs[@]};do
     cp -n $runtime_dir'/'$lib $deploy_folder

@@ -53,8 +53,8 @@ DateTimeEditor::DateTimeEditor(QWidget *parent) :
 
     setCursor(Qt::PointingHandCursor);
 
-    connect(this, SIGNAL(dateChanged(QDate)), this, SLOT(valueChanged()));
-    connect(this, SIGNAL(timeChanged(QTime)), this, SLOT(valueChanged()));
+    connect(this, &QDateTimeEdit::dateChanged, this, &DateTimeEditor::valueChanged);
+    connect(this, &QDateTimeEdit::timeChanged, this, &DateTimeEditor::valueChanged);
     this->setDisplayFormat(global.getDateTimeFormat());
 
     hide();
@@ -109,4 +109,3 @@ void DateTimeEditor::valueChanged() {
     QDateTime dt = this->dateTime();
     noteTable.updateDate(lid, dt.toMSecsSinceEpoch(), key, true);
 }
-

@@ -19,6 +19,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include <QApplication>
+#if __has_include(<tidy/tidy.h>)
+#include <tidy/tidy.h>
+#include <tidy/tidybuffio.h>
+#else
+#include <tidy.h>
+#include <tidybuffio.h>
+#endif
+
 #include "src/nixnote.h"
 #include "src/global.h"
 #include "src/settings/startupconfig.h"
@@ -30,6 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <iostream>
 #include <QMessageBox>
 #include <QSharedMemory>
+#include <QWebEngineUrlScheme>
 
 // Windows Check
 #ifndef _WIN32
@@ -46,14 +55,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "src/application.h"
 
-#ifdef Q_OS_MACOS
-#include <tidy.h>
-#include <tidybuffio.h>
-#else
-#include <tidy/tidy.h>
-#include <tidy/tidybuffio.h>
-#endif
-
 
 NixNote *w;
 
@@ -63,6 +64,19 @@ using namespace std;
 //* This is the main entry point for NixNote.
 //*********************************************
 extern Global global;
+
+namespace {
+void registerWebEngineUrlSchemes()
+{
+    QWebEngineUrlScheme nnresScheme(QByteArrayLiteral("nnres"));
+    nnresScheme.setSyntax(QWebEngineUrlScheme::Syntax::Path);
+    nnresScheme.setFlags(QWebEngineUrlScheme::SecureScheme
+                          | QWebEngineUrlScheme::LocalScheme
+                          | QWebEngineUrlScheme::LocalAccessAllowed
+                          | QWebEngineUrlScheme::ContentSecurityPolicyIgnored);
+    QWebEngineUrlScheme::registerScheme(nnresScheme);
+}
+}
 
 //*********************************************************************
 //* Segmentation fault.  This is triggered to print a stack trace.
@@ -116,6 +130,8 @@ void sigint_handler(int sig) {
 int main(int argc, char *argv[]) {
     w = NULL;
     bool guiAvailable = true;
+
+    registerWebEngineUrlSchemes();
 
     // Setup the QLOG functions for debugging & messages
     // we need to do it at very beginning, else we lose the startup messages
@@ -192,7 +208,7 @@ int main(int argc, char *argv[]) {
             QLOG_INFO() << result;
         }
         delete db;
-        QLOG_INFO() << "Ok" << endl;
+        QLOG_INFO() << "Ok";
         exit(0);
     }
 
@@ -329,7 +345,7 @@ int main(int argc, char *argv[]) {
     w->setAttribute(Qt::WA_QuitOnClose);
 
     // this is bit dirty, maybe improve later
-    QObject::connect(&global, SIGNAL(setMessageSignal(QString, int)), w, SLOT(setMessage(QString, int)));
+    QObject::connect(&global, &Global::setMessageSignal, w, &NixNote::setMessage);
 
     bool show = true;
     if (global.readSettingMinimizeToTray() && global.startMinimized)
@@ -369,7 +385,7 @@ int main(int argc, char *argv[]) {
     }
 
     QLOG_DEBUG() << "main: setting up exit signal (to saveOnExit())";
-    QObject::connect(a, SIGNAL(aboutToQuit()), w, SLOT(saveOnExit()));
+    QObject::connect(a, &QCoreApplication::aboutToQuit, w, &NixNote::saveOnExit);
 
     QLOG_DEBUG() << "main: Launching";
     int rc = a->exec();

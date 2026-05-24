@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QGridLayout>
 #include <QLineEdit>
 #include <QListWidget>
-#include <QRegExp>
+#include <QRegularExpression>
 #include "src/global.h"
 
 extern Global global;
@@ -86,13 +86,13 @@ EmailDialog::EmailDialog(QWidget *parent) :
     buttonGrid->addWidget(cancelButton, 0,0);
     buttonGrid->addWidget(sendButton, 0,1);
 
-    connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
-    connect(sendButton, SIGNAL(clicked()), this, SLOT(sendButtonPressed()));
+    connect(cancelButton, &QPushButton::clicked, this, &EmailDialog::cancelButtonPressed);
+    connect(sendButton, &QPushButton::clicked, this, &EmailDialog::sendButtonPressed);
 
-    connect(toAddress, SIGNAL(textChanged(QString)), this, SLOT(toAddressChanged()));
-    connect(ccAddress, SIGNAL(textChanged(QString)), this, SLOT(toAddressChanged()));
-    connect(bccAddress, SIGNAL(textChanged(QString)), this, SLOT(toAddressChanged()));
-    connect(ccSelf, SIGNAL(toggled(bool)), this, SLOT(toAddressChanged()));
+    connect(toAddress, &QLineEdit::textChanged, this, &EmailDialog::toAddressChanged);
+    connect(ccAddress, &QLineEdit::textChanged, this, &EmailDialog::toAddressChanged);
+    connect(bccAddress, &QLineEdit::textChanged, this, &EmailDialog::toAddressChanged);
+    connect(ccSelf, &QCheckBox::toggled, this, &EmailDialog::toAddressChanged);
     cancelButton->setAutoDefault(false);
     sendButton->setEnabled(false);
     sendButton->setAutoDefault(true);
@@ -125,15 +125,15 @@ void EmailDialog::toAddressChanged() {
     cc = ccAddress->text().trimmed();
 
     // Setup regular expression to test email addresses
-    QRegExp mailREX("\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}\\b");
-    mailREX.setCaseSensitivity(Qt::CaseInsensitive);
-    mailREX.setPatternSyntax(QRegExp::RegExp);
+    QRegularExpression mailREX(
+            QRegularExpression::anchoredPattern("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}"),
+            QRegularExpression::CaseInsensitiveOption);
 
     // Check if "to" address is valid
     bool validTo = true;
     QStringList toList = tokenizeString(to);
     for (int i=0; i<toList.size(); i++) {
-        if (!mailREX.exactMatch(toList[i]))
+        if (!mailREX.match(toList[i]).hasMatch())
             validTo = false;
     }
 
@@ -141,7 +141,7 @@ void EmailDialog::toAddressChanged() {
     bool validCc = true;
     QStringList ccList = tokenizeString(cc);
     for (int i=0; i<ccList.size(); i++) {
-        if (!mailREX.exactMatch(ccList[i]))
+        if (!mailREX.match(ccList[i]).hasMatch())
             validCc = false;
     }
 
@@ -149,7 +149,7 @@ void EmailDialog::toAddressChanged() {
     bool validBcc = true;
     QStringList bccList = tokenizeString(bcc);
     for (int i=0; i<bccList.size(); i++) {
-        if (!mailREX.exactMatch(bccList[i]))
+        if (!mailREX.match(bccList[i]).hasMatch())
             validBcc = false;
     }
 
@@ -169,7 +169,7 @@ void EmailDialog::toAddressChanged() {
 
 
 QStringList EmailDialog::tokenizeString(QString value) {
-    QStringList values =  value.split(QRegExp(",|;|\\s+"), QString::SkipEmptyParts);
+    QStringList values =  value.split(QRegularExpression(",|;|\\s+"), Qt::SkipEmptyParts);
 
     // There is probably an easier way to do this with regular expressions, but
     // I am horrible at regular expressions.

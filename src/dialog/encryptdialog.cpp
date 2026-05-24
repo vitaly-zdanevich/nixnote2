@@ -66,18 +66,18 @@ EnCryptDialog::EnCryptDialog(QWidget *parent) :
     grid->addLayout(msgGrid, 2, 1);
 
     ok.setText(tr("OK"));
-    connect(&ok, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
+    connect(&ok, &QPushButton::clicked, this, &EnCryptDialog::okButtonPressed);
     ok.setEnabled(false);
 
     QPushButton *cancel = new QPushButton(tr("Cancel"), this);
-    connect(cancel, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
+    connect(cancel, &QPushButton::clicked, this, &EnCryptDialog::cancelButtonPressed);
     button->addWidget(&ok, 1, 1);
     button->addWidget(cancel, 1,2);
     grid->addLayout(button, 3, 1);
 
-    connect(&password, SIGNAL(textChanged(QString)), this, SLOT(validateInput()));
-    connect(&password2, SIGNAL(textChanged(QString)), this, SLOT(validateInput()));
-    connect(&hint, SIGNAL(textChanged(QString)), this, SLOT(validateInput()));
+    connect(&password, &QLineEdit::textChanged, this, &EnCryptDialog::validateInput);
+    connect(&password2, &QLineEdit::textChanged, this, &EnCryptDialog::validateInput);
+    connect(&hint, &QLineEdit::textChanged, this, &EnCryptDialog::validateInput);
     this->setFont(guiFont);
 
 }

@@ -36,10 +36,8 @@ LoginDialog::LoginDialog(QWidget *parent) :
 
     password.setEchoMode(QLineEdit::Password);
 
-    connect(&userid, SIGNAL(textChanged(
-                                const QString&)), this, SLOT(validateInput()));
-    connect(&password, SIGNAL(textChanged(
-                                  const QString&)), this, SLOT(validateInput()));
+    connect(&userid, &QLineEdit::textChanged, this, &LoginDialog::validateInput);
+    connect(&password, &QLineEdit::textChanged, this, &LoginDialog::validateInput);
 
     useridLabel.setText(tr("Userid"));
     passwordLabel.setText(tr("Password"));
@@ -53,9 +51,9 @@ LoginDialog::LoginDialog(QWidget *parent) :
     ok.setText(tr("OK"));
     if (global.password == "" and global.username == "")
         ok.setEnabled(false);
-    connect(&ok, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
+    connect(&ok, &QPushButton::clicked, this, &LoginDialog::okButtonPressed);
     cancel.setText(tr("Cancel"));
-    connect(&cancel, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
+    connect(&cancel, &QPushButton::clicked, this, &LoginDialog::cancelButtonPressed);
     buttonGrid.addWidget(&ok, 1, 1);
     buttonGrid.addWidget(&cancel, 1, 2);
     grid.addLayout(&buttonGrid, 2, 1);

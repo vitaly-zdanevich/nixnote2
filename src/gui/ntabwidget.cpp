@@ -52,16 +52,13 @@ NTabWidget::NTabWidget(NixNote *p, SyncRunner *s, NNotebookView *n, NTagView *t)
     vboxlayout.addWidget(&stack);
     setLayout(&vboxlayout);
 
-    connect(tabBar, SIGNAL(currentChanged(int)),
-            &stack, SLOT(setCurrentIndex(int)));
-    connect(tabBar, SIGNAL(tabCloseRequested(int)),
-            this, SLOT(closeTab(int)));
-    connect(tabBar, SIGNAL(tabMoved(int, int)),
-            this, SLOT(moveTab(int, int)));
-    this->layout()->setMargin(0);
+    connect(tabBar, &QTabBar::currentChanged, &stack, &QStackedWidget::setCurrentIndex);
+    connect(tabBar, &QTabBar::tabCloseRequested, this, static_cast<void (NTabWidget::*)(int)>(&NTabWidget::closeTab));
+    connect(tabBar, &QTabBar::tabMoved, this, &NTabWidget::moveTab);
+    this->layout()->setContentsMargins(0, 0, 0, 0);
     htmlEntities = new HtmlEntitiesDialog();
     htmlEntities->setHidden(true);
-    connect(htmlEntities, SIGNAL(entityClicked(QString)), this, SLOT(htmlEntitiesClicked(QString)));
+    connect(htmlEntities, &HtmlEntitiesDialog::entityClicked, this, &NTabWidget::htmlEntitiesClicked);
 
     QString css = global.getThemeCss("noteTabCss");
     if (css != "") {
@@ -89,8 +86,10 @@ void NTabWidget::addBrowser(NBrowserWindow *v, QString title) {
     else
         tabBar->setHidden(false);
 
-    connect(v, SIGNAL(showHtmlEntities()), this, SLOT(showHtmlEntities()));
-    connect(v, SIGNAL(setMessage(QString)), parent, SLOT(setMessage(QString)));
+    connect(v, &NBrowserWindow::showHtmlEntities, this, &NTabWidget::showHtmlEntities);
+    connect(v, &NBrowserWindow::setMessage, this, [this](const QString &message) {
+        parent->setMessage(message);
+    });
     return;
 }
 
@@ -266,8 +265,8 @@ void NTabWidget::openNote(qint32 lid, OpenNoteMode mode) {
             setupExternalBrowserConnections(external->browser);
             external->setWindowTitle(tr(NN_APP_DISPLAY_NAME_GUI " - ") + external->browser->noteTitle.text());
             external->show();
-            connect(external->browser->editor->titleEditor, SIGNAL(titleUpdated(QString)), external,
-                    SLOT(setTitle(QString)));
+            connect(external->browser->editor->titleEditor, &NTitleEditor::titleUpdated,
+                    external, &ExternalBrowse::setTitle);
             this->lastExternal = external;
             return;
         }
@@ -348,48 +347,34 @@ void NTabWidget::tagCreationSignaled(qint32 lid) {
 
 
 void NTabWidget::setupConnections(NBrowserWindow *newBrowser) {
-    connect(tagTreeView, SIGNAL(tagRenamed(qint32, QString, QString)), newBrowser,
-            SLOT(tagRenamed(qint32, QString, QString)));
-    connect(tagTreeView, SIGNAL(tagDeleted(qint32, QString)), newBrowser, SLOT(tagDeleted(qint32, QString)));
-    connect(tagTreeView, SIGNAL(tagAdded(qint32)), &newBrowser->tagEditor.newTag, SLOT(loadCompleter()));
+    connect(tagTreeView, &NTagView::tagRenamed, newBrowser, &NBrowserWindow::tagRenamed);
+    connect(tagTreeView, &NTagView::tagDeleted, newBrowser, &NBrowserWindow::tagDeleted);
+    connect(tagTreeView, &NTagView::tagAdded, &newBrowser->tagEditor.newTag, &TagEditorNewTag::loadCompleter);
 
-    connect(notebookTreeView, SIGNAL(notebookRenamed(qint32, QString, QString)), newBrowser,
-            SLOT(notebookRenamed(qint32, QString, QString)));
-    connect(notebookTreeView, SIGNAL(notebookDeleted(qint32, QString)), newBrowser,
-            SLOT(notebookDeleted(qint32, QString)));
-    connect(notebookTreeView, SIGNAL(notebookAdded(qint32)), newBrowser, SLOT(notebookAdded(qint32)));
+    connect(notebookTreeView, &NNotebookView::notebookRenamed, newBrowser, &NBrowserWindow::notebookRenamed);
+    connect(notebookTreeView, &NNotebookView::notebookDeleted, newBrowser, &NBrowserWindow::notebookDeleted);
+    connect(notebookTreeView, &NNotebookView::notebookAdded, newBrowser, &NBrowserWindow::notebookAdded);
 
-    connect(notebookTreeView, SIGNAL(stackRenamed(QString, QString)), newBrowser, SLOT(stackRenamed(QString, QString)));
-    connect(notebookTreeView, SIGNAL(stackDeleted(QString)), newBrowser, SLOT(stackDeleted(QString)));
-    connect(notebookTreeView, SIGNAL(stackAdded(QString)), newBrowser, SLOT(stackAdded(QString)));
+    connect(notebookTreeView, &NNotebookView::stackRenamed, newBrowser, &NBrowserWindow::stackRenamed);
+    connect(notebookTreeView, &NNotebookView::stackDeleted, newBrowser, &NBrowserWindow::stackDeleted);
+    connect(notebookTreeView, &NNotebookView::stackAdded, newBrowser, &NBrowserWindow::stackAdded);
 
-    connect(newBrowser, SIGNAL(noteUpdated(qint32)), this, SLOT(noteUpdateSignaled(qint32)));
-    connect(newBrowser, SIGNAL(tagAdded(qint32)), this, SLOT(tagCreationSignaled(qint32)));
-    connect(newBrowser, SIGNAL(updateNoteList(qint32, int, QVariant)), this,
-            SLOT(updateNoteListSignaled(qint32, int, QVariant)));
-    connect(syncThread, SIGNAL(noteUpdated(qint32)), this, SLOT(noteSyncSignaled(qint32)));
-    connect(newBrowser, SIGNAL(noteContentEditedSignal(QString, qint32, QString)), this,
-            SLOT(noteContentEdited(QString, qint32, QString)));
-    connect(newBrowser, SIGNAL(noteTitleEditedSignal(QString, qint32, QString)), this,
-            SLOT(noteTitleEdited(QString, qint32, QString)));
-    connect(newBrowser, SIGNAL(noteAuthorEditedSignal(QString, qint32, QString)), this,
-            SLOT(noteAuthorEdited(QString, qint32, QString)));
-    connect(newBrowser, SIGNAL(noteLocationEditedSignal(QString, qint32, double, double, double, QString)), this,
-            SLOT(noteLocationEdited(QString, qint32, double, double, double, QString)));
-    connect(newBrowser, SIGNAL(noteUrlEditedSignal(QString, qint32, QString)), this,
-            SLOT(noteUrlEdited(QString, qint32, QString)));
-    connect(newBrowser, SIGNAL(noteAlarmEditedSignal(QString, qint32, bool, QString)), this,
-            SLOT(noteAlarmEdited(QString, qint32, bool, QString)));
-    connect(newBrowser, SIGNAL(noteTagsEditedSignal(QString, qint32, QStringList)), this,
-            SLOT(noteTagsEdited(QString, qint32, QStringList)));
-    connect(newBrowser, SIGNAL(noteNotebookEditedSignal(QString, qint32, qint32, QString)), this,
-            SLOT(noteNotebookEdited(QString, qint32, qint32, QString)));
-    connect(newBrowser, SIGNAL(noteDateEditedSignal(QString, qint32, int, QDateTime)), this,
-            SLOT(noteDateEdited(QString, qint32, int, QDateTime)));
-    connect(newBrowser, SIGNAL(evernoteLinkClicked(qint32, bool, bool)), this,
-            SLOT(evernoteLinkClicked(qint32, bool, bool)));
+    connect(newBrowser, &NBrowserWindow::noteUpdated, this, &NTabWidget::noteUpdateSignaled);
+    connect(newBrowser, &NBrowserWindow::tagAdded, this, &NTabWidget::tagCreationSignaled);
+    connect(newBrowser, &NBrowserWindow::updateNoteList, this, &NTabWidget::updateNoteListSignaled);
+    connect(syncThread, &SyncRunner::noteUpdated, this, &NTabWidget::noteSyncSignaled);
+    connect(newBrowser, &NBrowserWindow::noteContentEditedSignal, this, &NTabWidget::noteContentEdited);
+    connect(newBrowser, &NBrowserWindow::noteTitleEditedSignal, this, &NTabWidget::noteTitleEdited);
+    connect(newBrowser, &NBrowserWindow::noteAuthorEditedSignal, this, &NTabWidget::noteAuthorEdited);
+    connect(newBrowser, &NBrowserWindow::noteLocationEditedSignal, this, &NTabWidget::noteLocationEdited);
+    connect(newBrowser, &NBrowserWindow::noteUrlEditedSignal, this, &NTabWidget::noteUrlEdited);
+    connect(newBrowser, &NBrowserWindow::noteAlarmEditedSignal, this, &NTabWidget::noteAlarmEdited);
+    connect(newBrowser, &NBrowserWindow::noteTagsEditedSignal, this, &NTabWidget::noteTagsEdited);
+    connect(newBrowser, &NBrowserWindow::noteNotebookEditedSignal, this, &NTabWidget::noteNotebookEdited);
+    connect(newBrowser, &NBrowserWindow::noteDateEditedSignal, this, &NTabWidget::noteDateEdited);
+    connect(newBrowser, &NBrowserWindow::evernoteLinkClicked, this, &NTabWidget::evernoteLinkClicked);
 
-    connect(newBrowser->editor, SIGNAL(escapeKeyPressed()), this, SLOT(escapeKeyListener()));
+    connect(newBrowser->editor, &NWebView::escapeKeyPressed, this, &NTabWidget::escapeKeyListener);
 }
 
 
@@ -477,46 +462,32 @@ void NTabWidget::refreshNoteContent(qint32 lid) {
 // Called when an external editor is created
 
 void NTabWidget::setupExternalBrowserConnections(NBrowserWindow *newBrowser) {
-    connect(tagTreeView, SIGNAL(tagRenamed(qint32, QString, QString)), newBrowser,
-            SLOT(tagRenamed(qint32, QString, QString)));
-    connect(tagTreeView, SIGNAL(tagDeleted(qint32, QString)), newBrowser, SLOT(tagDeleted(qint32, QString)));
-    connect(tagTreeView, SIGNAL(tagAdded(qint32)), &newBrowser->tagEditor.newTag, SLOT(loadCompleter()));
+    connect(tagTreeView, &NTagView::tagRenamed, newBrowser, &NBrowserWindow::tagRenamed);
+    connect(tagTreeView, &NTagView::tagDeleted, newBrowser, &NBrowserWindow::tagDeleted);
+    connect(tagTreeView, &NTagView::tagAdded, &newBrowser->tagEditor.newTag, &TagEditorNewTag::loadCompleter);
 
-    connect(notebookTreeView, SIGNAL(notebookRenamed(qint32, QString, QString)), newBrowser,
-            SLOT(notebookRenamed(qint32, QString, QString)));
-    connect(notebookTreeView, SIGNAL(notebookDeleted(qint32, QString)), newBrowser,
-            SLOT(notebookDeleted(qint32, QString)));
-    connect(notebookTreeView, SIGNAL(notebookAdded(qint32)), newBrowser, SLOT(notebookAdded(qint32)));
+    connect(notebookTreeView, &NNotebookView::notebookRenamed, newBrowser, &NBrowserWindow::notebookRenamed);
+    connect(notebookTreeView, &NNotebookView::notebookDeleted, newBrowser, &NBrowserWindow::notebookDeleted);
+    connect(notebookTreeView, &NNotebookView::notebookAdded, newBrowser, &NBrowserWindow::notebookAdded);
 
-    connect(notebookTreeView, SIGNAL(stackRenamed(QString, QString)), newBrowser, SLOT(stackRenamed(QString, QString)));
-    connect(notebookTreeView, SIGNAL(stackDeleted(QString)), newBrowser, SLOT(stackDeleted(QString)));
-    connect(notebookTreeView, SIGNAL(stackAdded(QString)), newBrowser, SLOT(stackAdded(QString)));
+    connect(notebookTreeView, &NNotebookView::stackRenamed, newBrowser, &NBrowserWindow::stackRenamed);
+    connect(notebookTreeView, &NNotebookView::stackDeleted, newBrowser, &NBrowserWindow::stackDeleted);
+    connect(notebookTreeView, &NNotebookView::stackAdded, newBrowser, &NBrowserWindow::stackAdded);
 
-    connect(newBrowser, SIGNAL(noteUpdated(qint32)), this, SLOT(noteUpdateSignaled(qint32)));
-    connect(newBrowser, SIGNAL(tagAdded(qint32)), this, SLOT(tagCreationSignaled(qint32)));
-    connect(newBrowser, SIGNAL(updateNoteList(qint32, int, QVariant)), this,
-            SLOT(updateNoteListSignaled(qint32, int, QVariant)));
-    connect(syncThread, SIGNAL(noteUpdated(qint32)), this, SLOT(noteSyncSignaled(qint32)));
-    connect(newBrowser, SIGNAL(noteContentEditedSignal(QString, qint32, QString)), this,
-            SLOT(noteContentEdited(QString, qint32, QString)));
-    connect(newBrowser, SIGNAL(evernoteLinkClicked(qint32, bool, bool)), this,
-            SLOT(evernoteLinkClicked(qint32, bool, bool)));
-    connect(newBrowser, SIGNAL(noteTitleEditedSignal(QString, qint32, QString)), this,
-            SLOT(noteTitleEdited(QString, qint32, QString)));
-    connect(newBrowser, SIGNAL(noteAuthorEditedSignal(QString, qint32, QString)), this,
-            SLOT(noteAuthorEdited(QString, qint32, QString)));
-    connect(newBrowser, SIGNAL(noteLocationEditedSignal(QString, qint32, double, double, double, QString)), this,
-            SLOT(noteLocationEdited(QString, qint32, double, double, double, QString)));
-    connect(newBrowser, SIGNAL(noteUrlEditedSignal(QString, qint32, QString)), this,
-            SLOT(noteUrlEdited(QString, qint32, QString)));
-    connect(newBrowser, SIGNAL(noteAlarmEditedSignal(QString, qint32, bool, QString)), this,
-            SLOT(noteAlarmEdited(QString, qint32, bool, QString)));
-    connect(newBrowser, SIGNAL(noteTagsEditedSignal(QString, qint32, QStringList)), this,
-            SLOT(noteTagsEdited(QString, qint32, QStringList)));
-    connect(newBrowser, SIGNAL(noteNotebookEditedSignal(QString, qint32, qint32, QString)), this,
-            SLOT(noteNotebookEdited(QString, qint32, qint32, QString)));
-    connect(newBrowser, SIGNAL(noteDateEditedSignal(QString, qint32, int, QDateTime)), this,
-            SLOT(noteDateEdited(QString, qint32, int, QDateTime)));
+    connect(newBrowser, &NBrowserWindow::noteUpdated, this, &NTabWidget::noteUpdateSignaled);
+    connect(newBrowser, &NBrowserWindow::tagAdded, this, &NTabWidget::tagCreationSignaled);
+    connect(newBrowser, &NBrowserWindow::updateNoteList, this, &NTabWidget::updateNoteListSignaled);
+    connect(syncThread, &SyncRunner::noteUpdated, this, &NTabWidget::noteSyncSignaled);
+    connect(newBrowser, &NBrowserWindow::noteContentEditedSignal, this, &NTabWidget::noteContentEdited);
+    connect(newBrowser, &NBrowserWindow::evernoteLinkClicked, this, &NTabWidget::evernoteLinkClicked);
+    connect(newBrowser, &NBrowserWindow::noteTitleEditedSignal, this, &NTabWidget::noteTitleEdited);
+    connect(newBrowser, &NBrowserWindow::noteAuthorEditedSignal, this, &NTabWidget::noteAuthorEdited);
+    connect(newBrowser, &NBrowserWindow::noteLocationEditedSignal, this, &NTabWidget::noteLocationEdited);
+    connect(newBrowser, &NBrowserWindow::noteUrlEditedSignal, this, &NTabWidget::noteUrlEdited);
+    connect(newBrowser, &NBrowserWindow::noteAlarmEditedSignal, this, &NTabWidget::noteAlarmEdited);
+    connect(newBrowser, &NBrowserWindow::noteTagsEditedSignal, this, &NTabWidget::noteTagsEdited);
+    connect(newBrowser, &NBrowserWindow::noteNotebookEditedSignal, this, &NTabWidget::noteNotebookEdited);
+    connect(newBrowser, &NBrowserWindow::noteDateEditedSignal, this, &NTabWidget::noteDateEdited);
 
     // Hide the html entities dialog since it doesn't work.
     newBrowser->hideHtmlEntities();

@@ -109,8 +109,13 @@ More info in: [DOCKER README](docs/DOCKER-README.md)
   or [debian/control](https://github.com/robert7/nixnote2/blob/master/debian/control)
   to see example, what is needed for Ubuntu. If you use another distribution/version,
   you may need adjust packages.
-* Qt: you can either get Qt packages for your distribution or as alternative you can download Qt 5 directly
-  from [qt.io/download](https://www.qt.io/download). 
+* Qt: install Qt 6 packages from your distribution, or download Qt 6 directly
+  from [qt.io/download](https://www.qt.io/download).
+  The qmake build now requires `qmake6`.
+* On Gentoo, the relevant packages are:
+  `dev-qt/qtbase:6`, `dev-qt/qtwebengine:6`, `dev-qt/qtwebchannel:6`,
+  `app-text/poppler[qt6]`, `app-text/htmltidy`, `net-misc/curl`,
+  `app-text/hunspell`, and `dev-util/pkgconf`.
 * Get latest source from github...
   * I recommend using `master` branch.
 * Build
@@ -120,7 +125,7 @@ More info in: [DOCKER README](docs/DOCKER-README.md)
 ./development/build-with-qmake.sh
 ```
 `build-with-qmake.sh` is just kind of convenience script. You can also build without it like:
-`qmake CONFIG+=debug PREFIX=appdir/usr`, then `make && make install`.
+`qmake6 CONFIG+=debug PREFIX=appdir/usr`, then `make && make install`.
 
 This suppose, you installed libtidy in system default location (recommended version is 5.6.0).
 
@@ -130,6 +135,32 @@ the could command could be `./development/build-with-qmake.sh debug noclean /usr
 If all got OK, you should have "qmake-build-debug/nixnote2" binary available now
 (and also a deployment copy in appdir). 
 I suggest running from "appdir" (e.g. `./appdir/usr/bin/nixnote2`).
+
+For a local Qt6 qmake build, install into the local `appdir` layout first:
+
+```bash
+qmake6 CONFIG+=release nixnote2.pro
+make -j1
+make -j1 install INSTALL_ROOT=appdir
+```
+
+Then run the installed binary from the repository root:
+
+```bash
+./appdir/usr/bin/nixnote2
+```
+
+The raw `qmake-build-release/nixnote2` binary is not enough by itself because NixNote
+expects the runtime data directory next to the binary as `../share/nixnote2`.
+Run the application inside a normal graphical session. The offscreen platform is only
+useful for automated tests:
+
+```bash
+cd testsrc
+qmake6 tests.pro
+make -j1
+./qmake-build-release-t/tests -platform offscreen
+```
 
 
 ```bash
@@ -167,8 +198,8 @@ Build from source. Basically same as for linux:
 Upon successful completion you will have the NixNote2.app bundle in the build directory (e.g. qmake-build-debug/NixNote2.app).
 
 Dependencies can come from MacPorts, Fink or HomeBrew (I use MacPorts).
-It should be possible to use official Qt5 packages too but I haven't tested that.
-Tested with following macPorts packages: qt5, qt5-qtwebkit, poppler-qt5, hunspell, boost, tidy.
+Use Qt 6 packages. The expected dependencies are Qt 6, Qt WebEngine, Qt WebChannel,
+poppler with Qt 6 bindings, hunspell, curl, and tidy.
 
 The resulting application still depends MacPorts (or Fink or HomeBrew). To turn this into a standalone app bundle that can be
 deployed anywhere:
@@ -189,9 +220,11 @@ Unlike Unix-like systems, Windows is not shipped with a bash environment, so you
 #### Download development dependencies:
 
 ##### Download the third-party libraries:
-If you want to download binary third-party library files compatible with Qt 5.5.0, you can get them from [winlib](https://github.com/boo-yee/winlib). Inside it, Hunspell and tidy are built with MinGW 32 4.9.2(shipped with Qt 5.5.0), and poppler is downloaded from sourceforge as binary. If you want to build by yourself, you can download them from the following links:
+If you want to download binary third-party library files, make sure they are built for
+the same compiler and Qt 6 version that you use for NixNote. If you want to build them
+yourself, you can download them from the following links:
 
-[poppler](https://sourceforge.net/projects/poppler-qt5-mingw32/)
+[poppler](https://poppler.freedesktop.org/)
 
 [tidy](https://github.com/htacg/tidy-html5/)
 
@@ -200,9 +233,7 @@ If you want to download binary third-party library files compatible with Qt 5.5.
 ##### Download Qt:
 [Qt](https://download.qt.io/)(with MinGW32)
 
-Qt 5.5.0 is enough. But if you want to build with a newer version, you need to download QtWebKit separately and copy the files under QtWebKit include folder to /your_path_to_qt/[version]/mingw[version]/include.
-
-[QtWebKit](https://github.com/qtwebkit/qtwebkit/releases)
+Install Qt 6 with Qt WebEngine and Qt WebChannel. QtWebKit is no longer used.
 
 (Advice: You may want to add the path to qmake.exe and ming32-make.exe to the PATH environment, so that you do not have to type the full path when building the application and libraries later. You can do this by hand or running qtenv2.bat.)
 
@@ -228,7 +259,7 @@ nixnote2
    |
    `--poppler
    |  |
-   |  `--qt5
+   |  `--qt6
    |  |  |
    |  |  `...
    |  `--cpp
@@ -248,7 +279,7 @@ nixnote2
       |
       ...
 ```
-And also copy the dll files libtidy.dll, libpoppler.dll, libpoppler-qt5.dll, libhunspell-1.7-0.dll to winlib.
+And also copy the dll files libtidy.dll, libpoppler.dll, libpoppler-qt6.dll, libhunspell-1.7-0.dll to winlib.
 
 #### Build the application:
 

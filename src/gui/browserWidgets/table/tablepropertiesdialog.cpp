@@ -86,8 +86,8 @@ TablePropertiesDialog::TablePropertiesDialog(QString tableCss, QString cellCss, 
     cancelButton = new QPushButton(tr("Cancel"), this);
     okButton = new QPushButton(tr("OK"), this);
 
-    connect(okButton, SIGNAL(clicked()), this, SLOT(okButtonClicked()));
-    connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelButtonClicked()));
+    connect(okButton, &QPushButton::clicked, this, &TablePropertiesDialog::okButtonClicked);
+    connect(cancelButton, &QPushButton::clicked, this, &TablePropertiesDialog::cancelButtonClicked);
 
     QSpacerItem *spacer1 = new QSpacerItem(0,0,QSizePolicy::MinimumExpanding);
     QSpacerItem *spacer2 = new QSpacerItem(0,0,QSizePolicy::MinimumExpanding);
@@ -105,7 +105,7 @@ TablePropertiesDialog::TablePropertiesDialog(QString tableCss, QString cellCss, 
     tabs->addTab(tablePanel, tr("Table Properties"));
     tabs->addTab(cellPanel,tr("Cell Properties"));
 
-    preview = new QWebView();
+    preview = new QWebEngineView();
     mainLayout->addWidget(preview);
 
     mainLayout->addLayout(buttonLayout);
@@ -529,18 +529,28 @@ void TablePropertiesDialog::setupTablePanel() {
     rightMarginLayout->addWidget(tableRightMarginUnitCombo);
     tablePanelLayout->addLayout(rightMarginLayout, row, col++);
 
-    connect(tableWidthSpinner, SIGNAL(valueChanged(int)), this, SLOT(tableWidthChanged(int)));
-    connect(tableWidthUnitCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(tableWidthUnitChanged(int)));
+    connect(tableWidthSpinner, qOverload<int>(&QSpinBox::valueChanged),
+            this, &TablePropertiesDialog::tableWidthChanged);
+    connect(tableWidthUnitCombo, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &TablePropertiesDialog::tableWidthUnitChanged);
 
-    connect(tableTopMarginSpinner, SIGNAL(valueChanged(int)), this, SLOT(tableTopMarginChanged(int)));
-    connect(tableBottomMarginSpinner, SIGNAL(valueChanged(int)), this, SLOT(tableBottomMarginChanged(int)));
-    connect(tableLeftMarginSpinner, SIGNAL(valueChanged(int)), this, SLOT(tableLeftMarginChanged(int)));
-    connect(tableRightMarginSpinner, SIGNAL(valueChanged(int)), this, SLOT(tableRightMarginChanged(int)));
+    connect(tableTopMarginSpinner, qOverload<int>(&QSpinBox::valueChanged),
+            this, &TablePropertiesDialog::tableTopMarginChanged);
+    connect(tableBottomMarginSpinner, qOverload<int>(&QSpinBox::valueChanged),
+            this, &TablePropertiesDialog::tableBottomMarginChanged);
+    connect(tableLeftMarginSpinner, qOverload<int>(&QSpinBox::valueChanged),
+            this, &TablePropertiesDialog::tableLeftMarginChanged);
+    connect(tableRightMarginSpinner, qOverload<int>(&QSpinBox::valueChanged),
+            this, &TablePropertiesDialog::tableRightMarginChanged);
 
-    connect(tableRightMarginUnitCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(tableMarginUnitChanged(int)));
-    connect(tableLeftMarginUnitCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(tableMarginUnitChanged(int)));
-    connect(tableTopMarginUnitCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(tableMarginUnitChanged(int)));
-    connect(tableBottomMarginUnitCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(tableMarginUnitChanged(int)));
+    connect(tableRightMarginUnitCombo, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &TablePropertiesDialog::tableMarginUnitChanged);
+    connect(tableLeftMarginUnitCombo, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &TablePropertiesDialog::tableMarginUnitChanged);
+    connect(tableTopMarginUnitCombo, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &TablePropertiesDialog::tableMarginUnitChanged);
+    connect(tableBottomMarginUnitCombo, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &TablePropertiesDialog::tableMarginUnitChanged);
 
 }
 
@@ -643,7 +653,8 @@ void TablePropertiesDialog::setupCellPanel() {
     horizontalAlignmentCombo->addItem(tr("Right"),"right");
     horizontalAlignmentCombo->addItem(tr("Center"),"center");
     cellLayout->addLayout(alignmentLayoutHorizontal, row, col++);
-    connect(horizontalAlignmentCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(horizontalAlignmentChanged(int)));
+    connect(horizontalAlignmentCombo, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &TablePropertiesDialog::horizontalAlignmentChanged);
 
     // Vertical alignment doesn't work for some reason.
 //    QHBoxLayout *alignmentLayoutVertical = new QHBoxLayout();
@@ -657,15 +668,21 @@ void TablePropertiesDialog::setupCellPanel() {
 //    verticalAlignmentCombo->addItem(tr("Top"),"top");
 //    verticalAlignmentCombo->addItem(tr("Center"),"center");
 //    cellLayout->addLayout(alignmentLayoutVertical, row, col++);
-//    connect(verticalAlignmentCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(verticalAlignmentChanged(int)));
+//    connect(verticalAlignmentCombo, qOverload<int>(&QComboBox::currentIndexChanged),
+//            this, &TablePropertiesDialog::verticalAlignmentChanged);
 
     colorDialog = new QColorDialog();
 
-    connect(borderColorButton, SIGNAL(pressed()), this, SLOT(cellBorderColorButtonPressed()));
-    connect(backgroundColorButton, SIGNAL(pressed()), this, SLOT(cellBackgroundColorButtonPressed()));
-    connect(fontColorButton, SIGNAL(pressed()), this, SLOT(cellFontColorButtonPressed()));
-    connect(borderSizeSpinner, SIGNAL(valueChanged(int)), this, SLOT(cellBorderSizeChanged(int)));
-    connect(paddingSizeSpinner, SIGNAL(valueChanged(int)), this, SLOT(cellPaddingSizeChanged(int)));
+    connect(borderColorButton, &QPushButton::pressed,
+            this, &TablePropertiesDialog::cellBorderColorButtonPressed);
+    connect(backgroundColorButton, &QPushButton::pressed,
+            this, &TablePropertiesDialog::cellBackgroundColorButtonPressed);
+    connect(fontColorButton, &QPushButton::pressed,
+            this, &TablePropertiesDialog::cellFontColorButtonPressed);
+    connect(borderSizeSpinner, qOverload<int>(&QSpinBox::valueChanged),
+            this, &TablePropertiesDialog::cellBorderSizeChanged);
+    connect(paddingSizeSpinner, qOverload<int>(&QSpinBox::valueChanged),
+            this, &TablePropertiesDialog::cellPaddingSizeChanged);
 }
 
 
@@ -681,7 +698,8 @@ void TablePropertiesDialog::loadBorderCombo(QComboBox *box) {
     box->addItem(tr("Ridge"), "ridge");
     box->addItem(tr("Inset"), "inset");
     box->addItem(tr("Outset"), "outset");
-    connect(box, SIGNAL(currentIndexChanged(int)), SLOT(cellBorderChanged(int)));
+    connect(box, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &TablePropertiesDialog::cellBorderChanged);
 }
 
 
@@ -739,18 +757,10 @@ void TablePropertiesDialog::cellPaddingSizeChanged(int size) {
 // Signaled when a cell border style changes
 void TablePropertiesDialog::cellBorderChanged(int index) {
     Q_UNUSED(index);
-#if QT_VERSION >= 0x050000
     cellBorderStyleBottom = borderComboBottom->currentData().toString();
     cellBorderStyleTop = borderComboTop->currentData().toString();
     cellBorderStyleLeft = borderComboLeft->currentData().toString();
     cellBorderStyleRight = borderComboRight->currentData().toString();
-#endif
-#if QT_VERSION < 0x050000
-    cellBorderStyleBottom = borderComboBottom->itemData(borderComboBottom->currentIndex()).toString();
-    cellBorderStyleTop = borderComboTop->itemData(borderComboTop->currentIndex()).toString();
-    cellBorderStyleLeft = borderComboLeft->itemData(borderComboLeft->currentIndex()).toString();
-    cellBorderStyleRight = borderComboRight->itemData(borderComboRight->currentIndex()).toString();
-#endif
     generatePreview();
 }
 
@@ -761,12 +771,7 @@ void TablePropertiesDialog::cellBorderChanged(int index) {
 // Signaled when the horizontal alignment changes
 void TablePropertiesDialog::horizontalAlignmentChanged(int index) {
     Q_UNUSED(index);
-#if QT_VERSION >= 0x050000
     horizontalAlignment = horizontalAlignmentCombo->currentData().toString();
-#endif
-#if QT_VERSION < 0x050000
-    horizontalAlignment = horizontalAlignmentCombo->itemData(horizontalAlignmentCombo->currentIndex()).toString();
-#endif
     generatePreview();
 }
 
@@ -775,12 +780,7 @@ void TablePropertiesDialog::horizontalAlignmentChanged(int index) {
 // Signaled when the vertical alignment changes
 void TablePropertiesDialog::verticalAlignmentChanged(int index) {
     Q_UNUSED(index);
-#if QT_VERSION >= 0x050000
     verticalAlignment = verticalAlignmentCombo->currentData().toString();
-#endif
-#if QT_VERSION < 0x050000
-    verticalAlignment = verticalAlignmentCombo->itemData(verticalAlignmentCombo->currentIndex()).toString();
-#endif
     generatePreview();
 }
 
@@ -830,18 +830,10 @@ void TablePropertiesDialog::cellBorderSizeChanged(int size) {
 void TablePropertiesDialog::tableMarginUnitChanged(int index) {
     Q_UNUSED(index);
 
-#if QT_VERSION >= 0x050000
     tableRightMarginUnit = tableRightMarginUnitCombo->currentData().toString();
     tableTopMarginUnit = tableTopMarginUnitCombo->currentData().toString();
     tableLeftMarginUnit = tableLeftMarginUnitCombo->currentData().toString();
     tableBottomMarginUnit = tableBottomMarginUnitCombo->currentData().toString();
-#endif
-#if QT_VERSION < 0x050000
-    tableRightMarginUnit = tableRightMarginUnitCombo->itemData(tableRightMarginUnitCombo->currentIndex()).toString();
-    tableTopMarginUnit = tableTopMarginUnitCombo->itemData(tableTopMarginUnitCombo->currentIndex()).toString();
-    tableLeftMarginUnit = tableLeftMarginUnitCombo->itemData(tableLeftMarginUnitCombo->currentIndex()).toString();
-    tableBottomMarginUnit = tableBottomMarginUnitCombo->itemData(tableBottomMarginUnitCombo->currentIndex()).toString();
-#endif
 
     generatePreview();
 }
@@ -864,5 +856,3 @@ void TablePropertiesDialog::tableWidthUnitChanged(int index) {
         tableWidthSpinner->setMaximum(1000);
     generatePreview();
 }
-
-

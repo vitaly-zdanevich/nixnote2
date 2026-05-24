@@ -66,7 +66,7 @@ public slots:
 private slots:
     void enableSyncStateChange();
     void enableSuccessfulSyncMessagesInTray();
-    void proxyCheckboxAltered(int state);
+    void proxyCheckboxAltered(Qt::CheckState state);
     
 };
 

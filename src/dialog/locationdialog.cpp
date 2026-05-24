@@ -48,10 +48,10 @@ LocationDialog::LocationDialog(QWidget *parent) :
 
     ok.setText(tr("OK"));
     ok.setDefault(true);
-    connect(&ok, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
+    connect(&ok, &QPushButton::clicked, this, &LocationDialog::okButtonPressed);
 
     QPushButton *cancel = new QPushButton(tr("Cancel"), this);
-    connect(cancel, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
+    connect(cancel, &QPushButton::clicked, this, &LocationDialog::cancelButtonPressed);
     button->addWidget(&ok, 1, 1);
     button->addWidget(cancel, 1, 2);
     grid->addLayout(button, 3, 1);

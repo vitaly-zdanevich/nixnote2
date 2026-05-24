@@ -3324,6 +3324,7 @@ QEVERCLOUD_EXPORT IUserStore * newUserStore(
 
 } // namespace qevercloud
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 Q_DECLARE_METATYPE(QList<qevercloud::Notebook>)
 Q_DECLARE_METATYPE(QList<qevercloud::Tag>)
 Q_DECLARE_METATYPE(QList<qevercloud::SavedSearch>)
@@ -3332,5 +3333,6 @@ Q_DECLARE_METATYPE(QList<qevercloud::SharedNotebook>)
 Q_DECLARE_METATYPE(QList<qevercloud::LinkedNotebook>)
 Q_DECLARE_METATYPE(QList<qevercloud::BusinessInvitation>)
 Q_DECLARE_METATYPE(QList<qevercloud::UserProfile>)
+#endif
 
 #endif // QEVERCLOUD_GENERATED_SERVICES_H

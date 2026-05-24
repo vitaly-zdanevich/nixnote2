@@ -26,11 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/sql/resourcetable.h"
 #include <QTextDocument>
 #include <QtXml>
-#if QT_VERSION < 0x050000
-#include <poppler-qt4.h>
-#else
-#include <poppler-qt5.h>
-#endif
+#include <poppler-qt6.h>
 
 extern Global global;
 using namespace Poppler;
@@ -249,8 +245,11 @@ void NoteIndexer::indexRecognition(qint32 reslid, Resource &r) {
         return;
 
     QDomDocument doc;
-    QString emsg;
-    doc.setContent(recognition.body, &emsg);
+    const QDomDocument::ParseResult parseResult = doc.setContent(recognition.body);
+    if (!parseResult) {
+        QLOG_WARN() << "Unable to parse recognition XML:" << parseResult.errorMessage;
+        return;
+    }
 
     // look for text tags
     QDomNodeList anchors = doc.documentElement().elementsByTagName("t");
@@ -258,11 +257,7 @@ void NoteIndexer::indexRecognition(qint32 reslid, Resource &r) {
     QLOG_TRACE() << "Beginning insertion of recognition:";
     QLOG_TRACE() << "Anchors found: " << anchors.length();
     sql.exec("begin;");
-#if QT_VERSION < 0x050000
-    for (unsigned int i=0;  i<anchors.length(); i++) {
-#else
     for (int i=0; i<anchors.length(); i++) {
-#endif
         QLOG_TRACE() << "Anchor: " << i;
         QApplication::processEvents();
         QDomElement enmedia = anchors.at(i).toElement();
@@ -304,7 +299,7 @@ void NoteIndexer::indexPdf(qint32 reslid) {
     QString file = global.fileManager.getDbaDirPath() + QString::number(reslid) +".pdf";
 
     QString text = "";
-    Poppler::Document *doc = Poppler::Document::load(file);
+    auto doc = Poppler::Document::load(file);
     if (doc == nullptr || doc->isEncrypted() || doc->isLocked())
         return;
 

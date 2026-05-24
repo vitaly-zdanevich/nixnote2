@@ -29,12 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/sql/tagtable.h"
 
 #include <QDirIterator>
-
-#if QT_VERSION < 0x050000
-#include <QtScript/QScriptEngine>
-#else
 #include <QJSEngine>
-#endif
 
 
 
@@ -51,8 +46,8 @@ FileWatcher::FileWatcher(QString dir, ScanType type, qint32 notebookLid, bool su
     this->includeSubdirectories = subdirs;
     addDirectory(dir);
 
-    connect(this, SIGNAL(directoryChanged(QString)), this, SLOT(saveDirectory(QString)));
-    connect(this, SIGNAL(fileChanged(QString)), this, SLOT(saveFile(QString)));
+    connect(this, &QFileSystemWatcher::directoryChanged, this, &FileWatcher::saveDirectory);
+    connect(this, &QFileSystemWatcher::fileChanged, this, &FileWatcher::saveFile);
 }
 
 
@@ -101,7 +96,8 @@ void FileWatcher::saveFile(QString filename) {
 
     // If we have a user-import file
     QFile f(filename);
-    f.open(QIODevice::ReadOnly);
+    if (!f.open(QIODevice::ReadOnly))
+        return;
     QByteArray data = f.readAll();
     f.close();
     if (f.size() == 0) {
@@ -279,7 +275,6 @@ void FileWatcher::exitPoint(ExitPoint *exit, Note &n) {
     QLOG_TRACE_IN();
     ExitPoint_FileImport *saveExit = new ExitPoint_FileImport();
 
-#if QT_VERSION >= 0x050000
     QJSEngine engine;
     QJSValue exit_s = engine.newQObject(saveExit);
     engine.globalObject().setProperty("note", exit_s);
@@ -304,19 +299,6 @@ void FileWatcher::exitPoint(ExitPoint *exit, Note &n) {
     saveExit->setExitReady();
     QJSValue retval = engine.evaluate(exit->getScript());
     QLOG_INFO() << "Return value from exit: " << retval.toString();
-#endif
-#if QT_VERSION < 0x050000
-    QScriptEngine scriptEngine;
-    QScriptValue exit_qs = scriptEngine.newQObject(saveExit);
-    scriptEngine.globalObject().setProperty("note", exit_qs);
-    // Start loading values
-    QLOG_INFO() << tr("Calling exit ") << exit->getExitName();
-
-    // Set exit ready & call it.
-    saveExit->setExitReady();
-    QScriptValue retval = scriptEngine.evaluate(exit->getScript());
-    QLOG_INFO() << "Return value from exit: " << retval.toString();
-#endif
 
     // Check for any changes.
     if (saveExit->isTitleModified()) {

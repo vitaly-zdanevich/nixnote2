@@ -74,9 +74,7 @@ HtmlEntitiesDialog::HtmlEntitiesDialog(QWidget *parent) :
 
     initGrid();
     initEntitiesGrid();
-    signalmapper = new QSignalMapper();
     initEntitiesButtons();
-    connect(signalmapper, SIGNAL(mapped(QString)), this, SLOT(htmlEntityClicked(QString)));
 
     scrollArea = new QScrollArea();
     scrollArea->setBackgroundRole(QPalette::Dark);
@@ -93,8 +91,8 @@ HtmlEntitiesDialog::HtmlEntitiesDialog(QWidget *parent) :
     buttonLayout = new QHBoxLayout();
     editButton = new QPushButton(editString);
     closeButton = new QPushButton(closeString);
-    connect(closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
-    connect(editButton, SIGNAL(clicked()), this, SLOT(editClicked()));
+    connect(closeButton, &QPushButton::clicked, this, &HtmlEntitiesDialog::closeClicked);
+    connect(editButton, &QPushButton::clicked, this, &HtmlEntitiesDialog::editClicked);
     buttonLayout->addStretch();
     buttonLayout->addWidget(editButton);
     buttonLayout->addWidget(closeButton);
@@ -111,7 +109,6 @@ HtmlEntitiesDialog::HtmlEntitiesDialog(QWidget *parent) :
 
 void HtmlEntitiesDialog::clearEntitiesButtons() {
     for (int i =buttonList.size()-1; i>=0; i--) {
-        signalmapper->removeMappings(buttonList[i]);
         entitiesGrid->removeWidget(buttonList[i]);
         buttonList[i]->setVisible(false);
         //delete buttonList[i];
@@ -136,8 +133,10 @@ void HtmlEntitiesDialog::initEntitiesButtons() {
         doc.setHtml(ptr->at(i));
         QString htmlText = doc.toPlainText();
         QPushButton *button = new QPushButton(htmlText);
-        signalmapper->setMapping(button, ptr->at(i));
-        connect(button, SIGNAL(clicked()), signalmapper, SLOT(map()));
+        const QString entity = ptr->at(i);
+        connect(button, &QPushButton::clicked, this, [this, entity]() {
+            htmlEntityClicked(entity);
+        });
         button->setMinimumHeight(ENTITY_BUTTON_HEIGHT);
         button->setMinimumWidth(ENTITY_BUTTON_WIDTH);
         entitiesGrid->addWidget(button,row, column);
@@ -190,8 +189,7 @@ void HtmlEntitiesDialog::editClicked() {
             QDir dir;
             dir.remove(fileName);
             QFile file(fileName);
-            file.open(QFile::WriteOnly);
-            if (file.isOpen()) {
+            if (file.open(QFile::WriteOnly)) {
                 QTextStream out(&file);
                 out << value;
             }
@@ -261,8 +259,7 @@ void HtmlEntitiesDialog::loadCustomEntities() {
     entities.clear();
     QString fileName = global.fileManager.getConfigDir() + QString("entities.txt");
     QFile file(fileName);
-    file.open(QFile::ReadOnly);
-    if (file.isOpen()) {
+    if (file.open(QFile::ReadOnly)) {
         while (!file.atEnd()) {
             QString line = file.readLine();
             line = line.replace("\t", " ");

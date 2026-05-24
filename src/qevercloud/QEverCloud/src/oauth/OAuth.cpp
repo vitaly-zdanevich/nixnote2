@@ -16,7 +16,7 @@
 #elif QEVERCLOUD_USE_SYSTEM_BROWSER
 #include "OAuthSystemBrowser.h"
 #else
-#include "OAuthWebKit.h"
+#error "QEverCloud OAuth requires QEVERCLOUD_USE_SYSTEM_BROWSER or QEVERCLOUD_USE_QT_WEB_ENGINE."
 #endif
 
 #include <QVBoxLayout>

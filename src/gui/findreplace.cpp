@@ -39,7 +39,9 @@ FindReplace::FindReplace(QWidget *parent) :
 
     closeButton->setIcon(global.getIconResource(":filecloseIcon"));
     closeButton->setStyleSheet("border:none;");
-    connect(closeButton, SIGNAL(clicked()), this, SLOT(hide()));
+    connect(closeButton, &QPushButton::clicked, this, [this]() {
+        hide();
+    });
 
     findLine->setMaximumWidth(300);
 
@@ -90,8 +92,8 @@ FindReplace::FindReplace(QWidget *parent) :
     replaceAllButton->setDisabled(true);
     caseSensitive->setDisabled(true);
 
-    connect(findLine, SIGNAL(textChanged(QString)), this, SLOT(textChanged()));
-    connect(replaceLine, SIGNAL(textChanged(QString)), this, SLOT(textChanged()));
+    connect(findLine, &QLineEdit::textChanged, this, &FindReplace::textChanged);
+    connect(replaceLine, &QLineEdit::textChanged, this, &FindReplace::textChanged);
 
     QString css = global.getThemeCss("findReplaceCss");
     if (css!="")
@@ -146,12 +148,10 @@ void FindReplace::textChanged() {
 
 
 
-QWebPage::FindFlags FindReplace::getCaseSensitive() {
-    QWebPage::FindFlags ff;
-    ff = QWebPage::HighlightAllOccurrences;
-    ff = 0;
+QWebEnginePage::FindFlags FindReplace::getCaseSensitive() {
+    QWebEnginePage::FindFlags ff;
     if (caseSensitive->isChecked())
-        ff = ff | QWebPage::FindCaseSensitively;
+        ff = ff | QWebEnginePage::FindCaseSensitively;
 
     return ff;
 }

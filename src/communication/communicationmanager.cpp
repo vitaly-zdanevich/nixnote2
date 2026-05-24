@@ -169,11 +169,8 @@ void CommunicationManager::enDisconnect() {
 // Get a user's information
 bool CommunicationManager::getUserInfo(User &user) {
 
-    QNetworkAccessManager *p = new QNetworkAccessManager;
-    QNetworkAccessManager::NetworkAccessibility accessibility = p->networkAccessible();
-    // unfortunately it doesn't really seem to check the network availability
     qint64 time1 = QDateTime::currentMSecsSinceEpoch();
-    QLOG_DEBUG() << "CommunicationManager.getUserInfo(): networkAccessible=" << accessibility << ", timestamp=" << time1;
+    QLOG_DEBUG() << "CommunicationManager.getUserInfo(): timestamp=" << time1;
 
     QLOG_DEBUG() << "CommunicationManager.getUserInfo(): new UserStore(); host=" << evernoteHost;
     QLOG_TRACE() << "token=" << authToken;
@@ -432,7 +429,7 @@ qint32 CommunicationManager::expungeTag(Guid guid) {
     } catch (EDAMSystemException &e) {
         handleEDAMSystemException(e);
         return 0;
-    } catch (EDAMNotFoundException) {
+    } catch (const EDAMNotFoundException &) {
         return 1;
     }
 }
@@ -478,7 +475,7 @@ qint32 CommunicationManager::expungeNotebook(Guid guid) {
     } catch (ThriftException &e) {
         reportError(CommunicationError::ThriftException, static_cast<int>(e.type()), e.what());
         return 0;
-    } catch (EDAMNotFoundException) {
+    } catch (const EDAMNotFoundException &) {
         return 1;
     } catch (EDAMUserException &e) {
         reportError(CommunicationError::EDAMUserException, static_cast<int>(e.errorCode), e.what());
@@ -682,7 +679,7 @@ bool CommunicationManager::authenticateToLinkedNotebookShard(LinkedNotebook &boo
     } catch (EDAMSystemException &e) {
         handleEDAMSystemException(e);
         return false;
-    } catch (EDAMNotFoundException) {
+    } catch (const EDAMNotFoundException &) {
         // If it is a linked noteboook & it isn't found, then we can just expunge it
         return false;
     }
@@ -837,6 +834,39 @@ bool CommunicationManager::getNote(Note &note, QString guid, bool withResource, 
     }
 }
 
+bool CommunicationManager::getResource(Resource &resource, QString guid, bool withData, bool withRecognition,
+                                       bool withAttributes, bool withAlternateData, bool reportNotFound,
+                                       bool *notFound) {
+    if (notFound) {
+        *notFound = false;
+    }
+    try {
+        resource = noteStore->getResource(guid, withData, withRecognition, withAttributes, withAlternateData,
+                                          newRequestContext(authToken, requestTimeout));
+        return true;
+    } catch (ThriftException &e) {
+        reportError(CommunicationError::ThriftException, static_cast<int>(e.type()), e.what());
+        return false;
+    } catch (EDAMUserException &e) {
+        reportError(CommunicationError::EDAMUserException, static_cast<int>(e.errorCode), e.what());
+        return false;
+    } catch (EDAMSystemException &e) {
+        handleEDAMSystemException(e);
+        return false;
+    } catch (EDAMNotFoundException &e) {
+        if (notFound) {
+            *notFound = true;
+        }
+        if (reportNotFound) {
+            handleEDAMNotFoundException(e);
+        } else {
+            QLOG_DEBUG() << "Resource not found on Evernote server, guid=" << guid
+                         << "message=" << e.what();
+        }
+        return false;
+    }
+}
+
 
 
 
@@ -958,11 +988,7 @@ void CommunicationManager::downloadInkNoteImage(QString guid, Resource *r, QStri
     size.setHeight(r->height);
     size.setWidth(r->width);
 
-#if QT_VERSION < 0x050000
-    QUrl postData;
-#else
     QUrlQuery postData;
-#endif
     postData.clear();
     postData.addQueryItem("auth", authToken);
 
@@ -976,18 +1002,17 @@ void CommunicationManager::downloadInkNoteImage(QString guid, Resource *r, QStri
         for (int i = 0; i < sliceCount && position >= 0; i++) {
 
             QTemporaryFile tempFile;
-            tempFile.open();
+            if (!tempFile.open())
+                continue;
             tempFile.close();
             fp = fopen(tempFile.fileName().toStdString().c_str(), "wb");
+            if (fp == nullptr)
+                continue;
 
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWriter);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
 
-#if QT_VERSION < 0x050000
-            QString url = urlBase+QString::number(i+1)+"&"+postData.encodedQuery();
-#else
             QString url = urlBase + QString::number(i + 1) + "&" + postData.query();
-#endif
             curl_easy_setopt(curl, CURLOPT_URL, url.toStdString().c_str());
             res = curl_easy_perform(curl);
             QLOG_DEBUG() << "curl inknote result " << res;
@@ -1163,7 +1188,7 @@ void CommunicationManager::handleEDAMSystemException(EDAMSystemException e, QStr
                 + tr(startText.c_str()) + QString(" ") + QString::number(this->minutesToNextSync)
                 + " " + tr(endOfText.c_str()));
         if (e.rateLimitDuration.isSet()) {
-            msg.append(" # rateLimitDuration=").append(e.rateLimitDuration.ref());
+            msg.append(" # rateLimitDuration=").append(QString::number(e.rateLimitDuration.ref()));
         }
         reportError(CommunicationError::RateLimitExceeded, static_cast<int>(e.errorCode), userMessage, msg);
         return;

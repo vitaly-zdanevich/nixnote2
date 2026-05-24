@@ -39,7 +39,7 @@ TableDialog::TableDialog(QWidget *parent) :
     widthValidator.setBottom(0);
     widthValidator.setTop(100);
     width.setValidator(&widthValidator);
-    connect(&width, SIGNAL(textChanged(QString)), this, SLOT(validateWidth()));
+    connect(&width, &QLineEdit::textChanged, this, &TableDialog::validateWidth);
 
     rows.setMinimum(1);
     rows.setMaximum(30);
@@ -51,7 +51,7 @@ TableDialog::TableDialog(QWidget *parent) :
 
 
 
-    connect(&unit, SIGNAL(activated(int)), this, SLOT(unitChanged()));
+    connect(&unit, qOverload<int>(&QComboBox::activated), this, &TableDialog::unitChanged);
     input.addWidget(new QLabel(tr("Rows")),1,1);
     input.addWidget(&rows, 1, 2);
     input.addWidget(new QLabel(tr("Columns")), 2, 1);
@@ -66,10 +66,10 @@ TableDialog::TableDialog(QWidget *parent) :
     grid.addLayout(&msgGrid, 2, 1);
 
     ok.setText(tr("OK"));
-    connect(&ok, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
+    connect(&ok, &QPushButton::clicked, this, &TableDialog::okButtonPressed);
 
     cancel.setText(tr("Cancel"));
-    connect(&cancel, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
+    connect(&cancel, &QPushButton::clicked, this, &TableDialog::cancelButtonPressed);
 
     button.addWidget(&ok, 1,1);
     button.addWidget(&cancel, 1,2);

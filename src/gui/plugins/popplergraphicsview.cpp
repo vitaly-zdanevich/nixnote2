@@ -40,5 +40,4 @@ PopplerGraphicsView::PopplerGraphicsView(QGraphicsScene *&scene) :
 void PopplerGraphicsView::mousePressEvent(QMouseEvent * e) {
    Q_UNUSED(e);  // suppress unused variable warning
    QDesktopServices::openUrl(QUrl(filename));
-   QGraphicsView(parent);
 }

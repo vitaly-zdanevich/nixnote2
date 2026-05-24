@@ -43,8 +43,7 @@ ShortcutKeys::ShortcutKeys(QObject *parent) :
 // Read in the custom keys (if they exist)
 void ShortcutKeys::loadCustomKeys(QString fileName) {
     QFile file(fileName);
-    file.open(QFile::ReadOnly);
-    if (file.isOpen()) {
+    if (file.open(QFile::ReadOnly)) {
         QLOG_DEBUG() << "Loading " << fileName;
         while (!file.atEnd()) {
             QString line = file.readLine().simplified();
@@ -153,4 +152,3 @@ QString ShortcutKeys::getAction(QString *shortcut) {
         return "";
     return shortcutMap->value(shortcut->toLower());
 }
-

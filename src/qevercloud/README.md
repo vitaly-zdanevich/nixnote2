@@ -50,25 +50,24 @@ make install
 
 The library can be built and shipped either as a static library or a shared library. Dll export/import symbols necessary for Windows platform are supported.
 
-QEverCloud uses C++14 standard. CMake automatically checks whether the compiler is capable enough of building QEverCloud so if the pre-build configuration step was successful, the build step should be successful as well. Known capable compilers are g++ 9 or later and Visual Studio 2019 or later.
+QEverCloud uses C++17 standard. CMake automatically checks whether the compiler is capable enough of building QEverCloud so if the pre-build configuration step was successful, the build step should be successful as well. Known capable compilers are g++ 9 or later and Visual Studio 2019 or later.
 
-The recommended version of Qt5 for building the library is the latest Qt 5.15. However, it is also known to build and work with Qt 5.12.
+The recommended version of Qt for building this NixNote-integrated library is Qt 6.
 
 QEverCloud depends on the following Qt components:
- * Qt5Core
- * Qt5Widgets
- * Qt5Network
- * (Optional) Qt5WebKit an Qt5WebKitWidgets
- * (Optional) Qt5WebEngine and Qt5WebEngineWidgets
+ * Qt6Core
+ * Qt6Widgets
+ * Qt6Network
+ * (Optional) Qt6WebEngineCore and Qt6WebEngineWidgets
 
-The dependencies on Qt5WebKit or Qt5WebEngine are only actual if the library is built with OAuth support. But even then there is an option to build the library with OAuth support but without the dependency on either of these components. More on this below.
+The dependency on Qt6WebEngine is only required if the library is built with OAuth support and the QtWebEngine OAuth backend is selected. There is also an option to build OAuth support without QtWebEngine by delegating part of the OAuth procedure to the system browser.
 
-By default the library is built with OAuth support and uses Qt5WebEngine for it. The following cmake parameters are available to alter this behaviour:
+By default the library is built with OAuth support and uses the system browser backend. The following cmake parameters are available to alter this behaviour:
  * `-DBUILD_WITH_OAUTH_SUPPORT=NO` would disable building with OAuth support entirely.
- * `-DUSE_QT5_WEBKIT=ON` would build the library with OAuth using Qt5WebKit for web page rendering.
- * `-DQEVERCLOUD_USE_SYSTEM_BROWSER=ON` would build the library with OAuth not using either Qt5WebKit or Qt5WebEngine but instead delegating some portion of OAuth procedure to the system browser.
+ * `-DQEVERCLOUD_USE_QT_WEB_ENGINE=ON -DQEVERCLOUD_USE_SYSTEM_BROWSER=OFF` would build the library with OAuth using Qt6WebEngine.
+ * `-DQEVERCLOUD_USE_SYSTEM_BROWSER=ON` would build the library with OAuth without using Qt6WebEngine and instead delegate part of the OAuth procedure to the system browser.
 
-If Qt5's Qt5Test module is found during the pre-build configuration step, the unit tests are enabled and can be run with `make test` and more verbose `make check` commands.
+If Qt6Test is found during the pre-build configuration step, the unit tests are enabled and can be run with `make test` and more verbose `make check` commands.
 
 Other available CMake configurations options:
 

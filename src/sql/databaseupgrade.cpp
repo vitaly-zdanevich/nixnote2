@@ -17,7 +17,7 @@ DatabaseUpgrade::DatabaseUpgrade(QObject *parent) :
 }
 
 
-void DatabaseUpgrade::fixSql(bool toQt5) {
+void DatabaseUpgrade::fixSql(bool toNumericBooleans) {
     QList<int> fields;
 
     fields.append(NOTE_ISPINNED);
@@ -66,7 +66,7 @@ void DatabaseUpgrade::fixSql(bool toQt5) {
 
     NSqlQuery falseQuery(global.db);
     NSqlQuery trueQuery(global.db);
-    if (toQt5) {
+    if (toNumericBooleans) {
         falseQuery.prepare("Update Datastore set data=0 where data='false' and key=:key");
         trueQuery.prepare("Update Datastore set data=1 where data='true' and key=:key");
     } else {

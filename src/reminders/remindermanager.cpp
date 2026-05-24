@@ -36,7 +36,7 @@ void ReminderManager::reloadTimers() {
     }
 
     ReminderEvent *event = new ReminderEvent();
-    connect(&event->timer, SIGNAL(timeout()), this, SLOT(timerPop()));
+    connect(&event->timer, &QTimer::timeout, this, &ReminderManager::timerPop);
 
     NoteTable ntable(global.db);
     QList< QPair<qint32, qlonglong>* > notes;
@@ -45,7 +45,7 @@ void ReminderManager::reloadTimers() {
     for (int i=notes.size() -1; i>=0; i--) {
         ReminderEvent *event = new ReminderEvent();
         event->lid = notes[i]->first;
-        connect(&event->timer, SIGNAL(timeout()), this, SLOT(timerPop()));
+        connect(&event->timer, &QTimer::timeout, this, &ReminderManager::timerPop);
         event->setTimer(notes[i]->first, notes[i]->second);
         reminders.append(event);
     }
@@ -97,7 +97,7 @@ void ReminderManager::updateReminder(qint32 lid, QDateTime time) {
     }
     ReminderEvent *event = new ReminderEvent();
     event->lid = lid;
-    connect(&event->timer, SIGNAL(timeout()), this, SLOT(timerPop()));
+    connect(&event->timer, &QTimer::timeout, this, &ReminderManager::timerPop);
     event->setTimer(lid, time);
     reminders.append(event);
 }

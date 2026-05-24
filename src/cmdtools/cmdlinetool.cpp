@@ -45,9 +45,6 @@ CmdLineTool::CmdLineTool(QObject *parent) :
 
 // Run the command line request.
 int CmdLineTool::run(StartupConfig &config) {
-#if QT_VERSION < 0x050000
-    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
-#endif
     QString errmsg(tr("Unable to attach to shared memory segment.  Is the other NixNote running?\n"));
     if (config.sync()) {
         QLOG_DEBUG() << "Command: sync";
@@ -202,7 +199,7 @@ int CmdLineTool::addNote(StartupConfig config) {
             content.append("<br>");
             content.replace("\n","<br>");
         }
-        config.newNote->content = QString::fromAscii(content);
+        config.newNote->content = QString::fromUtf8(content);
     }
 
     if (!config.newNote->content.contains("<body")) {
@@ -311,7 +308,8 @@ int CmdLineTool::addNote(StartupConfig config) {
         QFile file(filename);
         if (file.exists()) {
 
-            file.open(QIODevice::ReadOnly);
+            if (!file.open(QIODevice::ReadOnly))
+                continue;
             QByteArray ba = file.readAll();
             file.close();
 
@@ -376,7 +374,7 @@ int CmdLineTool::appendNote(StartupConfig config) {
             content.append("<br>");
             content.replace("\n","<br>");
         }
-        config.newNote->content = QString::fromAscii(content);
+        config.newNote->content = QString::fromUtf8(content);
     }
 
     if (!config.newNote->content.contains("<body")) {
@@ -418,7 +416,8 @@ int CmdLineTool::appendNote(StartupConfig config) {
         QFile file(filename);
         if (file.exists()) {
 
-            file.open(QIODevice::ReadOnly);
+            if (!file.open(QIODevice::ReadOnly))
+                continue;
             QByteArray ba = file.readAll();
             file.close();
 
@@ -473,7 +472,7 @@ int CmdLineTool::readNote(StartupConfig config) {
     } else {
         text = tr("Note not found.");
     }
-    std::cout << text.toStdString() << endl;
+    std::cout << text.toStdString() << std::endl;
     return 0;
 }
 
@@ -482,7 +481,7 @@ int CmdLineTool::readNote(StartupConfig config) {
 // Export notes or do a backup via the command line
 int CmdLineTool::exportNotes(StartupConfig config) {
     if (global.sharedMemory->attach()) {
-        std::cout << tr("This cannot be done with NixNote running.").toStdString() << endl;
+        std::cout << tr("This cannot be done with NixNote running.").toStdString() << std::endl;
         return 16;
     }
     global.db = new DatabaseConnection(NN_DB_CONNECTION_NAME);  // Startup the database
@@ -498,7 +497,7 @@ int CmdLineTool::exportNotes(StartupConfig config) {
 // Import notes from a nnex file.
 int CmdLineTool::importNotes(StartupConfig config) {
     if (global.sharedMemory->attach()) {
-        std::cout << tr("This cannot be done with NixNote running.").toStdString() << endl;
+        std::cout << tr("This cannot be done with NixNote running.").toStdString() << std::endl;
         return 16;
     }
     global.db = new DatabaseConnection(NN_DB_CONNECTION_NAME);  // Startup the database
@@ -517,7 +516,7 @@ int CmdLineTool::alterNote(StartupConfig config) {
 // Open a notebook
 int CmdLineTool::openNotebook(StartupConfig config) {
     if (global.sharedMemory->attach()) {
-        std::cout << tr("This cannot be done with NixNote running.").toStdString() << endl;
+        std::cout << tr("This cannot be done with NixNote running.").toStdString() << std::endl;
         return 16;
     }
     global.db = new DatabaseConnection(NN_DB_CONNECTION_NAME);  // Startup the database
@@ -527,7 +526,7 @@ int CmdLineTool::openNotebook(StartupConfig config) {
         if (lid >0) {
             bookTable.openNotebook(lid);
         } else {
-            std::cout << tr("Notebook not found: ").toStdString() << config.notebookList[i].toStdString() << endl;
+            std::cout << tr("Notebook not found: ").toStdString() << config.notebookList[i].toStdString() << std::endl;
         }
     }
     return 0;
@@ -537,7 +536,7 @@ int CmdLineTool::openNotebook(StartupConfig config) {
 // Close a notebook
 int CmdLineTool::closeNotebook(StartupConfig config) {
     if (global.sharedMemory->attach()) {
-        std::cout << tr("This cannot be done with NixNote running.").toStdString() << endl;
+        std::cout << tr("This cannot be done with NixNote running.").toStdString() << std::endl;
         return 16;
     }
     global.db = new DatabaseConnection(NN_DB_CONNECTION_NAME);  // Startup the database
@@ -547,7 +546,7 @@ int CmdLineTool::closeNotebook(StartupConfig config) {
         if (lid >0) {
             bookTable.closeNotebook(lid);
         } else {
-            std::cout << tr("Notebook not found: ").toStdString() << config.notebookList[i].toStdString() << endl;
+            std::cout << tr("Notebook not found: ").toStdString() << config.notebookList[i].toStdString() << std::endl;
         }
     }
     return 0;
@@ -560,7 +559,7 @@ int CmdLineTool::closeNotebook(StartupConfig config) {
 // Do a sync
 int CmdLineTool::sync() {
     if (!global.accountsManager->oauthTokenFound()) {
-        std::cout << tr("OAuth token not found.").toStdString() << endl;
+        std::cout << tr("OAuth token not found.").toStdString() << std::endl;
         return 16;
     }
 

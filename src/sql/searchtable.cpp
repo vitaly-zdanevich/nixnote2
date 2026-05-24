@@ -37,7 +37,7 @@ SearchTable::SearchTable(DatabaseConnection *db)
 
 // Get the LIDs for all searches
 void SearchTable::getAll(QList<qint32> &lids) {
-    lids.empty();
+    lids.clear();
     db->lockForRead();
     NSqlQuery query(db);
     query.prepare("Select lid from datastore where key=:key");

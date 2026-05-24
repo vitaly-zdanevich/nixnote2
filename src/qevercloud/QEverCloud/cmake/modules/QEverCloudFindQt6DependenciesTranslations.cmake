@@ -1,0 +1,1 @@
+QEverCloudFindPackageWrapper(Qt6LinguistTools ${QEVERCLOUD_FIND_PACKAGE_ARG})

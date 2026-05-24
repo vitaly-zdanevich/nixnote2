@@ -29,10 +29,10 @@ DateEditor::DateEditor(QWidget *parent) :
 {
     QVBoxLayout *layout = new QVBoxLayout();
     QHBoxLayout *vLayout = new QHBoxLayout();
-    vLayout->setMargin(4);
+    vLayout->setContentsMargins(4, 4, 4, 4);
     QHBoxLayout *v2Layout = new QHBoxLayout();
-    v2Layout->setMargin(4);
-    layout->setMargin(0);
+    v2Layout->setContentsMargins(4, 4, 4, 4);
+    layout->setContentsMargins(0, 0, 0, 0);
 
 
     vLayout->addWidget(new QLabel(tr("Created:")));
@@ -52,14 +52,14 @@ DateEditor::DateEditor(QWidget *parent) :
     v2Layout->addWidget(&locationEditor);
     layout->addLayout(v2Layout);
 
-    connect(&createdDate, SIGNAL(dateChanged(QDate)), this, SLOT(emitChangedSignal()));
-    connect(&updatedDate, SIGNAL(dateChanged(QDate)), this, SLOT(emitChangedSignal()));
-    connect(&subjectDate, SIGNAL(dateChanged(QDate)), this, SLOT(emitChangedSignal()));
-    connect(&createdDate, SIGNAL(timeChanged(QTime)), this, SLOT(emitChangedSignal()));
-    connect(&updatedDate, SIGNAL(timeChanged(QTime)), this, SLOT(emitChangedSignal()));
-    connect(&subjectDate, SIGNAL(timeChanged(QTime)), this, SLOT(emitChangedSignal()));
-    connect(&authorEditor, SIGNAL(textUpdated()), this, SLOT(emitChangedSignal()));
-    connect(&locationEditor, SIGNAL(clicked()), this, SLOT(emitChangedSignal()));
+    connect(&createdDate, &QDateTimeEdit::dateChanged, this, &DateEditor::emitChangedSignal);
+    connect(&updatedDate, &QDateTimeEdit::dateChanged, this, &DateEditor::emitChangedSignal);
+    connect(&subjectDate, &QDateTimeEdit::dateChanged, this, &DateEditor::emitChangedSignal);
+    connect(&createdDate, &QDateTimeEdit::timeChanged, this, &DateEditor::emitChangedSignal);
+    connect(&updatedDate, &QDateTimeEdit::timeChanged, this, &DateEditor::emitChangedSignal);
+    connect(&subjectDate, &QDateTimeEdit::timeChanged, this, &DateEditor::emitChangedSignal);
+    connect(&authorEditor, &AuthorEditor::textUpdated, this, &DateEditor::emitChangedSignal);
+    connect(&locationEditor, &QToolButton::clicked, this, &DateEditor::emitChangedSignal);
     setLayout(layout);
     hide();
 }

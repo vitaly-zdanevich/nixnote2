@@ -121,7 +121,7 @@ void NotebookMenuButton::loadData() {
             actions.append(action);
             action->setText(book.name);
             action->setCheckable(true);
-            connect(action, SIGNAL(triggered()), this, SLOT(notebookSelected()));
+            connect(action, &QAction::triggered, this, &NotebookMenuButton::notebookSelected);
             QFont f = action->font();
             f.setPixelSize(10);
             action->setFont(f);
@@ -280,4 +280,3 @@ void NotebookMenuButton::reloadData() {
 void NotebookMenuButton::reloadIcons() {
     setIcon(global.getIconResource(":notebookSmallIcon"));
 }
-

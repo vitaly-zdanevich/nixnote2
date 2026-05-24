@@ -70,7 +70,7 @@ public:
     void dropEvent(QDropEvent *event);
     void contextMenuEvent(QContextMenuEvent *event);
     NTagViewItem* getItem(qint32 lid);
-    QSize sizeHint();
+    QSize sizeHint() const override;
     void drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const;
     void reloadIcons();
 

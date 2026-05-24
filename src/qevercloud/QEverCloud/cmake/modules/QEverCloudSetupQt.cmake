@@ -1,82 +1,61 @@
 set(QEVERCLOUD_FIND_PACKAGE_ARG "VERBOSE")
 
-find_package(Qt5Core 5.5 REQUIRED)
-message(STATUS "Found Qt5 installation, version ${Qt5Core_VERSION}")
+find_package(Qt6Core REQUIRED)
+message(STATUS "Found Qt6 installation, version ${Qt6Core_VERSION}")
 
 include(QEverCloudFindPackageWrapperMacro)
-include(QEverCloudFindQt5DependenciesCore)
+include(QEverCloudFindQt6DependenciesCore)
 
 list(APPEND QT_INCLUDES
-  ${Qt5Core_INCLUDE_DIRS}
-  ${Qt5Network_INCLUDE_DIRS}
-  ${Qt5Widgets_INCLUDE_DIRS})
+  ${Qt6Core_INCLUDE_DIRS}
+  ${Qt6Network_INCLUDE_DIRS}
+  ${Qt6Widgets_INCLUDE_DIRS})
 
 list(APPEND QT_LIBRARIES
-  ${Qt5Core_LIBRARIES}
-  ${Qt5Network_LIBRARIES}
-  ${Qt5Widgets_LIBRARIES})
+  Qt6::Core
+  Qt6::Network
+  Qt6::Widgets)
 
 list(APPEND QT_DEFINITIONS
-  ${Qt5Core_DEFINITIONS}
-  ${Qt5Network_DEFINITIONS}
-  ${Qt5Widgets_DEFINITIONS})
+  ${Qt6Core_DEFINITIONS}
+  ${Qt6Network_DEFINITIONS}
+  ${Qt6Widgets_DEFINITIONS})
 
 if(BUILD_TRANSLATIONS)
-  include(QEverCloudFindQt5DependenciesTranslations)
+  include(QEverCloudFindQt6DependenciesTranslations)
 
   list(APPEND QT_INCLUDES
-    ${Qt5LinguistTools_INCLUDE_DIRS})
+    ${Qt6LinguistTools_INCLUDE_DIRS})
 
   list(APPEND QT_LIBRARIES
-    ${Qt5LinguistTools_LIBRARIES})
+    ${Qt6LinguistTools_LIBRARIES})
 
   list(APPEND QT_DEFINITIONS
-    ${Qt5LinguistTools_DEFINITIONS})
+    ${Qt6LinguistTools_DEFINITIONS})
 endif()
 
 if(BUILD_WITH_OAUTH_SUPPORT AND NOT QEVERCLOUD_USE_SYSTEM_BROWSER)
-  if(USE_QT5_WEBKIT OR Qt5Core_VERSION VERSION_LESS "5.6.0")
-    include(QEverCloudFindQt5DependenciesWebKit)
-  else()
-    include(QEverCloudFindQt5DependenciesWebEngineCore)
-    set(QEVERCLOUD_USE_QT_WEB_ENGINE TRUE)
-  endif()
+  include(QEverCloudFindQt6DependenciesWebEngineCore)
+  set(QEVERCLOUD_USE_QT_WEB_ENGINE TRUE)
 
   if(QEVERCLOUD_USE_QT_WEB_ENGINE)
     add_definitions(-DQEVERCLOUD_USE_QT_WEB_ENGINE)
   endif()
 
-  if(USE_QT5_WEBKIT)
-    list(APPEND QT_INCLUDES
-      ${QT_INCLUDES}
-      ${Qt5WebKit_INCLUDE_DIRS}
-      ${Qt5WebKitWidgets_INCLUDE_DIRS})
+  list(APPEND QT_INCLUDES
+    ${QT_INCLUDES}
+    ${Qt6WebEngineCore_INCLUDE_DIRS}
+    ${Qt6WebEngineWidgets_INCLUDE_DIRS})
 
-    list(APPEND QT_LIBRARIES
-      ${QT_LIBRARIES}
-      ${Qt5WebKit_LIBRARIES}
-      ${Qt5WebKitWidgets_LIBRARIES})
+  list(APPEND QT_LIBRARIES
+    ${QT_LIBRARIES}
+    Qt6::WebEngineCore
+    Qt6::WebEngineWidgets)
 
-    list(APPEND QT_DEFINITIONS
-      ${QT_DEFINITIONS}
-      ${Qt5WebKit_DEFINITIONS}
-      ${Qt5WebKitWidgets_DEFINITIONS})
-  else()
-    list(APPEND QT_INCLUDES
-      ${QT_INCLUDES}
-      ${Qt5WebEngineCore_INCLUDE_DIRS}
-      ${Qt5WebEngineWidgets_INCLUDE_DIRS})
-
-    list(APPEND QT_LIBRARIES
-      ${QT_LIBRARIES}
-      ${Qt5WebEngineCore_LIBRARIES}
-      ${Qt5WebEngineWidgets_LIBRARIES})
-
-    list(APPEND QT_DEFINITIONS
-      ${QT_DEFINITIONS}
-      ${Qt5WebEngineCore_DEFINITIONS}
-      ${Qt5WebEngineWidgets_DEFINITIONS})
-  endif()
+  list(APPEND QT_DEFINITIONS
+    ${QT_DEFINITIONS}
+    ${Qt6WebEngineCore_DEFINITIONS}
+    ${Qt6WebEngineWidgets_DEFINITIONS})
 endif()
 
 list(REMOVE_DUPLICATES QT_INCLUDES)

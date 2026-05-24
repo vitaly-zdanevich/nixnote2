@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define ENMLFORMATTER_H
 
 #include <QObject>
-#include <QtWebKit>
 #include <QObject>
 #include <QTemporaryFile>
 #include <QThread>
@@ -32,6 +31,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QVector>
 #include <QtXml>
 
+#include "src/html/htmldom.h"
+
 using namespace std;
 
 enum HtmlCleanupMode {
@@ -40,7 +41,7 @@ enum HtmlCleanupMode {
 };
 
 #define DEFAULT_HTML_HEAD "<head>" \
-                          "<meta http-equiv=\"content-type\" content=\"text-html; charset=utf-8\">" \
+                          "<meta http-equiv=\"content-type\" content=\"text-html; charset=utf-8\" />" \
                           "<style>img { height:auto; width:auto; max-height:auto; max-width:100%; }</style>" \
                           "</head>"
 #define DEFAULT_HTML_TYPE "<!DOCTYPE html><html xmlns=\"http://www.w3.org/1999/xhtml\">"
@@ -58,13 +59,13 @@ private:
     QByteArray content;
 
     bool isAttributeValid(QString attribute);
-    bool checkAndFixElement(QWebElement &e);
-    void fixImgNode(QWebElement &element);
-    void fixTableNode(QWebElement &e);
-    void fixInputNode(QWebElement &e);
-    void removeInvalidAttributes(QWebElement &e);
-    void fixANode(QWebElement &e);
-    void fixObjectNode(QWebElement &e);
+    bool checkAndFixElement(HtmlDomElement &e);
+    void fixImgNode(HtmlDomElement &element);
+    void fixTableNode(HtmlDomElement &e);
+    void fixInputNode(HtmlDomElement &e);
+    void removeInvalidAttributes(HtmlDomElement &e);
+    void fixANode(HtmlDomElement &e);
+    void fixObjectNode(HtmlDomElement &e);
     void removeInvalidUnicode();
     //QByteArray fixEncryptionTags(QByteArray newContent);
     void postXmlFix();
@@ -103,12 +104,12 @@ private:
     QStringList tr_;
     QStringList ul;
     bool formattingError;
-    void checkAttributes(QWebElement &element, QStringList valid);
+    void checkAttributes(HtmlDomElement &element, QStringList valid);
     QList<qint32> resources;
     bool guiAvailable;
     QHash< QString, QPair <QString, QString> > passwordSafe;
     QString cryptoJarPath;
-    void recursiveTreeCleanup(QWebElement &elementRoot, int level);
+    void recursiveTreeCleanup(HtmlDomElement &elementRoot, int level);
 
 public:
     explicit EnmlFormatter(QString html, bool guiAvailable, QHash< QString, QPair <QString, QString> > passwordSafe, QString cryptoJarPath);

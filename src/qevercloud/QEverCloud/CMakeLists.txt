@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.16)
 
 include(QEverCloudCMakePolicies)
 SET_POLICIES()
@@ -89,19 +89,19 @@ set(${PROJECT_NAME}_TR_SOURCES
     ${SOURCES}
     src/oauth/OAuthWebEngine.h
     src/oauth/OAuthWebEngine.cpp
-    src/oauth/OAuthWebKit.h
-    src/oauth/OAuthWebKit.cpp
     src/oauth/OAuthSystemBrowser.h
     src/oauth/OAuthSystemBrowser.cpp
     src/oauth/OAuth.cpp)
 
 if(BUILD_WITH_OAUTH_SUPPORT)
+  list(APPEND SOURCES
+    src/oauth/NetworkCookieJar.cpp)
+
   if(QEVERCLOUD_USE_QT_WEB_ENGINE)
     list(APPEND PRIVATE_HEADERS
       src/oauth/OAuthWebEngine.h)
 
     list(APPEND SOURCES
-      src/oauth/NetworkCookieJar.cpp
       src/oauth/OAuthWebEngine.cpp)
   elseif(QEVERCLOUD_USE_SYSTEM_BROWSER)
     list(APPEND PRIVATE_HEADERS
@@ -110,11 +110,7 @@ if(BUILD_WITH_OAUTH_SUPPORT)
     list(APPEND SOURCES
       src/oauth/OAuthSystemBrowser.cpp)
   else()
-    list(APPEND PRIVATE_HEADERS
-      src/oauth/OAuthWebKit.h)
-
-    list(APPEND SOURCES
-      src/oauth/OAuthWebKit.cpp)
+    message(FATAL_ERROR "QEverCloud OAuth requires either QtWebEngine or the system browser backend")
   endif()
 
   list(APPEND SOURCES
@@ -131,7 +127,9 @@ set(${PROJECT_NAME}_TR_FILES
     QEverCloud/translations/QEverCloud_ru_RU.ts)
 
 set(${PROJECT_NAME}_QM_FILES "")
-update_translation("${${PROJECT_NAME}_TR_SOURCES}" "${${PROJECT_NAME}_TR_FILES}")
+if(BUILD_TRANSLATIONS)
+  update_translation("${${PROJECT_NAME}_TR_SOURCES}" "${${PROJECT_NAME}_TR_FILES}")
+endif()
 
 if(BUILD_WITH_OAUTH_SUPPORT)
   set(QEVERCLOUD_HAS_OAUTH "#define QEVERCLOUD_HAS_OAUTH 1")
@@ -140,7 +138,7 @@ else()
 endif()
 
 if(QEVERCLOUD_USE_QT_WEB_ENGINE EQUAL QEVERCLOUD_USE_SYSTEM_BROWSER)
-  message(FATAL_ERROR "QEverCloud can be built either with QtWebKit or QtWebEngine or system browser backend for OAuth")
+  message(FATAL_ERROR "QEverCloud can be built either with QtWebEngine or system browser backend for OAuth")
 endif()
 
 if(QEVERCLOUD_USE_QT_WEB_ENGINE)
@@ -222,8 +220,24 @@ else()
   set(QEVERCLOUD_BUILD_INFO "#define QEVERCLOUD_BUILD_INFO \"${QEVERCLOUD_BUILD_INFO}\"")
 endif()
 
-configure_file(headers/VersionInfo.h.in
-  ${PROJECT_BINARY_DIR}/VersionInfo.h @ONLY)
+if(QEVERCLOUD_USE_QT_WEB_ENGINE)
+  set(QEVERCLOUD_USE_QT_WEB_ENGINE_VALUE 1)
+else()
+  set(QEVERCLOUD_USE_QT_WEB_ENGINE_VALUE 0)
+endif()
+
+if(QEVERCLOUD_USE_SYSTEM_BROWSER)
+  set(QEVERCLOUD_USE_SYSTEM_BROWSER_VALUE 1)
+else()
+  set(QEVERCLOUD_USE_SYSTEM_BROWSER_VALUE 0)
+endif()
+
+file(READ headers/VersionInfo.h.in QEVERCLOUD_VERSION_INFO_H)
+string(REPLACE "$$QEVERCLOUD_USE_QT_WEB_ENGINE" "${QEVERCLOUD_USE_QT_WEB_ENGINE_VALUE}"
+  QEVERCLOUD_VERSION_INFO_H "${QEVERCLOUD_VERSION_INFO_H}")
+string(REPLACE "$$QEVERCLOUD_USE_SYSTEM_BROWSER" "${QEVERCLOUD_USE_SYSTEM_BROWSER_VALUE}"
+  QEVERCLOUD_VERSION_INFO_H "${QEVERCLOUD_VERSION_INFO_H}")
+file(WRITE ${PROJECT_BINARY_DIR}/VersionInfo.h "${QEVERCLOUD_VERSION_INFO_H}")
 list(APPEND ALL_HEADERS_AND_SOURCES ${PROJECT_BINARY_DIR}/VersionInfo.h)
 include_directories(${PROJECT_BINARY_DIR})
 
@@ -242,7 +256,7 @@ add_sanitizers(${LIBNAME})
 set_target_properties(${LIBNAME} PROPERTIES
   VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
   SOVERSION ${PROJECT_VERSION_MAJOR}
-  CXX_STANDARD 14
+  CXX_STANDARD 17
   CXX_EXTENSIONS OFF
   MACOSX_RPATH 1)
 
@@ -270,8 +284,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/headers)
 add_definitions("-DQT_NO_CAST_FROM_ASCII -DQT_NO_CAST_TO_ASCII -DQT_NO_CAST_FROM_BYTEARRAY -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT")
 
 # Tests
-find_package(Qt5Test QUIET)
-if(Qt5Test_FOUND)
+find_package(Qt6Test QUIET)
+if(Qt6Test_FOUND)
   set(TEST_HEADERS
       src/HttpRequestData.h
       src/HttpRequestParser.h
@@ -296,9 +310,9 @@ if(Qt5Test_FOUND)
   add_sanitizers(test_${PROJECT_NAME})
   add_test(test_${PROJECT_NAME} test_${PROJECT_NAME})
   set_target_properties(test_${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 14
+    CXX_STANDARD 17
     CXX_EXTENSIONS OFF)
-  target_link_libraries(test_${PROJECT_NAME} ${LIBNAME} ${QT_LIBRARIES} Qt5::Test)
+  target_link_libraries(test_${PROJECT_NAME} ${LIBNAME} ${QT_LIBRARIES} Qt6::Test)
 else()
   message(STATUS "Haven't found Qt components required for building and running the unit tests")
 endif()

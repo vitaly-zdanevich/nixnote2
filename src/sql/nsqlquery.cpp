@@ -62,11 +62,10 @@ NSqlQuery::~NSqlQuery() {
 QString getLastExecutedQuery(const QSqlQuery& query)
 {
     QString str = query.lastQuery();
-    QMapIterator<QString, QVariant> it(query.boundValues());
-    while (it.hasNext())
-    {
-      it.next();
-      str.replace(it.key(),it.value().toString());
+    const QStringList names = query.boundValueNames();
+    const QVariantList values = query.boundValues();
+    for (int i = 0; i < names.size() && i < values.size(); ++i) {
+      str.replace(names.at(i), values.at(i).toString());
     }
     return str;
 }
@@ -84,7 +83,7 @@ bool NSqlQuery::exec() {
                 global.indexRunner->pauseIndexing = indexPauseSave;
             return true;
         }
-        if (lastError().number() != DATABASE_LOCKED)
+        if (lastError().nativeErrorCode().toInt() != DATABASE_LOCKED)
             return false;
         if (i>DEBUG_TRIGGER) {
             QLOG_ERROR() << "DB Locked:  Retry #" << i;
@@ -127,7 +126,7 @@ bool NSqlQuery::exec(const QString &query) {
                 global.indexRunner->pauseIndexing = indexPauseSave;
             return true;
         }
-        if (lastError().number() != DATABASE_LOCKED)
+        if (lastError().nativeErrorCode().toInt() != DATABASE_LOCKED)
             return false;
 
         if (i == INDEX_PAUSE_TRIGGER && this->db->getConnectionName() != "indexrunner") {
@@ -171,46 +170,4 @@ bool NSqlQuery::exec(const char *query) {
     q = QString::fromStdString(query);
     return this->exec(q);
 }
-
-
-
-#if QT_VERSION < 0x050000
-
-// Override bindValue for SQL fix
-void NSqlQuery::bindValue(const QString & placeholder, const QVariant & val, QSql::ParamType paramType) {
-    if (val.type() == QVariant::Bool) {
-        if (val.toBool() == true)
-            QSqlQuery::bindValue(placeholder, 1, paramType);
-        else
-           QSqlQuery::bindValue(placeholder, 0, paramType);
-        return;
-    }
-    QSqlQuery::bindValue(placeholder, val, paramType);
-}
-
-void NSqlQuery::bindValue(int pos, const QVariant &val, QSql::ParamType paramType) {
-    if (val.type() == QVariant::Bool) {
-        if (val.toBool() == true)
-            QSqlQuery::bindValue(pos, 1, paramType);
-        else
-           QSqlQuery::bindValue(pos, 0, paramType);
-        return;
-    }
-    QSqlQuery::bindValue(pos, val, paramType);
-}
-
-
-void NSqlQuery::addBindValue(const QVariant &val, QSql::ParamType paramType) {
-    if (val.type() == QVariant::Bool) {
-        if (val.toBool() == true)
-            QSqlQuery::addBindValue(1, paramType);
-        else
-           QSqlQuery::addBindValue(0, paramType);
-    }
-    QSqlQuery::addBindValue(val, paramType);
-}
-
-
-#endif
-
 

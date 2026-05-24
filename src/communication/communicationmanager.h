@@ -125,6 +125,8 @@ public:
     bool authenticateToLinkedNotebookShard(LinkedNotebook &book);    // Authenticate to a linked notebook account owner shard
     bool getUserInfo(User &user);                              // Get user information
     bool getNote(Note &n, QString guid, bool wthResource, bool withRecognition, bool withResource);
+    bool getResource(Resource &resource, QString guid, bool withData, bool withRecognition, bool withAttributes,
+                     bool withAlternateData, bool reportNotFound = true, bool *notFound = nullptr);
     Note downloadNote(const Note &n);
     QList< QPair<QString, QImage*>* > *inkNoteList;            // List to store inknotes downloaded from account.
     QList< QPair<QString, QImage*>* > *thumbnailList;          // List to store thumbnails from account (not used)

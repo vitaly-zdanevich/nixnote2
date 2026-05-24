@@ -99,7 +99,6 @@ bool EvernoteOAuthWebViewPrivate::onStartAuthentication()
         return false;
     }
 
-    QTcpSocket * pSocket = nullptr;
     QObject::connect(
         m_oauthCallbackServer,
         &QTcpServer::newConnection,

@@ -26,12 +26,9 @@ extern Global global;
 
 TrayMenu::TrayMenu(QWidget *parent) :
         QMenu(parent) {
-    signalMapper = new QSignalMapper();
-    connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(noteChosen(int)));
-
     // QMenu: this signal is emitted just before the menu is shown to the user.
-    connect(this, SIGNAL(aboutToShow()), this, SLOT(buildActionMenu()));
-    //connect(this, SIGNAL(show()), this, SLOT(buildActionMenu()));
+    connect(this, &QMenu::aboutToShow, this, &TrayMenu::buildActionMenu);
+    //connect(this, &QMenu::show, this, &TrayMenu::buildActionMenu);
 
     QString css = global.getThemeCss("trayMenuCss");
     if (css != "") {
@@ -58,7 +55,6 @@ void TrayMenu::buildActionMenu() {
 
     for (int i = actions.size() - 1; i >= 0; i--) {
         QAction *action = actions[i];
-        signalMapper->removeMappings(action);
         if (pinnedMenu) {
             pinnedMenu->removeAction(action);
         }
@@ -123,8 +119,10 @@ void TrayMenu::buildMenu(QString debugInfo, QMenu *actionMenu, QList<QPair<qint3
 
     for (int i = 0; i < records.size(); i++) {
         QAction *newAction = actionMenu->addAction(records[i].second);
-        signalMapper->setMapping(newAction, records[i].first);
-        connect(newAction, SIGNAL(triggered()), signalMapper, SLOT(map()));
+        const qint32 noteLid = records[i].first;
+        connect(newAction, &QAction::triggered, this, [this, noteLid]() {
+            noteChosen(noteLid);
+        });
         actions.append(newAction);
     }
 

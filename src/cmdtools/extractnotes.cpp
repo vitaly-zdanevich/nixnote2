@@ -38,7 +38,7 @@ ExtractNotes::ExtractNotes(QObject *parent) :
 
 void ExtractNotes::extract() {
     if (outputFile.trimmed() == "") {
-        std::cout << QString(tr("Output file not specified.")).toStdString() << endl;
+        std::cout << QString(tr("Output file not specified.")).toStdString() << std::endl;
         return;
     }
     if (query != "") {
@@ -61,7 +61,7 @@ void ExtractNotes::extract() {
     if (deleteAfterExtract) {
         if (verifyDelete) {
             std::string verify;
-            std::cout << QString(tr("Deleting notes:")).toStdString() << endl;
+            std::cout << QString(tr("Deleting notes:")).toStdString() << std::endl;
             std::cout << QString(tr("Type DELETE to verify: ")).toStdString();
             std::cin >> verify;
             QString qVerify = QString::fromStdString(verify);
@@ -79,7 +79,7 @@ void ExtractNotes::extract() {
 
 void ExtractNotes::backupDB() {
     if (outputFile.trimmed() == "") {
-        std::cout << QString(tr("Output file not specified.")).toStdString() << endl;
+        std::cout << QString(tr("Output file not specified.")).toStdString() << std::endl;
         return;
     }
     ExportData exports(backup, true, this);

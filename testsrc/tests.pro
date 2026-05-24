@@ -1,6 +1,12 @@
 message("Out path: $${OUT_PWD}")
 
-QT += core widgets printsupport webkit webkitwidgets sql network xml dbus qml testlib
+lessThan(QT_MAJOR_VERSION, 6) {
+    error("NixNote tests now require Qt 6; use qmake6 to build them.")
+}
+
+QT += core widgets printsupport sql network xml dbus qml testlib
+
+INCLUDEPATH += ..
 
 CONFIG += link_pkgconfig
 PKGCONFIG += tidy
@@ -18,6 +24,7 @@ TEMPLATE = app
 
 SOURCES += tests.cpp \
            ../src/html/enmlformatter.cpp \
+           ../src/html/htmldom.cpp \
            ../src/logger/qslog.cpp \
            ../src/logger/qslogdest.cpp \
            ../src/logger/qsdebugoutput.cpp \
@@ -26,6 +33,7 @@ SOURCES += tests.cpp \
 
 HEADERS += tests.h \
            ../src/html/enmlformatter.h \
+           ../src/html/htmldom.h \
            ../src/logger/qslog.h \
            ../src/logger/qslogdest.h \
            ../src/logger/qsdebugoutput.h \
@@ -54,7 +62,7 @@ gcc {
     CONFIG += $$COMPILER_CONFIG
 }
 
-linux:QMAKE_CXXFLAGS += -std=c++11 -g -O2  -Wformat -Werror=format-security
+linux:QMAKE_CXXFLAGS += -std=c++17 -g -O2  -Wformat -Werror=format-security
 linux:QMAKE_LFLAGS += -Wl,-Bsymbolic-functions -Wl,-z,relro
 
 g++4 {

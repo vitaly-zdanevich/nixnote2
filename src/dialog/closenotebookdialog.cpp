@@ -41,12 +41,12 @@ CloseNotebookDialog::CloseNotebookDialog(QWidget *parent) :
     closeButton.setEnabled(false);
     okButton.setText(tr("OK"));
     cancelButton.setText(tr("Cancel"));
-    connect(&openNotebooks, SIGNAL(itemSelectionChanged()), this, SLOT(openListSelection()));
-    connect(&closeNotebooks, SIGNAL(itemSelectionChanged()), this, SLOT(closeListSelection()));
-    connect(&okButton, SIGNAL(clicked()), this, SLOT(okButtonPressed()));
-    connect(&cancelButton, SIGNAL(clicked()), this, SLOT(cancelButtonPressed()));
-    connect(&closeButton, SIGNAL(clicked()), this, SLOT(closeButtonClicked()));
-    connect(&openButton, SIGNAL(clicked()), this, SLOT(openButtonClicked()));
+    connect(&openNotebooks, &QListWidget::itemSelectionChanged, this, &CloseNotebookDialog::openListSelection);
+    connect(&closeNotebooks, &QListWidget::itemSelectionChanged, this, &CloseNotebookDialog::closeListSelection);
+    connect(&okButton, &QPushButton::clicked, this, &CloseNotebookDialog::okButtonPressed);
+    connect(&cancelButton, &QPushButton::clicked, this, &CloseNotebookDialog::cancelButtonPressed);
+    connect(&closeButton, &QPushButton::clicked, this, &CloseNotebookDialog::closeButtonClicked);
+    connect(&openButton, &QPushButton::clicked, this, &CloseNotebookDialog::openButtonClicked);
 
     openNotebooks.setSelectionMode(QAbstractItemView::MultiSelection);
     closeNotebooks.setSelectionMode(QAbstractItemView::MultiSelection);

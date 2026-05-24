@@ -43,9 +43,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QStatusBar>
 #include <QSlider>
 #include <QPrinter>
-#include <QDesktopWidget>
+#include <QPageLayout>
+#include <QPageSize>
 #include <QFileIconProvider>
 #include <QSplashScreen>
+#include <QWebEngineView>
 #include <unistd.h>
 
 #include "src/sql/notetable.h"
@@ -115,10 +117,10 @@ NixNote *NixNote::singleton;
 NixNote::NixNote(QWidget *parent) : QMainWindow(parent) {
     global.settings->beginGroup(INI_GROUP_APPEARANCE);
     if (global.settings->value("showSplashScreen", false).toBool()) {
-        splashScreen = new QSplashScreen(this, global.getPixmapResource(":splashLogoImage"));
+        splashScreen = new QSplashScreen(global.getPixmapResource(":splashLogoImage"));
         splashScreen->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::SplashScreen | Qt::FramelessWindowHint);
         splashScreen->show();
-        QTimer::singleShot(2500, this, SLOT(clearSplashScreen()));
+        QTimer::singleShot(2500, this, &NixNote::clearSplashScreen);
     }
     global.settings->endGroup();
     QString css = global.getThemeCss("mainWindowCss");
@@ -137,9 +139,9 @@ NixNote::NixNote(QWidget *parent) : QMainWindow(parent) {
     QApplication::instance()->installTranslator(nixnoteTranslator);
     QLOG_DEBUG() << "done";
 
-    connect(&syncThread, SIGNAL(started()), this, SLOT(syncThreadStarted()));
-    connect(&counterThread, SIGNAL(started()), this, SLOT(counterThreadStarted()));
-    connect(&indexThread, SIGNAL(started()), this, SLOT(indexThreadStarted()));
+    connect(&syncThread, &QThread::started, this, &NixNote::syncThreadStarted);
+    connect(&counterThread, &QThread::started, this, &NixNote::counterThreadStarted);
+    connect(&indexThread, &QThread::started, this, &NixNote::indexThreadStarted);
 
     counterThread.start(QThread::LowestPriority);
     syncThread.start(QThread::LowPriority);
@@ -149,7 +151,7 @@ NixNote::NixNote(QWidget *parent) : QMainWindow(parent) {
     if (global.getListenToCommands()) {
         heartbeatTimer.setInterval(1000);
         heartbeatTimer.setSingleShot(false);
-        connect(&heartbeatTimer, SIGNAL(timeout()), this, SLOT(heartbeatTimerTriggered()));
+        connect(&heartbeatTimer, &QTimer::timeout, this, &NixNote::heartbeatTimerTriggered);
         heartbeatTimer.start();
     }
 
@@ -159,13 +161,14 @@ NixNote::NixNote(QWidget *parent) : QMainWindow(parent) {
 
     // Setup the sync thread
     QLOG_DEBUG() << "Setting up counter thread";
-    connect(this, SIGNAL(updateCounts()), &counterRunner, SLOT(countAll()));
+    connect(this, &NixNote::updateCounts, &counterRunner, &CounterRunner::countAll);
 
 
     // Setup the counter thread
     QLOG_DEBUG() << "Setting up sync thread";
-    connect(this, SIGNAL(syncRequested()), &syncRunner, SLOT(synchronize()));
-    connect(&syncRunner, SIGNAL(setMessage(QString, int)), this, SLOT(setMessage(QString, int)));
+    connect(this, &NixNote::syncRequested, &syncRunner, &SyncRunner::synchronize);
+    connect(this, &NixNote::repairMissingResourcesRequested, &syncRunner, &SyncRunner::repairMissingResources);
+    connect(&syncRunner, &SyncRunner::setMessage, this, &NixNote::setMessage);
 
     QLOG_DEBUG() << "Setting up GUI";
     global.filterPosition = 0;
@@ -174,29 +177,42 @@ NixNote::NixNote(QWidget *parent) : QMainWindow(parent) {
 
     global.resourceWatcher = new QFileSystemWatcher(this);
     QLOG_DEBUG() << "Connecting signals";
-    connect(favoritesTreeView, SIGNAL(updateSelectionRequested()), this, SLOT(updateSelectionCriteria()));
-    connect(tagTreeView, SIGNAL(updateSelectionRequested()), this, SLOT(updateSelectionCriteria()));
-    connect(notebookTreeView, SIGNAL(updateSelectionRequested()), this, SLOT(updateSelectionCriteria()));
-    connect(searchTreeView, SIGNAL(updateSelectionRequested()), this, SLOT(updateSelectionCriteria()));
-    connect(attributeTree, SIGNAL(updateSelectionRequested()), this, SLOT(updateSelectionCriteria()));
-    connect(trashTree, SIGNAL(updateSelectionRequested()), this, SLOT(updateSelectionCriteria()));
-    connect(searchText, SIGNAL(updateSelectionRequested()), this, SLOT(updateSelectionCriteria()));
-    connect(global.resourceWatcher, SIGNAL(fileChanged(QString)), this, SLOT(resourceExternallyUpdated(QString)));
+    connect(favoritesTreeView, &FavoritesView::updateSelectionRequested, this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(tagTreeView, &NTagView::updateSelectionRequested, this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(notebookTreeView, &NNotebookView::updateSelectionRequested, this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(searchTreeView, &NSearchView::updateSelectionRequested, this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(attributeTree, &NAttributeTree::updateSelectionRequested, this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(trashTree, &NTrashTree::updateSelectionRequested, this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(searchText, &LineEdit::updateSelectionRequested, this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(global.resourceWatcher, &QFileSystemWatcher::fileChanged, this, &NixNote::resourceExternallyUpdated);
 
     finalSync = false;
 
 
     // Setup reminders
     global.reminderManager = new ReminderManager();
-    connect(global.reminderManager, SIGNAL(showMessage(QString, QString, int)), this,
-            SLOT(showMessage(QString, QString, int)));
+    connect(global.reminderManager, &ReminderManager::showMessage, this, &NixNote::showMessage);
     global.reminderManager->reloadTimers();
 
     global.settings->beginGroup(INI_GROUP_APPEARANCE);
     bool showMissed = global.settings->value("showMissedReminders", false).toBool();
     global.settings->endGroup();
     if (showMissed)
-        QTimer::singleShot(5000, global.reminderManager, SLOT(timerPop()));
+        QTimer::singleShot(5000, global.reminderManager, &ReminderManager::timerPop);
     else
         global.setLastReminderTime(QDateTime::currentMSecsSinceEpoch());
 
@@ -226,13 +242,17 @@ NixNote::NixNote(QWidget *parent) : QMainWindow(parent) {
 
     // Setup file watcher
     importManager = new FileWatcherManager(this);
-    connect(importManager, SIGNAL(fileImported(qint32, qint32)), this, SLOT(updateSelectionCriteria()));
-    connect(importManager, SIGNAL(fileImported()), this, SLOT(updateSelectionCriteria()));
+    connect(importManager, qOverload<qint32, qint32>(&FileWatcherManager::fileImported), this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(importManager, qOverload<>(&FileWatcherManager::fileImported), this, [this]() {
+        updateSelectionCriteria();
+    });
     importManager->setup();
     this->updateSelectionCriteria(true);  // This is only needed in case we imported something at statup
 
     networkManager = new QNetworkAccessManager();
-    connect(networkManager, SIGNAL(finished(QNetworkReply * )), this, SLOT(onNetworkManagerFinished(QNetworkReply * )));
+    connect(networkManager, &QNetworkAccessManager::finished, this, &NixNote::onNetworkManagerFinished);
 
     clientId = global.getOrCreateMemoryKey();
     // Set the static singleton instance pointer (q.v. get())
@@ -313,7 +333,7 @@ void NixNote::setupGui() {
     QString css = global.getThemeCss("mainToolbarCss");
     if (css != "")
         toolBar->setStyleSheet(css);
-    connect(toolBar, SIGNAL(visibilityChanged(bool)), this, SLOT(toolbarVisibilityChanged()));
+    connect(toolBar, &QToolBar::visibilityChanged, this, &NixNote::toolbarVisibilityChanged);
     //menuBar = new NMainMenuBar(this);
     toolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     toolBar->setObjectName("toolBar");
@@ -332,8 +352,8 @@ void NixNote::setupGui() {
     );
     leftArrowButton->setEnabled(false);
     leftArrowButton->setPriority(QAction::LowPriority);
-    connect(leftArrowButton, SIGNAL(triggered(bool)), this, SLOT(leftButtonTriggered()));
-    connect(leftArrowButtonShortcut, SIGNAL(activated()), this, SLOT(leftButtonTriggered()));
+    connect(leftArrowButton, &QAction::triggered, this, &NixNote::leftButtonTriggered);
+    connect(leftArrowButtonShortcut, &QShortcut::activated, this, &NixNote::leftButtonTriggered);
 
     rightArrowButtonShortcut = new QShortcut(this);
     rightArrowButton = toolBar->addAction(
@@ -342,8 +362,8 @@ void NixNote::setupGui() {
     );
     rightArrowButton->setEnabled(false);
     rightArrowButton->setPriority(QAction::LowPriority);
-    connect(rightArrowButton, SIGNAL(triggered(bool)), this, SLOT(rightButtonTriggered()));
-    connect(rightArrowButtonShortcut, SIGNAL(activated()), this, SLOT(rightButtonTriggered()));
+    connect(rightArrowButton, &QAction::triggered, this, &NixNote::rightButtonTriggered);
+    connect(rightArrowButtonShortcut, &QShortcut::activated, this, &NixNote::rightButtonTriggered);
 
     toolBar->addSeparator();
 
@@ -385,16 +405,16 @@ void NixNote::setupGui() {
     toolBar->addSeparator();
 
 
-    connect(syncButton, SIGNAL(triggered()), this, SLOT(synchronize()));
-    connect(syncButtonShortcut, SIGNAL(activated()), this, SLOT(synchronize()));
+    connect(syncButton, &QAction::triggered, this, &NixNote::synchronize);
+    connect(syncButtonShortcut, &QShortcut::activated, this, &NixNote::synchronize);
 
-    connect(homeButton, SIGNAL(triggered()), this, SLOT(resetView()));
-    connect(homeButtonShortcut, SIGNAL(activated()), this, SLOT(resetView()));
+    connect(homeButton, &QAction::triggered, this, &NixNote::resetView);
+    connect(homeButtonShortcut, &QShortcut::activated, this, &NixNote::resetView);
 
-    connect(printNoteButton, SIGNAL(triggered()), this, SLOT(fastPrintNote()));
-    connect(deleteNoteButton, SIGNAL(triggered()), this, SLOT(deleteCurrentNote()));
-    connect(newNoteButton, SIGNAL(triggered()), this, SLOT(newNote()));
-    connect(emailButton, SIGNAL(triggered()), this, SLOT(emailNote()));
+    connect(printNoteButton, &QAction::triggered, this, &NixNote::fastPrintNote);
+    connect(deleteNoteButton, &QAction::triggered, this, &NixNote::deleteCurrentNote);
+    connect(newNoteButton, &QAction::triggered, this, &NixNote::newNote);
+    connect(emailButton, &QAction::triggered, this, &NixNote::emailNote);
 
     QLOG_DEBUG() << "Adding main splitter";
     mainSplitter = new QSplitter(Qt::Horizontal);
@@ -414,20 +434,19 @@ void NixNote::setupGui() {
     this->setupTabWindow();
     leftPanel->vboxLayout->addStretch();
 
-    connect(tagTreeView, SIGNAL(tagDeleted(qint32, QString)), favoritesTreeView, SLOT(itemExpunged(qint32, QString)));
-    connect(searchTreeView, SIGNAL(searchDeleted(qint32)), favoritesTreeView, SLOT(itemExpunged(qint32)));
-    connect(notebookTreeView, SIGNAL(notebookDeleted(qint32, QString)), favoritesTreeView,
-            SLOT(itemExpunged(qint32, QString)));
-    connect(tagTreeView, SIGNAL(tagRenamed(qint32, QString, QString)), favoritesTreeView,
-            SLOT(itemRenamed(qint32, QString, QString)));
-    connect(searchTreeView, SIGNAL(searchDeleted(qint32)), favoritesTreeView, SLOT(itemExpunged(qint32)));
-    connect(notebookTreeView, SIGNAL(notebookRenamed(qint32, QString, QString)), favoritesTreeView,
-            SLOT(itemRenamed(qint32, QString, QString)));
-    connect(notebookTreeView, SIGNAL(stackDeleted(QString)), favoritesTreeView, SLOT(stackExpunged(QString)));
-    connect(notebookTreeView, SIGNAL(stackRenamed(QString, QString)), favoritesTreeView,
-            SLOT(stackRenamed(QString, QString)));
-    connect(tabWindow, SIGNAL(updateNoteTitle(QString, qint32, QString)), favoritesTreeView,
-            SLOT(updateShortcutName(QString, qint32, QString)));
+    connect(tagTreeView, &NTagView::tagDeleted, favoritesTreeView,
+            qOverload<qint32, QString>(&FavoritesView::itemExpunged));
+    connect(searchTreeView, &NSearchView::searchDeleted, favoritesTreeView,
+            qOverload<qint32>(&FavoritesView::itemExpunged));
+    connect(notebookTreeView, &NNotebookView::notebookDeleted, favoritesTreeView,
+            qOverload<qint32, QString>(&FavoritesView::itemExpunged));
+    connect(tagTreeView, &NTagView::tagRenamed, favoritesTreeView, &FavoritesView::itemRenamed);
+    connect(searchTreeView, &NSearchView::searchDeleted, favoritesTreeView,
+            qOverload<qint32>(&FavoritesView::itemExpunged));
+    connect(notebookTreeView, &NNotebookView::notebookRenamed, favoritesTreeView, &FavoritesView::itemRenamed);
+    connect(notebookTreeView, &NNotebookView::stackDeleted, favoritesTreeView, &FavoritesView::stackExpunged);
+    connect(notebookTreeView, &NNotebookView::stackRenamed, favoritesTreeView, &FavoritesView::stackRenamed);
+    connect(tabWindow, &NTabWidget::updateNoteTitle, favoritesTreeView, &FavoritesView::updateShortcutName);
 
     QLOG_DEBUG() << "Setting up left panel";
     leftPanel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
@@ -594,45 +613,47 @@ void NixNote::setupGui() {
     if (showTrayIcon) {
         trayIcon->show();
     }
-    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this,
-            SLOT(onTrayActivated(QSystemTrayIcon::ActivationReason)));
+    connect(trayIcon, &QSystemTrayIcon::activated, this, &NixNote::onTrayActivated);
 
     // Setup timers
     QLOG_DEBUG() << "Setting up timers";
     setSyncTimer();
-    connect(&syncTimer, SIGNAL(timeout()), this, SLOT(syncTimerExpired()));
-    connect(&syncButtonTimer, SIGNAL(timeout()), this, SLOT(updateSyncButton()));
-    connect(&syncRunner, SIGNAL(syncComplete()), this, SLOT(syncButtonReset()));
+    connect(&syncTimer, &QTimer::timeout, this, &NixNote::syncTimerExpired);
+    connect(&syncButtonTimer, &QTimer::timeout, this, &NixNote::updateSyncButton);
+    connect(&syncRunner, &SyncRunner::syncComplete, this, &NixNote::syncButtonReset);
 
     QLOG_DEBUG() << "Setting up more connections for tab windows & threads";
-    connect(&syncRunner, SIGNAL(syncComplete()), this, SLOT(notifySyncComplete()));
+    connect(&syncRunner, &SyncRunner::syncComplete, this, &NixNote::notifySyncComplete);
 
     // connect so we refresh the note list and counts whenever a note has changed
-    connect(tabWindow, SIGNAL(noteUpdated(qint32)), noteTableView, SLOT(refreshData()));
-    connect(tabWindow, SIGNAL(noteUpdated(qint32)), &counterRunner, SLOT(countNotebooks()));
-    connect(tabWindow, SIGNAL(noteUpdated(qint32)), &counterRunner, SLOT(countTags()));
-    connect(tabWindow, SIGNAL(noteTagsUpdated(QString, qint32, QStringList)), noteTableView,
-            SLOT(noteTagsUpdated(QString, qint32, QStringList)));
-    connect(tabWindow, SIGNAL(noteNotebookUpdated(QString, qint32, QString)), noteTableView,
-            SLOT(noteNotebookUpdated(QString, qint32, QString)));
-    connect(tabWindow, SIGNAL(updateNoteList(qint32, int, QVariant)), noteTableView,
-            SLOT(refreshCell(qint32, int, QVariant)));
-    connect(noteTableView, SIGNAL(refreshNoteContent(qint32)), tabWindow, SLOT(refreshNoteContent(qint32)));
-    connect(noteTableView, SIGNAL(saveAllNotes()), tabWindow, SLOT(saveAllNotes()));
+    connect(tabWindow, &NTabWidget::noteUpdated, noteTableView, &NTableView::refreshData);
+    connect(tabWindow, &NTabWidget::noteUpdated, &counterRunner, &CounterRunner::countNotebooks);
+    connect(tabWindow, &NTabWidget::noteUpdated, &counterRunner, &CounterRunner::countTags);
+    connect(tabWindow, &NTabWidget::noteTagsUpdated, noteTableView, &NTableView::noteTagsUpdated);
+    connect(tabWindow, &NTabWidget::noteNotebookUpdated, noteTableView, &NTableView::noteNotebookUpdated);
+    connect(tabWindow, &NTabWidget::updateNoteList, noteTableView, &NTableView::refreshCell);
+    connect(noteTableView, &NTableView::refreshNoteContent, tabWindow, &NTabWidget::refreshNoteContent);
+    connect(noteTableView, &NTableView::saveAllNotes, tabWindow, &NTabWidget::saveAllNotes);
 
     // connect so we refresh the tag tree when a new tag is added
-    connect(tabWindow, SIGNAL(tagCreated(qint32)), tagTreeView, SLOT(addNewTag(qint32)));
-    connect(tabWindow, SIGNAL(tagCreated(qint32)), &counterRunner, SLOT(countTags()));
+    connect(tabWindow, &NTabWidget::tagCreated, tagTreeView, &NTagView::addNewTag);
+    connect(tabWindow, &NTabWidget::tagCreated, &counterRunner, &CounterRunner::countTags);
 
-    connect(tabWindow, SIGNAL(updateSelectionRequested()), this, SLOT(updateSelectionCriteria()));
-    connect(tabWindow->tabBar, SIGNAL(currentChanged(int)), this, SLOT(checkReadOnlyNotebook()));
+    connect(tabWindow, &NTabWidget::updateSelectionRequested, this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(tabWindow->tabBar, &QTabBar::currentChanged, this, &NixNote::checkReadOnlyNotebook);
 
     // Finish by filtering & displaying the data
     //updateSelectionCriteria();
 
     // connect signal on a tag rename
-    connect(tagTreeView, SIGNAL(tagRenamed(qint32, QString, QString)), this, SLOT(updateSelectionCriteria()));
-    connect(notebookTreeView, SIGNAL(notebookRenamed(qint32, QString, QString)), this, SLOT(updateSelectionCriteria()));
+    connect(tagTreeView, &NTagView::tagRenamed, this, [this]() {
+        updateSelectionCriteria();
+    });
+    connect(notebookTreeView, &NNotebookView::notebookRenamed, this, [this]() {
+        updateSelectionCriteria();
+    });
 
     // Reload saved selection criteria
     if (selectionBehavior != AppearancePreferences::UseAllNotebooks) {
@@ -724,14 +745,14 @@ void NixNote::setupGui() {
         QLOG_DEBUG() << "About to start minimized in system tray";
         this->setWindowState(Qt::WindowMinimized);
         if (minimizeToTray) {
-            QTimer::singleShot(100, this, SLOT(hide()));
+            QTimer::singleShot(100, this, &QWidget::hide);
         }
     }
     if (global.forceStartMinimized) {
         QLOG_DEBUG() << "About to start minimized in system tray (2)";
         this->setWindowState(Qt::WindowMinimized);
         if (minimizeToTray)
-            QTimer::singleShot(100, this, SLOT(hide()));
+            QTimer::singleShot(100, this, &QWidget::hide);
     }
 
     // Restore expanded tags & stacks
@@ -784,88 +805,108 @@ void NixNote::setupGui() {
     focusSearchShortcut = new QShortcut(this);
     focusSearchShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusSearchShortcut, "Focus_Search");
-    connect(focusSearchShortcut, SIGNAL(activated()), searchText, SLOT(setFocus()));
+    connect(focusSearchShortcut, &QShortcut::activated, this, [this]() {
+        searchText->setFocus(Qt::ShortcutFocusReason);
+    });
 
     fileSaveShortcut = new QShortcut(this);
     fileSaveShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(fileSaveShortcut, "File_Save_Content");
-    connect(fileSaveShortcut, SIGNAL(activated()), tabWindow, SLOT(saveAllNotes()));
+    connect(fileSaveShortcut, &QShortcut::activated, tabWindow, &NTabWidget::saveAllNotes);
 
     focusTitleShortcut = new QShortcut(this);
     focusTitleShortcut->setContext(Qt::WidgetShortcut);
     global.setupShortcut(focusTitleShortcut, "Focus_Title");
-    connect(focusTitleShortcut, SIGNAL(activated()), &tabWindow->currentBrowser()->noteTitle, SLOT(setFocus()));
+    connect(focusTitleShortcut, &QShortcut::activated, this, [this]() {
+        tabWindow->currentBrowser()->noteTitle.setFocus();
+    });
 
     focusNoteShortcut = new QShortcut(this);
     focusNoteShortcut->setContext(Qt::WidgetShortcut);
     global.setupShortcut(focusNoteShortcut, "Focus_Note");
-    connect(focusNoteShortcut, SIGNAL(activated()), tabWindow->currentBrowser()->editor, SLOT(setFocus()));
+    connect(focusNoteShortcut, &QShortcut::activated, this, [this]() {
+        tabWindow->currentBrowser()->editor->setFocus();
+    });
 
     copyNoteUrlShortcut = new QShortcut(this);
     copyNoteUrlShortcut->setContext(Qt::WidgetShortcut);
     global.setupShortcut(copyNoteUrlShortcut, "Edit_Copy_Note_Url");
-    connect(copyNoteUrlShortcut, SIGNAL(activated()), tabWindow->currentBrowser(), SLOT(copyInAppNoteLink()));
+    connect(copyNoteUrlShortcut, &QShortcut::activated, this, [this]() {
+        tabWindow->currentBrowser()->copyInAppNoteLink();
+    });
 
     focusTagShortcut = new QShortcut(this);
     focusTagShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusTagShortcut, "Focus_Tag");
-    connect(focusTagShortcut, SIGNAL(activated()), tabWindow->currentBrowser(), SLOT(newTagFocusShortcut()));
+    connect(focusTagShortcut, &QShortcut::activated, this, [this]() {
+        tabWindow->currentBrowser()->newTagFocusShortcut();
+    });
 
     focusUrlShortcut = new QShortcut(this);
     focusUrlShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusUrlShortcut, "Focus_Url");
-    connect(focusUrlShortcut, SIGNAL(activated()), tabWindow->currentBrowser(), SLOT(urlFocusShortcut()));
+    connect(focusUrlShortcut, &QShortcut::activated, this, [this]() {
+        tabWindow->currentBrowser()->urlFocusShortcut();
+    });
 
     focusAuthorShortcut = new QShortcut(this);
     focusAuthorShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusAuthorShortcut, "Focus_Author");
-    connect(focusAuthorShortcut, SIGNAL(activated()), tabWindow->currentBrowser(), SLOT(authorFocusShortcut()));
+    connect(focusAuthorShortcut, &QShortcut::activated, this, [this]() {
+        tabWindow->currentBrowser()->authorFocusShortcut();
+    });
 
     focusNotebookShortcut = new QShortcut(this);
     focusNotebookShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusNotebookShortcut, "Focus_Notebook");
-    connect(focusNotebookShortcut, SIGNAL(activated()), tabWindow->currentBrowser(), SLOT(notebookFocusShortcut()));
+    connect(focusNotebookShortcut, &QShortcut::activated, this, [this]() {
+        tabWindow->currentBrowser()->notebookFocusShortcut();
+    });
 
     focusFontShortcut = new QShortcut(this);
     focusFontShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusFontShortcut, "Focus_Font");
-    connect(focusFontShortcut, SIGNAL(activated()), tabWindow->currentBrowser(), SLOT(fontFocusShortcut()));
+    connect(focusFontShortcut, &QShortcut::activated, this, [this]() {
+        tabWindow->currentBrowser()->fontFocusShortcut();
+    });
 
     focusFontSizeShortcut = new QShortcut(this);
     focusFontSizeShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(focusFontSizeShortcut, "Focus_Font_Size");
-    connect(focusFontSizeShortcut, SIGNAL(activated()), tabWindow->currentBrowser(), SLOT(fontSizeFocusShortcut()));
+    connect(focusFontSizeShortcut, &QShortcut::activated, this, [this]() {
+        tabWindow->currentBrowser()->fontSizeFocusShortcut();
+    });
 
     nextTabShortcut = new QShortcut(this);
     nextTabShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(nextTabShortcut, "Next_Tab");
-    connect(nextTabShortcut, SIGNAL(activated()), tabWindow, SLOT(nextTab()));
+    connect(nextTabShortcut, &QShortcut::activated, tabWindow, &NTabWidget::nextTab);
 
     prevTabShortcut = new QShortcut(this);
     prevTabShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(prevTabShortcut, "Prev_Tab");
-    connect(prevTabShortcut, SIGNAL(activated()), tabWindow, SLOT(prevTab()));
+    connect(prevTabShortcut, &QShortcut::activated, tabWindow, &NTabWidget::prevTab);
 
     closeTabShortcut = new QShortcut(this);
     closeTabShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(closeTabShortcut, "Close_Tab");
-    connect(closeTabShortcut, SIGNAL(activated()), tabWindow, SLOT(closeTab()));
+    connect(closeTabShortcut, &QShortcut::activated, tabWindow, static_cast<void (NTabWidget::*)()>(&NTabWidget::closeTab));
 
     downNoteShortcut = new QShortcut(this);
     downNoteShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(downNoteShortcut, "Down_Note");
-    connect(downNoteShortcut, SIGNAL(activated()), noteTableView, SLOT(downNote()));
+    connect(downNoteShortcut, &QShortcut::activated, noteTableView, &NTableView::downNote);
 
     upNoteShortcut = new QShortcut(this);
     upNoteShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     global.setupShortcut(upNoteShortcut, "Up_Note");
-    connect(upNoteShortcut, SIGNAL(activated()), noteTableView, SLOT(upNote()));
+    connect(upNoteShortcut, &QShortcut::activated, noteTableView, &NTableView::upNote);
 
     // startup the index timer (if needed)
     if (global.enableIndexing) {
         indexTimer.setInterval(global.minimumThumbnailInterval);
-        connect(&indexTimer, SIGNAL(timeout()), &indexRunner, SLOT(index()));
-        connect(&indexRunner, SIGNAL(indexDone(bool)), this, SLOT(indexFinished(bool)));
+        connect(&indexTimer, &QTimer::timeout, &indexRunner, &IndexRunner::index);
+        connect(&indexRunner, &IndexRunner::indexDone, this, &NixNote::indexFinished);
         indexTimer.start();
     }
 }
@@ -875,13 +916,13 @@ TrayMenu *NixNote::createTrayContexMenu() {
 
     // ~temporary removal
     //newExternalNoteButton = trayIconContextMenu->addAction(tr("Quick Note"));
-    //connect(newExternalNoteButton, SIGNAL(triggered()), this, SLOT(newExternalNote()));
+    //connect(newExternalNoteButton, &QAction::triggered, this, &NixNote::newExternalNote);
 
     showAction = trayIconContextMenu->addAction(tr("Show"));
-    connect(showAction, SIGNAL(triggered()), this, SLOT(showMainWindow()));
+    connect(showAction, &QAction::triggered, this, &NixNote::showMainWindow);
 
     QAction *newNoteButton2 = trayIconContextMenu->addAction(tr("New note"));
-    connect(newNoteButton2, SIGNAL(triggered()), this, SLOT(restoreAndNewNote()));
+    connect(newNoteButton2, &QAction::triggered, this, &NixNote::restoreAndNewNote);
 
     QMenu *favoritesMenu = trayIconContextMenu->addMenu(tr("Shortcut notes"));
     trayIconContextMenu->setActionMenu(TrayMenu::FavoriteNotesMenu, favoritesMenu);
@@ -892,11 +933,11 @@ TrayMenu *NixNote::createTrayContexMenu() {
 
     QMenu *recentMenu = trayIconContextMenu->addMenu(tr("Recently updated"));
     trayIconContextMenu->setActionMenu(TrayMenu::RecentMenu, recentMenu);
-    connect(trayIconContextMenu, SIGNAL(openNote(qint32)), this, SLOT(openExternalNote(qint32)));
+    connect(trayIconContextMenu, &TrayMenu::openNote, this, &NixNote::openExternalNote);
 
     trayIconContextMenu->addSeparator();
     quitAction = trayIconContextMenu->addAction(tr("Quit"));
-    connect(quitAction, SIGNAL(triggered()), this, SLOT(quitNixNote()));
+    connect(quitAction, &QAction::triggered, this, &NixNote::quitNixNote);
     return trayIconContextMenu;
 }
 
@@ -962,11 +1003,11 @@ void NixNote::setupNoteList() {
     else
         mainSplitter->addWidget(topRightWidget);
 
-    connect(noteTableView, SIGNAL(newNote()), this, SLOT(newNote()));
-    connect(noteTableView, SIGNAL(notesDeleted(QList<qint32>, bool)), this, SLOT(notesDeleted(QList<qint32>)));
-    connect(noteTableView, SIGNAL(notesRestored(QList<qint32>)), this, SLOT(notesRestored(QList<qint32>)));
-    connect(&syncRunner, SIGNAL(syncComplete()), noteTableView, SLOT(refreshData()));
-    connect(&syncRunner, SIGNAL(noteSynchronized(qint32, bool)), this, SLOT(noteSynchronized(qint32, bool)));
+    connect(noteTableView, &NTableView::newNote, this, &NixNote::newNote);
+    connect(noteTableView, &NTableView::notesDeleted, this, &NixNote::notesDeleted);
+    connect(noteTableView, &NTableView::notesRestored, this, &NixNote::notesRestored);
+    connect(&syncRunner, &SyncRunner::syncComplete, noteTableView, &NTableView::refreshData);
+    connect(&syncRunner, &SyncRunner::noteSynchronized, this, &NixNote::noteSynchronized);
 
     QLOG_TRACE() << "Leaving NixNote.setupNoteList()";
 }
@@ -991,9 +1032,9 @@ void NixNote::setupSearchTree() {
 
     searchTreeView = new NSearchView(leftPanel);
     leftPanel->addSearchView(searchTreeView);
-    connect(&syncRunner, SIGNAL(searchUpdated(qint32, QString)), searchTreeView, SLOT(searchUpdated(qint32, QString)));
-    connect(&syncRunner, SIGNAL(searchExpunged(qint32)), searchTreeView, SLOT(searchExpunged(qint32)));
-    //connect(&syncRunner, SIGNAL(syncComplete()),searchTreeView, SLOT(re);
+    connect(&syncRunner, &SyncRunner::searchUpdated, searchTreeView, &NSearchView::searchUpdated);
+    connect(&syncRunner, &SyncRunner::searchExpunged, searchTreeView, &NSearchView::searchExpunged);
+    //connect(&syncRunner, &SyncRunner::syncComplete, searchTreeView, ...);
     QLOG_TRACE() << "Exiting NixNote.setupSearchTree()";
 }
 
@@ -1011,18 +1052,15 @@ void NixNote::setupTagTree() {
 
     tagTreeView = new NTagView(leftPanel);
     leftPanel->addTagView(tagTreeView);
-    connect(&syncRunner, SIGNAL(tagUpdated(qint32, QString, QString, qint32)), tagTreeView,
-            SLOT(tagUpdated(qint32, QString, QString, qint32)));
-    connect(&syncRunner, SIGNAL(tagExpunged(qint32)), tagTreeView, SLOT(tagExpunged(qint32)));
-    connect(&syncRunner, SIGNAL(syncComplete()), tagTreeView, SLOT(rebuildTree()));
-    connect(&counterRunner, SIGNAL(tagTotals(qint32, qint32, qint32)), tagTreeView,
-            SLOT(updateTotals(qint32, qint32, qint32)));
-    connect(&counterRunner, SIGNAL(tagCountComplete()), tagTreeView, SLOT(hideUnassignedTags()));
-    connect(notebookTreeView, SIGNAL(notebookSelectionChanged(qint32)), tagTreeView,
-            SLOT(notebookSelectionChanged(qint32)));
-    connect(tagTreeView, SIGNAL(updateNoteList(qint32, int, QVariant)), noteTableView,
-            SLOT(refreshCell(qint32, int, QVariant)));
-    connect(tagTreeView, SIGNAL(updateCounts()), &counterRunner, SLOT(countAll()));
+    connect(&syncRunner, &SyncRunner::tagUpdated, tagTreeView, &NTagView::tagUpdated);
+    connect(&syncRunner, &SyncRunner::tagExpunged, tagTreeView, &NTagView::tagExpunged);
+    connect(&syncRunner, &SyncRunner::syncComplete, tagTreeView, &NTagView::rebuildTree);
+    connect(&counterRunner, &CounterRunner::tagTotals, tagTreeView, &NTagView::updateTotals);
+    connect(&counterRunner, &CounterRunner::tagCountComplete, tagTreeView, &NTagView::hideUnassignedTags);
+    connect(notebookTreeView, &NNotebookView::notebookSelectionChanged,
+            tagTreeView, &NTagView::notebookSelectionChanged);
+    connect(tagTreeView, &NTagView::updateNoteList, noteTableView, &NTableView::refreshCell);
+    connect(tagTreeView, &NTagView::updateCounts, &counterRunner, &CounterRunner::countAll);
     QLOG_TRACE() << "Exiting NixNote.setupTagTree()";
 }
 
@@ -1058,7 +1096,7 @@ void NixNote::setupTrashTree() {
     trashTree = new NTrashTree(leftPanel);
     leftPanel->addTrashTree(trashTree);
     QLOG_TRACE() << "Exiting NixNote.setupTrashTree()";
-    connect(&counterRunner, SIGNAL(trashTotals(qint32)), trashTree, SLOT(updateTotals(qint32)));
+    connect(&counterRunner, &CounterRunner::trashTotals, trashTree, &NTrashTree::updateTotals);
 }
 
 
@@ -1070,15 +1108,15 @@ void NixNote::setupFavoritesTree() {
     favoritesTreeView = new FavoritesView(leftPanel);
     leftPanel->addFavoritesView(favoritesTreeView);
 
-//    connect(&syncRunner, SIGNAL(notebookUpdated(qint32, QString,QString, bool, bool)),notebookTreeView, SLOT(notebookUpdated(qint32, QString, QString, bool, bool)));
-    connect(&syncRunner, SIGNAL(notebookExpunged(qint32)), favoritesTreeView, SLOT(itemExpunged(qint32)));
-    connect(&syncRunner, SIGNAL(tagExpunged(qint32)), favoritesTreeView, SLOT(itemExpunged(qint32)));
-//    connect(&syncRunner, SIGNAL(noteUpdated(qint32)), notebookTreeView, SLOT(itemExpunged(qint32)));
-    connect(&counterRunner, SIGNAL(notebookTotals(qint32, qint32, qint32)), favoritesTreeView,
-            SLOT(updateTotals(qint32, qint32, qint32)));
-    connect(&counterRunner, SIGNAL(tagTotals(qint32, qint32, qint32)), favoritesTreeView,
-            SLOT(updateTotals(qint32, qint32, qint32)));
-    connect(favoritesTreeView, SIGNAL(updateCounts()), &counterRunner, SLOT(countAll()));
+//    connect(&syncRunner, &SyncRunner::notebookUpdated, notebookTreeView, &NNotebookView::notebookUpdated);
+    connect(&syncRunner, &SyncRunner::notebookExpunged, favoritesTreeView,
+            qOverload<qint32>(&FavoritesView::itemExpunged));
+    connect(&syncRunner, &SyncRunner::tagExpunged, favoritesTreeView,
+            qOverload<qint32>(&FavoritesView::itemExpunged));
+//    connect(&syncRunner, &SyncRunner::noteUpdated, notebookTreeView, ...);
+    connect(&counterRunner, &CounterRunner::notebookTotals, favoritesTreeView, &FavoritesView::updateTotals);
+    connect(&counterRunner, &CounterRunner::tagTotals, favoritesTreeView, &FavoritesView::updateTotals);
+    connect(favoritesTreeView, &FavoritesView::updateCounts, &counterRunner, &CounterRunner::countAll);
 
     leftSeparator1 = new QLabel();
     leftSeparator1->setTextFormat(Qt::RichText);
@@ -1096,15 +1134,12 @@ void NixNote::setupSynchronizedNotebookTree() {
     QLOG_DEBUG() << "Starting NixNote.setupSynchronizedNotebookTree()";
     notebookTreeView = new NNotebookView(leftPanel);
     leftPanel->addNotebookView(notebookTreeView);
-    connect(&syncRunner, SIGNAL(notebookUpdated(qint32, QString, QString, bool, bool)), notebookTreeView,
-            SLOT(notebookUpdated(qint32, QString, QString, bool, bool)));
-    connect(&syncRunner, SIGNAL(syncComplete()), notebookTreeView, SLOT(rebuildTree()));
-    connect(&syncRunner, SIGNAL(notebookExpunged(qint32)), notebookTreeView, SLOT(notebookExpunged(qint32)));
-    connect(&counterRunner, SIGNAL(notebookTotals(qint32, qint32, qint32)), notebookTreeView,
-            SLOT(updateTotals(qint32, qint32, qint32)));
-    connect(notebookTreeView, SIGNAL(updateNoteList(qint32, int, QVariant)), noteTableView,
-            SLOT(refreshCell(qint32, int, QVariant)));
-    connect(notebookTreeView, SIGNAL(updateCounts()), &counterRunner, SLOT(countAll()));
+    connect(&syncRunner, &SyncRunner::notebookUpdated, notebookTreeView, &NNotebookView::notebookUpdated);
+    connect(&syncRunner, &SyncRunner::syncComplete, notebookTreeView, &NNotebookView::rebuildTree);
+    connect(&syncRunner, &SyncRunner::notebookExpunged, notebookTreeView, &NNotebookView::notebookExpunged);
+    connect(&counterRunner, &CounterRunner::notebookTotals, notebookTreeView, &NNotebookView::updateTotals);
+    connect(notebookTreeView, &NNotebookView::updateNoteList, noteTableView, &NTableView::refreshCell);
+    connect(notebookTreeView, &NNotebookView::updateCounts, &counterRunner, &CounterRunner::countAll);
     QLOG_TRACE() << "Exiting NixNote.setupSynchronizedNotebookTree()";
 }
 
@@ -1121,27 +1156,27 @@ void NixNote::setupTabWindow() {
     rightPanelSplitter->addWidget(tabPanel);
 
     NBrowserWindow *newBrowser = new NBrowserWindow(this);
-    connect(&syncRunner, SIGNAL(syncComplete()), &newBrowser->notebookMenu, SLOT(reloadData()));
-    connect(&syncRunner, SIGNAL(syncComplete()), &newBrowser->tagEditor, SLOT(reloadTags()));
-    connect(&syncRunner, SIGNAL(noteUpdated(qint32)), newBrowser, SLOT(noteSyncUpdate(qint32)));
+    connect(&syncRunner, &SyncRunner::syncComplete, &newBrowser->notebookMenu, &NotebookMenuButton::reloadData);
+    connect(&syncRunner, &SyncRunner::syncComplete, &newBrowser->tagEditor, &TagEditor::reloadTags);
+    connect(&syncRunner, &SyncRunner::noteUpdated, newBrowser, &NBrowserWindow::noteSyncUpdate);
     tabWindow->addBrowser(newBrowser, "");
     rightPanelSplitter->setStretchFactor(1, 10);
 
-    connect(noteTableView, SIGNAL(openNote(bool)), this, SLOT(openNote(bool)));
-    connect(noteTableView, SIGNAL(openNoteExternalWindow(qint32)), this, SLOT(openExternalNote(qint32)));
-    connect(menuBar->viewSourceAction, SIGNAL(triggered()), tabWindow, SLOT(toggleSource()));
-    connect(menuBar->viewHistoryAction, SIGNAL(triggered()), this, SLOT(viewNoteHistory()));
-    connect(menuBar->viewPresentationModeAction, SIGNAL(triggered()), this, SLOT(presentationModeOn()));
-    connect(tabWindow, SIGNAL(escapeKeyPressed()), this, SLOT(presentationModeOff()));
+    connect(noteTableView, &NTableView::openNote, this, &NixNote::openNote);
+    connect(noteTableView, &NTableView::openNoteExternalWindow, this, &NixNote::openExternalNote);
+    connect(menuBar->viewSourceAction, &QAction::triggered, tabWindow, &NTabWidget::toggleSource);
+    connect(menuBar->viewHistoryAction, &QAction::triggered, this, &NixNote::viewNoteHistory);
+    connect(menuBar->viewPresentationModeAction, &QAction::triggered, this, &NixNote::presentationModeOn);
+    connect(tabWindow, &NTabWidget::escapeKeyPressed, this, &NixNote::presentationModeOff);
 
-    connect(menuBar->undoAction, SIGNAL(triggered()), tabWindow, SLOT(undoButtonPressed()));
-    connect(menuBar->redoAction, SIGNAL(triggered()), tabWindow, SLOT(redoButtonPressed()));
-    connect(menuBar->cutAction, SIGNAL(triggered()), tabWindow, SLOT(cutButtonPressed()));
-    connect(menuBar->copyAction, SIGNAL(triggered()), tabWindow, SLOT(copyButtonPressed()));
-    connect(menuBar->pasteAction, SIGNAL(triggered()), tabWindow, SLOT(pasteButtonPressed()));
-    connect(menuBar->pasteAsTextAction, SIGNAL(triggered()), tabWindow, SLOT(pasteAsTextButtonPressed()));
-    connect(menuBar->selectAllAction, SIGNAL(triggered()), tabWindow, SLOT(selectAllButtonPressed()));
-    connect(menuBar->viewExtendedInformation, SIGNAL(triggered()), tabWindow, SLOT(viewExtendedInformation()));
+    connect(menuBar->undoAction, &QAction::triggered, tabWindow, &NTabWidget::undoButtonPressed);
+    connect(menuBar->redoAction, &QAction::triggered, tabWindow, &NTabWidget::redoButtonPressed);
+    connect(menuBar->cutAction, &QAction::triggered, tabWindow, &NTabWidget::cutButtonPressed);
+    connect(menuBar->copyAction, &QAction::triggered, tabWindow, &NTabWidget::copyButtonPressed);
+    connect(menuBar->pasteAction, &QAction::triggered, tabWindow, &NTabWidget::pasteButtonPressed);
+    connect(menuBar->pasteAsTextAction, &QAction::triggered, tabWindow, &NTabWidget::pasteAsTextButtonPressed);
+    connect(menuBar->selectAllAction, &QAction::triggered, tabWindow, &NTabWidget::selectAllButtonPressed);
+    connect(menuBar->viewExtendedInformation, &QAction::triggered, tabWindow, &NTabWidget::viewExtendedInformation);
 
     QLOG_TRACE() << "Exiting NixNote.setupTabWindow()";
 }
@@ -1324,7 +1359,9 @@ void NixNote::closeEvent(QCloseEvent *event) {
         finalSync = true;
         syncRunner.finalSync = true;
         hide();
-        connect(&syncRunner, SIGNAL(syncComplete()), this, SLOT(close()));
+        connect(&syncRunner, &SyncRunner::syncComplete, this, [this]() {
+            close();
+        });
         synchronize();
         event->ignore();
         QLOG_DEBUG() << "closeEvent: ignore";
@@ -1528,6 +1565,36 @@ void NixNote::synchronize() {
     emit syncRequested();
 }
 
+//******************************************************************************
+//* User requested download of missing resource sidecar files
+//******************************************************************************
+void NixNote::repairMissingResources() {
+    if (global.connected) {
+        return;
+    }
+
+    if (QMessageBox::question(this, tr("Repair Missing Resources"),
+                              tr("Download missing image and attachment files from Evernote?"),
+                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes) {
+        return;
+    }
+
+    this->pauseIndexing(true);
+
+    if (tabWindow->currentBrowser()->noteTitle.hasFocus()) {
+        tabWindow->currentBrowser()->noteTitle.checkNoteTitleChange();
+    }
+
+    if (!this->checkAuthAndReauthorize()) {
+        return;
+    }
+
+    this->saveContents();
+    tabWindow->saveAllNotes();
+    syncButtonTimer.start(36);
+    emit repairMissingResourcesRequested();
+}
+
 /**
  * Check if token is available & reauthorize if not.
  * Save new token.
@@ -1591,10 +1658,20 @@ void NixNote::syncButtonReset() {
         global.settings->value("connectionClosedAutoRestart", false).toBool();
     global.settings->endGroup();
 
+    if (!syncRunner.finalSync && syncRunner.authExpired && !global.accountsManager->oauthTokenFound()) {
+        QTimer::singleShot(0, this, [this]() {
+            if (!syncRunner.finalSync && syncRunner.authExpired && !global.accountsManager->oauthTokenFound())
+                checkAuthAndReauthorize();
+        });
+        return;
+    }
+
     // If we had an API rate limit exceeded, restart at the top of the hour.
     if (apiRateLimitAutoRestart && syncRunner.apiRateLimitExceeded) {
         QTimer::singleShot(60 * 1000 * (syncRunner.minutesToNextSync + 1),
-                this, SLOT(synchronize()));
+                this, [this]() {
+                    synchronize();
+                });
         return;
     }
 
@@ -1608,7 +1685,7 @@ void NixNote::syncButtonReset() {
 //        bool restart = global.settings->value("apiRateLimitAutoRestart", false).toBool();
 //        global.settings->endGroup();
 //        if (restart) {
-//            QTimer::singleShot(60 * 1000 * (syncRunner.minutesToNextSync + 1), this, SLOT(synchronize()));
+//            QTimer::singleShot(60 * 1000 * (syncRunner.minutesToNextSync + 1), this, &NixNote::synchronize);
 //        }
 //    }
 }
@@ -1626,15 +1703,15 @@ void NixNote::updateSyncButton() {
         QPixmap pix(":synchronizeIcon");
         syncIcons.push_back(pix);
 
-        QPainter p;
-        p.setBackgroundMode(Qt::OpaqueMode);
         QSize size = pix.size();
 
         for (qint32 i = 1; i < N_ICONS; ++i) {
             QPixmap rotatedPix(pix.size());
-            rotatedPix.fill(toolBar->palette().color(QPalette::Background));
+            rotatedPix.fill(toolBar->palette().color(QPalette::Window));
 
+            QPainter p;
             p.begin(&rotatedPix);
+            p.setBackgroundMode(Qt::OpaqueMode);
             p.translate(size.width() / 2, size.height() / 2);
             angle = angle + 360.0f/N_ICONS;
             p.rotate(angle);
@@ -1874,7 +1951,7 @@ void NixNote::exportNotes(bool exportAllNotes) {
 
     QFileDialog fd(0, caption, directory, tr(APP_NNEX_APP_NAME " Export (*.nnex);;All Files (*.*)"));
     fd.setFileMode(QFileDialog::AnyFile);
-    fd.setConfirmOverwrite(true);
+    fd.setOption(QFileDialog::DontConfirmOverwrite, false);
     fd.setAcceptMode(QFileDialog::AcceptSave);
 
     if (fd.exec() == 0 || fd.selectedFiles().size() == 0) {
@@ -1956,7 +2033,6 @@ void NixNote::importNotes(bool fullRestore) {
 
     QFileDialog fd(0, caption, directory, filter);
     fd.setFileMode(QFileDialog::ExistingFile);
-    fd.setConfirmOverwrite(true);
     fd.setAcceptMode(QFileDialog::AcceptOpen);
 
     if (fd.exec() == 0 || fd.selectedFiles().size() == 0) {
@@ -3097,7 +3173,7 @@ void NixNote::addAnotherUser() {
     newAction->setCheckable(true);
     newAction->setData(newid);
     menuBar->addUserAccount(newAction);
-    connect(newAction, SIGNAL(triggered()), this, SLOT(switchUser()));
+    connect(newAction, &QAction::triggered, this, &NixNote::switchUser);
 }
 
 
@@ -3179,7 +3255,11 @@ void NixNote::resourceExternallyUpdated(QString resourceFile) {
 
     qint32 lid = shortName.toInt();
     QFile file(resourceFile);
-    file.open(QIODevice::ReadOnly);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QLOG_WARN() << "Unable to read externally updated resource:" << resourceFile << file.errorString();
+        global.resourceWatcher->addPath(resourceFile);
+        return;
+    }
     QByteArray ba = file.readAll();
     file.close();
     QByteArray newHash = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
@@ -3643,8 +3723,8 @@ void NixNote::onExportAsPdf() {
     noteTableView->getSelectedLids(lids);
 
     if (pdfExportWindow == nullptr) {
-        pdfExportWindow = new QWebView();
-        connect(pdfExportWindow, SIGNAL(loadFinished(bool)), this, SLOT(onExportAsPdfReady(bool)));
+        pdfExportWindow = new QWebEngineView();
+        connect(pdfExportWindow, &QWebEngineView::loadFinished, this, &NixNote::onExportAsPdfReady);
     }
 
     if (lids.size() <= 0) {
@@ -3668,7 +3748,7 @@ void NixNote::onExportAsPdf() {
     }
 
     NoteTable noteTable(global.db);
-    QByteArray content;
+    QString content;
     content.clear();
     NoteFormatter formatter;
 
@@ -3689,7 +3769,7 @@ void NixNote::onExportAsPdf() {
         formatter.setNote(n, false);
         if (n.title.isSet())
             content.append("<h2>" + n.title + "</h2>");
-        content.append(formatter.rebuildNoteHTML());
+        content.append(QString::fromUtf8(formatter.rebuildNoteHTML()));
         if (i < lids.size() - 1)
             content.append("<p style=\"page-break-after:always;\"></p>");
         progress->setValue(i);
@@ -3703,11 +3783,11 @@ void NixNote::onExportAsPdf() {
 void NixNote::configurePdfPrinter(QPrinter &printer, QString &file) const {
     printer.setOutputFormat(QPrinter::PdfFormat);
     printer.setResolution(QPrinter::HighResolution);
-    printer.setPaperSize(QPrinter::A4);
+    printer.setPageSize(QPageSize(QPageSize::A4));
     printer.setOutputFileName(file);
 #define TOP_MARGIN 10
 #define SIDE_MARGIN 15
-    printer.setPageMargins(SIDE_MARGIN, TOP_MARGIN, SIDE_MARGIN, TOP_MARGIN, QPrinter::Millimeter);
+    printer.setPageMargins(QMarginsF(SIDE_MARGIN, TOP_MARGIN, SIDE_MARGIN, TOP_MARGIN), QPageLayout::Millimeter);
 }
 
 QString NixNote::selectExportPDFFileName() {
@@ -3750,5 +3830,5 @@ void NixNote::showAnnouncementMessage() {
 void NixNote::unsortNoteTable() {
     // Sort the notetableview by a non-existing column
     int sortColumn = noteTableView->horizontalHeader()->count();
-    noteTableView->sortByColumn(sortColumn);
+    noteTableView->sortByColumn(sortColumn, Qt::AscendingOrder);
 }

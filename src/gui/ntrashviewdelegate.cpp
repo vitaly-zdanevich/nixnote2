@@ -33,11 +33,7 @@ NTrashViewDelegate::NTrashViewDelegate(QObject *parent) :
 
 
 void NTrashViewDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const {
-#if QT_VERSION < 0x050000
-    QStyleOptionViewItemV4 options = option;
-#else
     QStyleOptionViewItem options = option;
-#endif
     initStyleOption(&options, index);
 
     painter->save();
@@ -62,8 +58,7 @@ void NTrashViewDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
     options.font.setBold(true);
     QFontMetrics fm = options.fontMetrics;
     painter->setPen(Qt::darkGray);
-    painter->drawText(10+fm.width(index.data().toString()+QString(" ")), fm.ascent(),countString);  // Maybe fm.ascent?
+    painter->drawText(10+fm.horizontalAdvance(index.data().toString()+QString(" ")), fm.ascent(),countString);  // Maybe fm.ascent?
 //    painter->drawText(6+fm.width(index.data().toString()+QString("   ")),fm.height()-1,countString);  // Maybe fm.ascent?
     painter->restore();
 }
-

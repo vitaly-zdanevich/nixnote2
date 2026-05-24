@@ -38,6 +38,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/qevercloud/QEverCloud/headers/QEverCloud.h"
 using namespace qevercloud;
 
+class ResourceTable;
+
 class SyncRunner : public QObject
 {
     Q_OBJECT
@@ -101,6 +103,14 @@ private:
     qint32 uploadNotebooks();
     qint32 uploadPersonalNotes();
     qint32 uploadLinkedNotes(qint32 notebookLid);
+    bool initialize();
+    struct ResourceRepairSummary {
+        int missing = 0;
+        int downloaded = 0;
+        int skipped = 0;
+    };
+    ResourceRepairSummary repairMissingResourceFiles();
+    bool repairMissingResourceFile(ResourceTable &resourceTable, qint32 lid);
 
 
 public:
@@ -116,6 +126,7 @@ public:
     bool apiRateLimitExceeded;
     qint32 minutesToNextSync;                    // After "API rate limit exceeded" how long should we wait to attempt sync notes (continue syncing large lists of notes - for example when user setup nixnote for first time)
     bool connectionClosed;
+    bool authExpired;
 
 
 signals:
@@ -132,6 +143,7 @@ signals:
 
  public slots:
     void synchronize();
+    void repairMissingResources();
     void applicationException(QString);
 };
 

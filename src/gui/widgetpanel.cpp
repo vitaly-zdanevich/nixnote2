@@ -39,7 +39,7 @@ WidgetPanel::WidgetPanel(QWidget *parent) :
     this->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
     this->setStyleSheet("QTreeView {background:transparent; border:none; margin:0px; padding: 0px;} ");
     this->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
-    connect(&timer, SIGNAL(timeout()), this, SLOT(scrollTimer()));
+    connect(&timer, &QTimer::timeout, this, &WidgetPanel::scrollTimer);
 
     QString css = global.getThemeCss("treeWidgetPanelCss");
     if (css!="")
@@ -64,16 +64,16 @@ void WidgetPanel::paintEvent(QPaintEvent *e)
  {
     //Suppress unused
     Q_UNUSED(e);
-    return;
+     return;
      QStyleOption opt;
-     opt.init(this);
+     opt.initFrom(this);
      QPainter p(this);
      style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
  }
 
 
 
-QSize WidgetPanel::sizeHint() {
+QSize WidgetPanel::sizeHint() const {
     return minimumSizeHint();
 }
 
@@ -187,4 +187,3 @@ void WidgetPanel::dragMoveHandler(QDragMoveEvent *event) {
     }
     priorMousePosition = pos;
 }
-

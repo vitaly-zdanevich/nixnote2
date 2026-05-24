@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QObject>
 #include <QStringList>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0) && !defined(_WIN32)
+#if !defined(_WIN32)
 #include <QLibraryInfo>
 #endif
 
@@ -51,8 +51,8 @@ public:
     static const QStringList dictionaryPaths()
     {
         QStringList dictPath;
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0) && !defined(_WIN32)
-        dictPath.append(QLibraryInfo::location(QLibraryInfo::PrefixPath) + "/share/hunspell/");
+#if !defined(_WIN32)
+        dictPath.append(QLibraryInfo::path(QLibraryInfo::PrefixPath) + "/share/hunspell/");
 #endif
         dictPath.append("/usr/share/hunspell/");
         dictPath.append("/usr/share/myspell/");

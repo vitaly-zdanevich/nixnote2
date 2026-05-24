@@ -115,7 +115,7 @@ AccountDialog::AccountDialog(QWidget *parent) :
 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     ok = new QPushButton(tr("OK"),this);
-    connect(ok, SIGNAL(clicked()), this, SLOT(okPushed()));
+    connect(ok, &QPushButton::clicked, this, &AccountDialog::okPushed);
     buttonLayout->addStretch();
     buttonLayout->addWidget(ok);
     buttonLayout->addStretch();
@@ -129,4 +129,3 @@ AccountDialog::AccountDialog(QWidget *parent) :
 void AccountDialog::okPushed() {
     this->close();
 }
-

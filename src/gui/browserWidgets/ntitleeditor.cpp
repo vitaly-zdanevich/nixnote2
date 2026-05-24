@@ -47,7 +47,9 @@ NTitleEditor::NTitleEditor(QWidget *parent) :
         activeColor = global.getNoteTitleActiveStyle();
 
     this->setStyleSheet(inactiveColor);
-    connect(this, SIGNAL(textChanged(QString)), this, SLOT(titleChanged(QString)));
+    connect(this, &QLineEdit::textChanged, this, [this](const QString &text) {
+        titleChanged(text);
+    });
 
     this->setFont(global.getGuiFont(font()));
 }

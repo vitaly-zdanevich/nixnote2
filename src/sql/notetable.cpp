@@ -27,9 +27,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/utilities/noteindexer.h"
 #include "src/utilities/NixnoteStringUtils.h"
 
+#include <QSet>
 #include <QSqlTableModel>
 #include <QtXml>
 #include "src/html/tagscanner.h"
+#include <algorithm>
 
 extern Global global;
 
@@ -76,15 +78,32 @@ void NoteTable::sync(qint32 lid, const Note &note, qint32 account) {
 
     if (lid > 0) {
         NSqlQuery query(db);
+        ResourceTable resTable(db);
+
+        if (note.resources.isSet()) {
+            QSet<QString> incomingResourceGuids;
+            QList<Resource> resources = note.resources;
+            for (int i = 0; i < resources.size(); ++i) {
+                if (resources[i].guid.isSet()) {
+                    incomingResourceGuids.insert(resources[i].guid);
+                }
+            }
+
+            QList<qint32> existingResourceLids;
+            resTable.getResourceList(existingResourceLids, lid);
+            for (int i = 0; i < existingResourceLids.size(); ++i) {
+                const qint32 resourceLid = existingResourceLids.at(i);
+                if (!incomingResourceGuids.contains(resTable.getGuid(resourceLid))) {
+                    resTable.expunge(resourceLid);
+                }
+            }
+        }
 
         // Delete the old record
         query.prepare("Delete from DataStore where lid=:lid");
         query.bindValue(":lid", lid);
         query.exec();
         query.finish();
-
-        ResourceTable resTable(db);
-        resTable.expungeByNote(lid);
     } else {
         ConfigStore cs(db);
         lid = cs.incrementLidCounter();
@@ -197,11 +216,7 @@ qint32 NoteTable::add(qint32 l, const Note &t, bool isDirty, qint32 account) {
     if (t.content.isSet()) {
         QByteArray b;
         QString content = t.content;
-#if QT_VERSION < 0x050000
-        b.append(content.toAscii());
-#else
-        b.append(content);
-#endif
+        b.append(content.toUtf8());
 
         QLOG_DEBUG_FILE("incoming.enml", content);
 
@@ -317,9 +332,12 @@ qint32 NoteTable::add(qint32 l, const Note &t, bool isDirty, qint32 account) {
         QLOG_DEBUG() << "Adding resource i=" << i << " noteGuid=" << noteGuid << ", resourceGuid=" << resourceGuid;
 
 
-        if (resLid == 0)
+        if (resLid == 0) {
             resLid = cs.incrementLidCounter();
-        resTable.add(resLid, r, isDirty, lid);
+            resTable.add(resLid, r, isDirty, lid);
+        } else {
+            resTable.sync(resLid, r, lid);
+        }
 
         if (r.mime.isSet()) {
             QString mime = r.mime;
@@ -457,10 +475,11 @@ qint32 NoteTable::add(qint32 l, const Note &t, bool isDirty, qint32 account) {
     }
     bindLids(query, lids);
     for (int i = 0; i < valueList.size(); ++i) {
-        if (valueList[i].type() == QVariant::Bool ||
-            valueList[i].type() == QVariant::Int) {
+        const int valueType = valueList[i].typeId();
+        if (valueType == QMetaType::Bool ||
+            valueType == QMetaType::Int) {
             query.bindValue(i*2 + 1, valueList[i].toInt());
-        } else if (valueList[i].type() == QVariant::LongLong) {
+        } else if (valueType == QMetaType::LongLong) {
             query.bindValue(i*2 + 1, valueList[i].toLongLong());
         } else {
             query.bindValue(i*2 + 1, valueList[i].toString());
@@ -1440,7 +1459,7 @@ void NoteTable::rebuildNoteListTags(qint32 lid) {
         if (t.name.isSet())
             tagNames.append(t.name);
     }
-    qSort(tagNames.begin(), tagNames.end(), caseInsensitiveLessThan);
+    std::sort(tagNames.begin(), tagNames.end(), caseInsensitiveLessThan);
     QString tagCol;
     for (qint32 i=0; i<tagNames.size(); i++) {
         tagCol = tagCol + tagNames[i];
@@ -2146,10 +2165,11 @@ qint32 NoteTable::duplicateNote(qint32 oldLid, bool keepCreatedDate) {
             QFile file(global.fileManager.getDbaDirPath()+files[j]);
             int pos = files[j].indexOf(".");
             QString type = files[j].mid(pos);
-            file.open(QIODevice::ReadOnly);
-            file.copy(global.fileManager.getDbaDirPath()+
-                      QString::number(newResLid) +type);
-            file.close();
+            if (file.open(QIODevice::ReadOnly)) {
+                file.copy(global.fileManager.getDbaDirPath()+
+                          QString::number(newResLid) +type);
+                file.close();
+            }
         }
     }
     query.finish();
@@ -2684,7 +2704,7 @@ void NoteTable::getRecentlyUpdated(QList< QPair< qint32, QString > > &lids) {
 // Get all lids
 void NoteTable::getAll(QList<qint32> &lids) {
     NSqlQuery query(db);
-    lids.empty();
+    lids.clear();
     db->lockForRead();
     query.prepare("Select lid from DataStore where key=:guid");
     query.bindValue(":guid", NOTE_GUID);
@@ -2783,10 +2803,11 @@ QString NoteTable::joinValues(const QList<qint32> &noteLids,
                 QString::number(key) + ",";
         }
 
-        if (value.type() == QVariant::Bool ||
-                value.type() == QVariant::Int) {
+        const int valueType = value.typeId();
+        if (valueType == QMetaType::Bool ||
+                valueType == QMetaType::Int) {
             values += QString::number(value.toInt()) + "),";
-        } else if (value.type() == QVariant::LongLong) {
+        } else if (valueType == QMetaType::LongLong) {
             values += QString::number(value.toLongLong()) + "),";
         } else {
             values += value.toString() + "),";

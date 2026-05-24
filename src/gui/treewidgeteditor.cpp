@@ -33,7 +33,7 @@ TreeWidgetEditor::TreeWidgetEditor(QTreeWidget *parent) :
     this->setFont(global.getGuiFont(font()));
     lid = 0;
     stackName = "";
-    connect(this, SIGNAL(returnPressed()), SLOT(textChanged()));
+    connect(this, &QLineEdit::returnPressed, this, &TreeWidgetEditor::textChanged);
 
     QString css = global.getThemeCss("treeWidgetEditorCss");
     if (css!="")
@@ -64,4 +64,3 @@ void TreeWidgetEditor::textChanged() {
 //    parent->setItemWidget(originalWidgetItem, column, originalWidget);
     emit(editComplete());
 }
-

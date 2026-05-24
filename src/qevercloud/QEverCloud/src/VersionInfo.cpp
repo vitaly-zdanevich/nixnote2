@@ -28,7 +28,7 @@ int qevercloudVersionPatch()
 
 QString qevercloudBuildInfo()
 {
-    return QStringLiteral(QEVERCLOUD_BUILD_INFO);
+    return QStringLiteral(QT_STRINGIFY(QEVERCLOUD_BUILD_INFO));
 }
 
 QString qevercloudBuiltWithQtVersion()

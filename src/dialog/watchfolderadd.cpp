@@ -45,15 +45,15 @@ WatchFolderAdd::WatchFolderAdd(qint32 lid, QWidget *parent) :
 
     okButton = new QPushButton(this);
     okButton->setText(tr("OK"));
-    connect(okButton, SIGNAL(clicked()), this, SLOT(onClicked()));
+    connect(okButton, &QPushButton::clicked, this, &WatchFolderAdd::onClicked);
 
     cancelButton = new QPushButton(this);
     cancelButton->setText(tr("Cancel"));
-    connect(cancelButton, SIGNAL(clicked()), this, SLOT(onCancel()));
+    connect(cancelButton, &QPushButton::clicked, this, &WatchFolderAdd::onCancel);
 
     folderButton = new QPushButton(this);
     folderButton->setText(tr("Directory"));
-    connect(folderButton, SIGNAL(clicked()), this, SLOT(folderButtonClicked()));
+    connect(folderButton, &QPushButton::clicked, this, &WatchFolderAdd::folderButtonClicked);
 
     directory = new QLabel(this);
     directory->setText(dir);
@@ -146,8 +146,8 @@ void WatchFolderAdd::itemSelected() {
 void WatchFolderAdd::folderButtonClicked() {
     QDir dir;
     fileDialog->setDirectory(dir.homePath()+"/");
-    fileDialog->setFileMode(QFileDialog::DirectoryOnly);
-    connect(fileDialog, SIGNAL(fileSelected(QString)), this, SLOT(folderSelected(QString)));
+    fileDialog->setFileMode(QFileDialog::Directory);
+    connect(fileDialog, &QFileDialog::fileSelected, this, &WatchFolderAdd::folderSelected);
     fileDialog->exec();
 }
 
@@ -155,4 +155,3 @@ void WatchFolderAdd::folderButtonClicked() {
 void WatchFolderAdd::folderSelected(QString f) {
     directory->setText(f);
 }
-

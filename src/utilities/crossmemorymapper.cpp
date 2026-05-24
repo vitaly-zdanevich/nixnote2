@@ -19,6 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include "crossmemorymapper.h"
+#include <algorithm>
+#include <cstring>
 #include <iostream>
 #include "src/logger/qslog.h"
 
@@ -133,14 +135,14 @@ size_t CrossMemoryMapper::getSharedMemorySize() const {
 }
 
 void CrossMemoryMapper::write(QString value) {
-    write(value.toAscii());
+    write(value.toUtf8());
 }
 
 void CrossMemoryMapper::write(QByteArray data) {
-    QString svalue(data);
     this->lock();
     void *memptr = sharedMemory->data();
-    memcpy(memptr, svalue.toStdString().c_str(), static_cast<size_t>(data.size()));
+    const size_t bytesToWrite = std::min(static_cast<size_t>(data.size()), getSharedMemorySize());
+    memcpy(memptr, data.constData(), bytesToWrite);
     this->unlock();
 }
 

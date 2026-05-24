@@ -41,7 +41,7 @@ ExportData::ExportData(bool backup, bool cmdLine, QObject *parent) :
     lastError = 0;
     errorMessage = "";
     this->cmdLine = cmdLine;
-    lids.empty();
+    lids.clear();
 }
 
 
@@ -58,12 +58,11 @@ void ExportData::backupData(QString filename) {
         progress = new QProgressDialog();
         progress->setAutoClose(false);
         progress->setWindowModality(Qt::ApplicationModal);
-        connect(progress, SIGNAL(canceled()), this, SLOT(abortBackup()));
+        connect(progress, &QProgressDialog::canceled, this, &ExportData::abortBackup);
         progress->setWindowTitle(tr("Export"));
     }
     writer = new QXmlStreamWriter(&xmlFile);
     writer->setAutoFormatting(true);
-    writer->setCodec("UTF-8");
     writer->writeStartDocument();
     writer->writeDTD("<!DOCTYPE NixNote-Export>");
     writer->writeStartElement("nixnote-export");
