@@ -22,13 +22,10 @@
 namespace quentier {
 
 StringUtils::StringUtils() :
-    d_ptr(new StringUtilsPrivate)
+    d_ptr(std::make_unique<StringUtilsPrivate>())
 {}
 
-StringUtils::~StringUtils()
-{
-    delete d_ptr;
-}
+StringUtils::~StringUtils() = default;
 
 void StringUtils::removePunctuation(QString & str, const QVector<QChar> & charactersToPreserve) const
 {

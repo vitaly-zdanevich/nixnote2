@@ -23,17 +23,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QSortFilterProxyModel>
 #include <QMap>
 #include <stdint.h>
+#include <memory>
 
 class NoteSortFilterProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
     explicit NoteSortFilterProxyModel();
-    ~NoteSortFilterProxyModel();
-    bool filterAcceptsRow(qint32 source_row, const QModelIndex &source_parent) const;
+    ~NoteSortFilterProxyModel() override;
+    bool filterAcceptsRow(qint32 source_row, const QModelIndex &source_parent) const override;
     //void sort(int column, Qt::SortOrder order);
-    bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
-    QMap<qint32, qint32> *lidMap;
+    bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
+    std::unique_ptr<QMap<qint32, qint32>> lidMap;
 
 signals:
 

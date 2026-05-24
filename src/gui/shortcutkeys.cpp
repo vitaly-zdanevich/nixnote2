@@ -28,8 +28,8 @@ ShortcutKeys::ShortcutKeys(QObject *parent) :
     QObject(parent)
 {
     // Setup value Array
-    shortcutMap = new QHash<QString, QString>();
-    actionMap = new QHash<QString, QString>();
+    shortcutMap = std::make_unique<QHash<QString, QString>>();
+    actionMap = std::make_unique<QHash<QString, QString>>();
 
     QString userFileName = global.fileManager.getConfigDir() + QString("shortcuts.txt"); // user shortcuts
     QString systemFileName = global.fileManager.getProgramDataDir() + QString("shortcuts.txt"); // system shortcuts

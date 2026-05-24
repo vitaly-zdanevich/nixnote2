@@ -37,7 +37,7 @@ class FileDestination : public Destination
 {
 public:
    FileDestination(const QString& filePath);
-   virtual void write(const QString& message);
+   void write(const QString& message) override;
 
 private:
    QFile mFile;
@@ -65,7 +65,7 @@ void FileDestination::write(const QString& message)
 class DebugOutputDestination : public Destination
 {
 public:
-   virtual void write(const QString& message);
+   void write(const QString& message) override;
 };
 
 void DebugOutputDestination::write(const QString& message)
@@ -75,12 +75,12 @@ void DebugOutputDestination::write(const QString& message)
 
 DestinationPtr DestinationFactory::MakeFileDestination(const QString& filePath)
 {
-   return DestinationPtr(new FileDestination(filePath));
+   return std::make_unique<FileDestination>(filePath);
 }
 
 DestinationPtr DestinationFactory::MakeDebugOutputDestination()
 {
-   return DestinationPtr(new DebugOutputDestination);
+   return std::make_unique<DebugOutputDestination>();
 }
 
 } // end namespace

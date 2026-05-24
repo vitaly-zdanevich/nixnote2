@@ -69,6 +69,13 @@ fi
 
 QMAKE_BINARY=${QMAKE_BINARY:-qmake6}
 JOBS=${JOBS:-$(nproc)}
+if [ -z "${QMAKE_CXX_VALUE}" ]; then
+  if command -v ccache >/dev/null 2>&1; then
+    QMAKE_CXX_VALUE="ccache g++"
+  else
+    QMAKE_CXX_VALUE="g++"
+  fi
+fi
 
 if [ "${TIDY_LIB_DIR}" == "/usr/lib" ] ; then
   # at least on ubuntu pkgconfig for "libtidy-dev" is not installed - so we provide default
@@ -82,8 +89,8 @@ elif [ -d ${TIDY_LIB_DIR}/pkgconfig ] ; then
   export PKG_CONFIG_PATH=${TIDY_LIB_DIR}/pkgconfig
 fi
 
-echo ${QMAKE_BINARY} CONFIG+=${BUILD_TYPE} ${OAUTH_CONFIG} PREFIX=appdir/usr QMAKE_RPATHDIR+=${TIDY_LIB_DIR} QMAKE_CXX="ccache g++" || error_exit "$0: qmake"
-${QMAKE_BINARY} CONFIG+=${BUILD_TYPE} ${OAUTH_CONFIG} PREFIX=appdir/usr QMAKE_RPATHDIR+=${TIDY_LIB_DIR} QMAKE_CXX="ccache g++" || error_exit "$0: qmake"
+echo ${QMAKE_BINARY} CONFIG+=${BUILD_TYPE} ${OAUTH_CONFIG} PREFIX=appdir/usr QMAKE_RPATHDIR+=${TIDY_LIB_DIR} QMAKE_CXX="${QMAKE_CXX_VALUE}" || error_exit "$0: qmake"
+${QMAKE_BINARY} CONFIG+=${BUILD_TYPE} ${OAUTH_CONFIG} PREFIX=appdir/usr QMAKE_RPATHDIR+=${TIDY_LIB_DIR} QMAKE_CXX="${QMAKE_CXX_VALUE}" || error_exit "$0: qmake"
 
 make clean
 make -j"${JOBS}" || error_exit "$0: make"

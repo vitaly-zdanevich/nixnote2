@@ -21,9 +21,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 MimeReference::MimeReference(QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    table(std::make_unique<QHash<QString,QString>>())
 {
-    table = new QHash<QString,QString>();
     table->insert("application/vnd.hzn-3d-crossword",".x3d");
     table->insert("video/3gpp",".3gp");
     table->insert("video/3gpp2",".3g2");
@@ -709,11 +709,6 @@ MimeReference::MimeReference(QObject *parent) :
 }
 
 
-MimeReference::~MimeReference() {
-    delete table;
-}
-
-
 
 QString MimeReference::getExtensionFromMime(QString key, QString filename) {
     if (!table->contains(key)) {
@@ -748,12 +743,12 @@ QString MimeReference::getMimeFromExtension(QString fileExtension) {
 }
 
 
-QString MimeReference::getExtensionFromMime(string key, string mime) {
+QString MimeReference::getExtensionFromMime(std::string key, std::string mime) {
     return this->getExtensionFromMime(QString::fromStdString(key), QString::fromStdString(mime));
 }
 
 
-QString MimeReference::getMimeFromExtension(string fileExtension) {
+QString MimeReference::getMimeFromExtension(std::string fileExtension) {
     return this->getMimeFromExtension(QString::fromStdString(fileExtension));
 }
 
@@ -767,6 +762,6 @@ QString MimeReference::getMimeFromFileName(QString fileName) {
 }
 
 
-QString MimeReference::getMimeFromFileName(string filename) {
+QString MimeReference::getMimeFromFileName(std::string filename) {
     return getMimeFromFileName(QString::fromStdString(filename));
 }

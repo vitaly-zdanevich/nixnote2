@@ -23,6 +23,8 @@
 #include <QString>
 #include <QVector>
 
+#include <memory>
+
 #define QUENTIER_EXPORT Q_DECL_EXPORT
 
 namespace quentier {
@@ -33,14 +35,17 @@ class QUENTIER_EXPORT StringUtils
 {
 public:
     StringUtils();
-    virtual ~StringUtils();
+    ~StringUtils();
+
+    StringUtils(const StringUtils &) = delete;
+    StringUtils & operator=(const StringUtils &) = delete;
 
     void removePunctuation(QString & str, const QVector<QChar> & charactersToPreserve = QVector<QChar>()) const;
     void removeDiacritics(QString & str) const;
     void removeNewlines(QString & str) const;
 
 private:
-    StringUtilsPrivate * const d_ptr;
+    std::unique_ptr<StringUtilsPrivate> d_ptr;
     Q_DECLARE_PRIVATE(StringUtils);
 };
 

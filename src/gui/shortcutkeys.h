@@ -22,10 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QObject>
 #include <QHash>
-#include <string>
 
-using namespace std;
-
+#include <memory>
 
 class ShortcutKeys : public QObject
 {
@@ -34,10 +32,10 @@ private:
     void loadCustomKeys(QString fileName);
 
 public:
-    explicit ShortcutKeys(QObject *parent = 0);
+    explicit ShortcutKeys(QObject *parent = nullptr);
 
-    QHash<QString, QString> *actionMap;
-    QHash<QString, QString> *shortcutMap;
+    std::unique_ptr<QHash<QString, QString>> actionMap;
+    std::unique_ptr<QHash<QString, QString>> shortcutMap;
 
     void loadkey(QString action, QString *shortcut);
     void removeByShortcut(QString shortcut);
@@ -49,7 +47,6 @@ public:
 };
 
 #endif // SHORTCUTKEYS_H
-
 
 
 

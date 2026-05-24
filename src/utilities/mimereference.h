@@ -22,23 +22,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QObject>
 #include <QHash>
+#include <memory>
 #include <string>
-
-using namespace std;
 
 class MimeReference : public QObject
 {
     Q_OBJECT
 public:
-    explicit MimeReference(QObject *parent = 0);
-    ~MimeReference();
-    QHash<QString,QString> *table;
+    explicit MimeReference(QObject *parent = nullptr);
+    std::unique_ptr<QHash<QString,QString>> table;
     QString getExtensionFromMime(QString mime, QString filename);
     QString getMimeFromExtension(QString fileExtension);
-    QString getMimeFromExtension(string fileExtension);
+    QString getMimeFromExtension(std::string fileExtension);
     QString getMimeFromFileName(QString fileName);
-    QString getMimeFromFileName(string filename);
-    QString getExtensionFromMime(string extension, string filename);
+    QString getMimeFromFileName(std::string filename);
+    QString getExtensionFromMime(std::string extension, std::string filename);
     
 signals:
     

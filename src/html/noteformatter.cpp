@@ -670,9 +670,8 @@ void NoteFormatter::modifyApplicationTags(HtmlDomElement &enmedia, QString &hash
             if (doc == nullptr)
                 return;
 
-            QImage *image = new QImage(doc->page(0)->renderToImage());
-            image->save(printImageFile, "jpg");
-            delete image;
+            QImage image = doc->page(0)->renderToImage();
+            image.save(printImageFile, "jpg");
 
             enmedia.setAttribute("src", localImageUrl(printImageFile, QStringLiteral("image/jpeg")));
             enmedia.removeAttribute("hash");
