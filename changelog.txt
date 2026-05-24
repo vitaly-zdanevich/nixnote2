@@ -1,3 +1,9 @@
+NixNote (2.1.15) stable; urgency=low
+  * Updated GitHub Actions CI to build Qt 6 AppImages on native amd64 and arm64 runners.
+  * Published architecture-specific AppImage artifacts and consolidated release upload after both builds complete.
+  * Added a build-script JOBS override so CI can run qmake builds and tests with a single worker.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Sun, 24 May 2026 21:57:15 +0400
+
 NixNote (2.1.14) stable; urgency=low
   * Fixed live theme switching so the selected theme remains loaded after icon refresh.
   * Reapplied theme styles to the main window, toolbar, menus, note list, side trees, tabs and open editor windows when changing themes.

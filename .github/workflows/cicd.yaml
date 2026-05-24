@@ -10,79 +10,146 @@ on:
       - master
       - develop
 
+permissions:
+  contents: read
+
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  appimage:
+    name: AppImage (${{ matrix.artifact_arch }})
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - artifact_arch: amd64
+            appimage_arch: x86_64
+            runner: ubuntu-24.04
+          - artifact_arch: arm64
+            appimage_arch: aarch64
+            runner: ubuntu-24.04-arm
 
     steps:
-    - name: Check out repository code
-      uses: actions/checkout@v2
+      - name: Check out repository code
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update -qq
-        sudo apt-get -y install git-core qtbase5-dev qtchooser qt5-qmake qttools5-dev-tools build-essential \
-                       wget curl make pkg-config \
-                       libboost-dev libboost-test-dev libboost-program-options-dev libevent-dev libcurl4-openssl-dev \
-                       libpoppler-qt5-dev libqt5webkit5-dev libqt5sql5-sqlite \
-                       libhunspell-dev libtidy-dev libqt5positioning5-plugins
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get -y install git-core build-essential ccache \
+            wget curl make pkg-config file \
+            libboost-dev libboost-test-dev libboost-program-options-dev libevent-dev libcurl4-openssl-dev \
+            libpoppler-qt6-dev libqt6sql6-sqlite libhunspell-dev libtidy-dev \
+            qt6-base-dev qt6-base-dev-tools qt6-declarative-dev qt6-tools-dev-tools \
+            qt6-webchannel-dev qt6-webengine-dev
 
+      - name: Build project
+        env:
+          JOBS: 1
+        run: |
+          ./development/build-with-qmake.sh release clean /usr/lib browser
 
+      - name: Build and run tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          qmake6 testsrc/tests.pro CONFIG+=release PREFIX=/usr
+          make -j1
+          ./qmake-build-release-t/tests -platform offscreen
 
-    - name: Build project
-      run: |
-        ls -la /usr/include/x86_64-linux-gnu/qt5/QtQml
-        qmake CONFIG+=release PREFIX=/usr &&
-        ls -l ./development &&
-        make -j2 || { echo 'Build failed'; exit 1; } &&
-        make INSTALL_ROOT=appdir -j2 install || { echo 'Install failed'; exit 1; } &&
-        find appdir/ &&
-        qmake testsrc/tests.pro CONFIG+=release PREFIX=/usr &&
-        make || { echo 'Test build failed'; exit 1; } &&
-        ./qmake-build-release-t/tests -platform offscreen
+      - name: Install AppImage tools
+        shell: bash
+        run: |
+          set -euo pipefail
 
-    - name: Install linuxdeploy
-      run: |
-        wget -nv "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" &&
-        chmod a+x ./linuxdeploy-x86_64.AppImage &&
-        ./linuxdeploy-x86_64.AppImage --appimage-extract &&
-        mv squashfs-root linuxdeploy &&
-        mv linuxdeploy/AppRun linuxdeploy/linuxdeploy
+          install_appimage_tool() {
+            local name="$1"
+            local url="$2"
 
-    - name: Install linuxdeploy-plugin-qt
-      run: |
-        wget -nv "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage" &&
-        chmod a+x ./linuxdeploy-plugin-qt-x86_64.AppImage &&
-        ./linuxdeploy-plugin-qt-x86_64.AppImage --appimage-extract &&
-        mv squashfs-root linuxdeploy-plugin-qt &&
-        mv linuxdeploy-plugin-qt/AppRun linuxdeploy-plugin-qt/linuxdeploy-plugin-qt
+            curl --fail --location --retry 3 --output "${name}.AppImage" "${url}"
+            chmod a+x "${name}.AppImage"
+            "./${name}.AppImage" --appimage-extract
+            mv squashfs-root "${name}"
+            mv "${name}/AppRun" "${name}/${name}"
+          }
 
-    - name: Install appimagetool
-      run: |
-        wget -nv "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" &&
-        chmod a+x appimagetool-x86_64.AppImage &&
-        ./appimagetool-x86_64.AppImage --appimage-extract &&
-        mv squashfs-root appimagetool &&
-        mv appimagetool/AppRun appimagetool/appimagetool
+          install_appimage_tool linuxdeploy \
+            "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.appimage_arch }}.AppImage"
+          install_appimage_tool linuxdeploy-plugin-qt \
+            "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-${{ matrix.appimage_arch }}.AppImage"
+          install_appimage_tool appimagetool \
+            "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${{ matrix.appimage_arch }}.AppImage"
 
-    - name: Build AppImage
-      run: |
-        export PATH=linuxdeploy:linuxdeploy-plugin-qt:appimagetool:$PATH
-        linuxdeploy --desktop-file=./appdir/usr/share/applications/nixnote2.desktop --appdir=appdir --plugin qt
-        rm -f appdir/usr/lib/libnss3.so
-        rm -f appdir/usr/lib/libnssutil3.so
-        appimagetool -n appdir
+      - name: Build AppImage
+        shell: bash
+        run: |
+          set -euo pipefail
 
-    - name: Upload AppImage
-      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-        if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-          export UPLOADTOOL_SUFFIX=develop
-        fi
-        RELEASE_NOTES=$(cat ./development/release-notes/release-${{ github.ref_name }}.md)
-        export VERSION=$(cat appdir/usr/share/nixnote2/version.txt)
-        export UPLOADTOOL_BODY="$RELEASE_NOTES - Version: **${VERSION}** - [GitHub Actions build log](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})."
-        bash upload.sh NixNote*.AppImage || exit 1
+          export PATH="$PWD/linuxdeploy:$PWD/linuxdeploy-plugin-qt:$PWD/appimagetool:$PATH"
+          export ARCH="${{ matrix.appimage_arch }}"
+
+          linuxdeploy --desktop-file=./appdir/usr/share/applications/nixnote2.desktop --appdir=appdir --plugin qt
+
+          if [ -d appdir/usr/lib ]; then
+            find appdir/usr/lib -type f \( -name 'libnss3.so*' -o -name 'libnssutil3.so*' \) -delete
+          fi
+
+          appimagetool -n appdir
+
+          version="$(cat appdir/usr/share/nixnote2/version.txt)"
+          mkdir -p dist
+          shopt -s nullglob
+          appimages=(NixNote*.AppImage)
+          if [ "${#appimages[@]}" -ne 1 ]; then
+            echo "Expected exactly one AppImage, found ${#appimages[@]}"
+            exit 1
+          fi
+
+          mv "${appimages[0]}" "dist/NixNote-${version}-${{ matrix.artifact_arch }}.AppImage"
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NixNote-${{ matrix.artifact_arch }}-AppImage
+          path: dist/*.AppImage
+          if-no-files-found: error
+
+  release-appimages:
+    name: Upload AppImage release assets
+    needs: appimage
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Download AppImage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: NixNote-*-AppImage
+          path: dist
+          merge-multiple: true
+
+      - name: Upload AppImage release assets
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+          if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            export UPLOADTOOL_SUFFIX=develop
+          fi
+
+          RELEASE_NOTES=$(cat ./development/release-notes/release-${{ github.ref_name }}.md)
+          VERSION=$(find dist -maxdepth 1 -name 'NixNote-*.AppImage' -printf '%f\n' | head -n 1 | sed -E 's/^NixNote-([0-9][^-]*)-.+$/\1/')
+          if [ -z "${VERSION}" ]; then
+            echo "Unable to determine AppImage version"
+            exit 1
+          fi
+          export UPLOADTOOL_BODY="$RELEASE_NOTES - Version: **${VERSION}** - Architectures: **amd64, arm64** - [GitHub Actions build log](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})."
+          bash upload.sh dist/*.AppImage || exit 1

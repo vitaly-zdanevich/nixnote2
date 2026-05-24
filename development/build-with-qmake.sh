@@ -68,6 +68,7 @@ if [ -d "${APPDIR}" ]; then
 fi
 
 QMAKE_BINARY=${QMAKE_BINARY:-qmake6}
+JOBS=${JOBS:-$(nproc)}
 
 if [ "${TIDY_LIB_DIR}" == "/usr/lib" ] ; then
   # at least on ubuntu pkgconfig for "libtidy-dev" is not installed - so we provide default
@@ -85,7 +86,7 @@ echo ${QMAKE_BINARY} CONFIG+=${BUILD_TYPE} ${OAUTH_CONFIG} PREFIX=appdir/usr QMA
 ${QMAKE_BINARY} CONFIG+=${BUILD_TYPE} ${OAUTH_CONFIG} PREFIX=appdir/usr QMAKE_RPATHDIR+=${TIDY_LIB_DIR} QMAKE_CXX="ccache g++" || error_exit "$0: qmake"
 
 make clean
-make -j$(nproc) || error_exit "$0: make"
-make -j$(nproc) install || error_exit "$0: make install"
+make -j"${JOBS}" || error_exit "$0: make"
+make -j"${JOBS}" install || error_exit "$0: make install"
 
 cp changelog.txt debian/changelog
