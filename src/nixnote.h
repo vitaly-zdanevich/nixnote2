@@ -188,6 +188,7 @@ private:
     void restoreAndShowMainWindow();
     void configurePdfPrinter(QPrinter &printer, QString &file) const;
     bool checkAuthAndReauthorize();
+    void applyThemeStyles();
 
 public:
     NixNote(QWidget *parent = 0);  // Constructor

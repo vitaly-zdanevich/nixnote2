@@ -777,6 +777,19 @@ void NTabWidget::reloadIcons() {
 }
 
 
+void NTabWidget::applyThemeStyles() {
+    setStyleSheet(global.getThemeCss("noteTabCss"));
+
+    for (int i = 0; i < browserList->size(); i++) {
+        browserList->at(i)->applyThemeStyles();
+    }
+    for (int i = 0; i < externalList->size(); i++) {
+        externalList->at(i)->setStyleSheet(global.getThemeCss("externalNoteWindowCss"));
+        externalList->at(i)->browser->applyThemeStyles();
+    }
+}
+
+
 void NTabWidget::changeEditorStyle() {
     for (int i = 0; i < browserList->size(); i++) {
         browserList->at(i)->setEditorStyle();

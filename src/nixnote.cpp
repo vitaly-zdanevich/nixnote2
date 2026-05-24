@@ -3463,51 +3463,65 @@ void NixNote::showDesktopUrl(const QUrl &url) {
 }
 
 
+void NixNote::applyThemeStyles() {
+    setStyleSheet(global.getThemeCss("mainWindowCss"));
+    toolBar->setStyleSheet(global.getThemeCss("mainToolbarCss"));
+    menuBar->setStyleSheet(global.getThemeCss("menuCss"));
+    searchText->setStyleSheet(global.getThemeCss("searchInputCss"));
+    noteTableView->setStyleSheet(global.getThemeCss("noteTableViewCss"));
+    noteTableView->tableViewHeader->setStyleSheet(global.getThemeCss("noteTableViewHeaderCss"));
+    notebookTreeView->setStyleSheet(global.getThemeCss("notebookTreeCss"));
+    tagTreeView->setStyleSheet(global.getThemeCss("tagTreeCss"));
+    attributeTree->setStyleSheet(global.getThemeCss("attributeTreeCss"));
+    trashTree->setStyleSheet(global.getThemeCss("trashTreeCss"));
+    searchTreeView->setStyleSheet(global.getThemeCss("savedSearchTreeCss"));
+
+    QString shortcutsTreeCss = global.getThemeCss("shortcutsTreeCss");
+    if (shortcutsTreeCss.isEmpty()) {
+        shortcutsTreeCss = QStringLiteral("QTreeView {border-image:none; image:none;} ");
+    }
+    favoritesTreeView->setStyleSheet(shortcutsTreeCss);
+
+    leftPanel->setStyleSheet(global.getThemeCss("treeWidgetPanelCss"));
+    tabWindow->applyThemeStyles();
+}
+
+
 // Reload the icons after a theme switch
 void NixNote::reloadIcons() {
-    QString newThemeName = "";
+    QAction *selectedTheme = qobject_cast<QAction *>(sender());
+
+    if (selectedTheme == nullptr) {
+        for (QAction *themeAction : menuBar->themeActions) {
+            if (themeAction->isChecked()) {
+                selectedTheme = themeAction;
+                break;
+            }
+        }
+    }
+
+    if (selectedTheme == nullptr && !menuBar->themeActions.isEmpty()) {
+        selectedTheme = menuBar->themeActions.first();
+    }
+
+    if (selectedTheme == nullptr) {
+        return;
+    }
+
+    QString newThemeName = selectedTheme->data().toString();
+    for (QAction *themeAction : menuBar->themeActions) {
+        themeAction->setChecked(themeAction == selectedTheme);
+    }
+
     global.settings->beginGroup(INI_GROUP_APPEARANCE);
-    QString currentTheme = global.settings->value("themeName", "").toString();
+    if (newThemeName.isEmpty())
+        global.settings->remove("themeName");
+    else
+        global.settings->setValue("themeName", newThemeName);
     global.settings->endGroup();
 
-    QAction *themeSwitch;
-    QList<int> checkedEntries;
-    int currentThemePos = 0;
-    int newThemePos = 0;
-    for (int i = 0; i < menuBar->themeActions.size(); i++) {
-        themeSwitch = menuBar->themeActions[i];
-        QString checkedTheme = themeSwitch->data().toString();
-        if (checkedTheme == currentTheme)
-            currentThemePos = i;
-        else {
-            if (themeSwitch->isChecked())
-                newThemePos = i;
-        }
-        if (themeSwitch->isChecked()) {
-            checkedEntries.append(i);
-        }
-    }
-
-    // If nothing is checked, we recheck the old one or
-    // if more than one is checked, we uncheck the old guy
-    if (checkedEntries.size() == 0) {
-        menuBar->blockSignals(true);
-        menuBar->themeActions[currentThemePos]->setChecked(true);
-        menuBar->blockSignals(false);
-    }
-    if (checkedEntries.size() > 0) {
-        menuBar->blockSignals(true);
-        menuBar->themeActions[currentThemePos]->setChecked(false);
-        menuBar->blockSignals(false);
-        global.settings->beginGroup(INI_GROUP_APPEARANCE);
-        newThemeName = menuBar->themeActions[newThemePos]->data().toString();
-        if (newThemeName != "")
-            global.settings->setValue("themeName", newThemeName);
-        else
-            global.settings->remove("themeName");
-        global.settings->endGroup();
-        global.loadTheme(global.resourceList, global.colorList, newThemeName);
-    }
+    global.loadTheme(global.resourceList, global.colorList, newThemeName);
+    applyThemeStyles();
 
     const auto wIcon = QIcon(global.getIconResource(":windowIcon"));
     if (!wIcon.isNull()) {
@@ -3530,8 +3544,6 @@ void NixNote::reloadIcons() {
     searchTreeView->reloadIcons();
     favoritesTreeView->reloadIcons();
     tabWindow->reloadIcons();
-
-    global.clearResourceList();
 
     tabWindow->changeEditorStyle();
 

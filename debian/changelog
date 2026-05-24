@@ -1,3 +1,9 @@
+NixNote (2.1.14) stable; urgency=low
+  * Fixed live theme switching so the selected theme remains loaded after icon refresh.
+  * Reapplied theme styles to the main window, toolbar, menus, note list, side trees, tabs and open editor windows when changing themes.
+  * Added Qt 6 system dark-mode detection for the editor and refresh the editor stylesheet when the system color scheme changes.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Sun, 24 May 2026 21:45:36 +0400
+
 NixNote (2.1.13) stable; urgency=low
   * Replaced the legacy Java crypto helper with native C++ encrypted-note support.
   * Removed the bundled crypto.jar and Java runtime/build dependency from qmake, Debian packaging and Windows deployment metadata.

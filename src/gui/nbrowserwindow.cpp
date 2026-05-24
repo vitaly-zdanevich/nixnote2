@@ -65,6 +65,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QFile>
 #include <QFileInfo>
+#include <QGuiApplication>
 #include <QClipboard>
 #include <QBuffer>
 #include <QDateTime>
@@ -81,6 +82,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QWebEngineScript>
 #include <QWebEngineScriptCollection>
 #include <QWebEngineSettings>
+#include <QStyleHints>
 #include <iostream>
 #include <istream>
 #include <qcalendarwidget.h>
@@ -119,6 +121,26 @@ QString resourceImageUrl(const QString &path)
     url.setScheme(QStringLiteral("nnres"));
     url.setPath(QStringLiteral("/") + QFileInfo(path).fileName());
     return url.toString();
+}
+
+bool systemDarkModeEnabled()
+{
+    const QStyleHints *styleHints = QGuiApplication::styleHints();
+    return styleHints != nullptr && styleHints->colorScheme() == Qt::ColorScheme::Dark;
+}
+
+QString systemDarkEditorCss()
+{
+    if (!systemDarkModeEnabled()) {
+        return QString();
+    }
+
+    return QStringLiteral(
+        "html { color-scheme: dark; }"
+        "html, body { background-color: black !important; }"
+        "body { color: white; }"
+        "a { color: lightblue; }"
+        "img { background-color: white; }");
 }
 }
 
@@ -247,6 +269,10 @@ NBrowserWindow::NBrowserWindow(QWidget *parent) :
     connect(editor, &NWebView::noteChanged, this, &NBrowserWindow::noteContentUpdated);
     connect(editor, &NWebView::htmlEditAlert, this, &NBrowserWindow::noteContentEdited);
     connect(editor, &NWebView::htmlEditAlert, this, &NBrowserWindow::correctFontTagAttr);
+    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
+            this, [this](Qt::ColorScheme) {
+                setEditorStyle();
+            });
 
     editor->settings()->setAttribute(QWebEngineSettings::PluginsEnabled, true);
     factory = new PluginFactory(this);
@@ -4148,6 +4174,8 @@ QString base64_encode(QString string) {
 void NBrowserWindow::setEditorStyle() {
     QString css = global.getEditorCss();
 
+    css += systemDarkEditorCss();
+
     QString checkbox =
         QString("img.todo-icon {") +
         QString("    vertical-align: baseline !important;") +
@@ -4193,6 +4221,18 @@ void NBrowserWindow::setEditorStyle() {
         scripts.remove(existing);
     scripts.insert(script);
     editor->evaluateJavaScript(source);
+}
+
+
+void NBrowserWindow::applyThemeStyles() {
+    setStyleSheet(global.getThemeCss("browserWindowCss"));
+    editor->setStyleSheet(global.getThemeCss("noteContentsCss"));
+    buttonBar->setStyleSheet(global.getThemeCss("editorButtonBarCss"));
+    expandButton.setStyleSheet(global.getThemeCss("nodeAttributesExpandButtonCss"));
+    notebookMenu.setStyleSheet(global.getThemeCss("notebookMenuButtonCss"));
+    alarmButton.setStyleSheet(global.getThemeCss("reminderButtonCss"));
+    urlEditor.setStyleSheet(global.getThemeCss("urlEditorCss"));
+    setEditorStyle();
 }
 
 

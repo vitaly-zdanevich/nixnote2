@@ -169,6 +169,7 @@ public:
     bool isReadOnly;
     QString buildPasteUrl(QString url);
     void setEditorStyle();
+    void applyThemeStyles();
 
     EditorButtonBar *buttonBar;
     QShortcut *focusNoteShortcut;

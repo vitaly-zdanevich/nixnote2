@@ -65,6 +65,7 @@ public:
         ExternalWindow = 2
     };
     void reloadIcons();
+    void applyThemeStyles();
     void changeEditorStyle();
     bool findBrowser(NBrowserWindow *retval, qint32 lid);
     ExternalBrowse *lastExternal;
