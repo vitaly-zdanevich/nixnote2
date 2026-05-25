@@ -271,10 +271,6 @@ void NMainMenuBar::setupEditMenu() {
     findReplaceMenu->addAction(searchFindReplaceAction);
     connect(searchFindReplaceAction, &QAction::triggered, parent, &NixNote::findReplaceInNote);
 
-    editMenu->addSeparator();
-
-    createThemeMenu(editMenu);
-
     preferencesAction = new QAction(tr("Preferences"), this);
     preferencesAction->setMenuRole(QAction::PreferencesRole);
     setupShortcut(preferencesAction, QString("Edit_Preferences"));
@@ -307,6 +303,8 @@ void NMainMenuBar::setupViewMenu() {
     viewHistoryAction = new QAction(tr("Note &History"), this);
     setupShortcut(viewHistoryAction, "View_Note_History");
     viewMenu->addAction(viewHistoryAction);
+
+    createThemeMenu(viewMenu);
 
     viewMenu->addSeparator();
 

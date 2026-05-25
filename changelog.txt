@@ -1,3 +1,8 @@
+NixNote (2.1.17) stable; urgency=low
+  * Moved the Theme menu from Edit to View so visual appearance controls live with other presentation options.
+  * Kept the existing theme actions and live theme switching behavior unchanged.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 05:36:32 +0400
+
 NixNote (2.1.16) stable; urgency=low
   * Modernized focused C++17 ownership patterns by replacing legacy raw ownership and auto_ptr compatibility with unique_ptr and make_unique.
   * Tightened Qt model, shortcut, MIME helper and logger classes with clearer defaulted destructors, deleted copy operations and override annotations.
