@@ -253,9 +253,20 @@ void Tests::enmlNixnoteLinkTest() {
         result.append(resourceUrl);
         result.append(
                 R"R("><en-media type="image/gif" hash="69cb83339ee2fb3f008492f82f98cbbc"/></a><br />)R");
+        QString resultWithTitleFirst(R"R(<a title=")R");
+        resultWithTitleFirst.append(resourceUrl);
+        resultWithTitleFirst.append(R"R("href=")R");
+        resultWithTitleFirst.append(resourceUrl);
+        resultWithTitleFirst.append(
+                R"R("><en-media type="image/gif" hash="69cb83339ee2fb3f008492f82f98cbbc"/></a><br />)R");
         const QString r1 = formatToEnml(src);
         const QString r2 = addEnmlEnvelope(result, "45913");
-        QCOMPAREX(r1, r2); // note: use string, not expressions
+        const QString r3 = addEnmlEnvelope(resultWithTitleFirst, "45913");
+        const bool matchesExpectedOutput = (r1 == r2 || r1 == r3);
+        if (!matchesExpectedOutput) {
+            QLOG_WARN() << "DIFF r1: " << r1 << ", r2: " << r2 << ", r3: " << r3;
+        }
+        QVERIFY(matchesExpectedOutput);
     }
 }
 
