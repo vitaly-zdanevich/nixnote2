@@ -307,6 +307,8 @@ bash development/deploy-on-windows.sh [deployment_folder]
 
 If you need spell check, you have to download the dictionary files and copy the .aff and .dic file to the deployment folder. You may want to download them [here](https://github.com/wooorm/dictionaries).
 
+## My other Evernote projects
 
-## Donations
-If you would like to support the project, you can send me some little amount via paypal: https://paypal.me/nixnote2
+* [reeknote cli on rust](https://gitlab.com/vitaly-zdanevich/reeknote)
+* [userstyle black and minimal](https://gitlab.com/vitaly-zdanevich-styles/evernote)
+* [Telegram read-only bot](https://gitlab.com/vitaly-zdanevich/bot_telegram_evernote)
