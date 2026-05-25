@@ -521,7 +521,7 @@ qlonglong ImportEnex::datetimeValue() {
     QTime time;
     time.setHMS(hour.toInt(), minute.toInt(), second.toInt());
 
-    QDateTime dt(date, time, QTimeZone(QTimeZone::UTC));
+    QDateTime dt(date, time, QTimeZone("UTC"));
 
     return dt.toMSecsSinceEpoch();
 }
