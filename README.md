@@ -309,6 +309,7 @@ If you need spell check, you have to download the dictionary files and copy the 
 
 ## My other Evernote projects
 
+* [Official client repack for Linux](https://github.com/vitaly-zdanevich/evernote-linux-repackage)
 * [reeknote cli on rust](https://gitlab.com/vitaly-zdanevich/reeknote)
 * [userstyle black and minimal](https://gitlab.com/vitaly-zdanevich-styles/evernote)
 * [Telegram read-only bot](https://gitlab.com/vitaly-zdanevich/bot_telegram_evernote)
