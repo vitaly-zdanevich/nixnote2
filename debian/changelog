@@ -1,3 +1,7 @@
+NixNote (2.1.30) stable; urgency=low
+  * Fixed Ubuntu 24.04 CI builds by avoiding QTimeZone::UTC on older Qt 6 packages.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 10:01:53 +0400
+
 NixNote (2.1.29) stable; urgency=low
   * Fixed Ubuntu 24.04 CI builds by avoiding QDomDocument::ParseResult on older Qt 6 packages.
  -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 09:35:02 +0400
