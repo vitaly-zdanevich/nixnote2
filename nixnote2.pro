@@ -2,7 +2,7 @@ lessThan(QT_MAJOR_VERSION, 6) {
     error("NixNote now requires Qt 6; use qmake6 to build it.")
 }
 
-QT += core gui widgets printsupport webenginewidgets webchannel sql network xml dbus qml concurrent
+QT += core gui widgets printsupport webenginecore webenginewidgets webchannel sql network xml dbus qml concurrent
 
 unix {
     CONFIG += link_pkgconfig
