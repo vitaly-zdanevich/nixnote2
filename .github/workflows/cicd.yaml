@@ -100,8 +100,14 @@ jobs:
           tail -n 200 build-tests.log
           echo "::endgroup::"
 
-          tail -n 80 build-tests.log > build-tests-error-summary.log
-          message=$(perl -0pe 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' build-tests-error-summary.log)
+          grep -E -C 4 '^(FAIL!|   Actual|   Expected|   Loc:|Totals:)|DIFF r1:' \
+            build-tests.log > build-tests-error-summary.log || true
+          if [ ! -s build-tests-error-summary.log ]; then
+            tail -n 80 build-tests.log > build-tests-error-summary.log
+          fi
+
+          cut -c 1-500 build-tests-error-summary.log > build-tests-error-annotation.log
+          message=$(perl -0pe 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' build-tests-error-annotation.log)
           echo "::error title=Build and run tests failed::${message}"
           exit "${status}"
 
