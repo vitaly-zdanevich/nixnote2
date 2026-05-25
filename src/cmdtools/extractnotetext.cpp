@@ -21,9 +21,111 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "src/global.h"
 #include <QXmlStreamReader>
 #include <QRegularExpression>
+#include <QStringList>
 #include "extractnotetext.h"
 
 extern Global global;
+
+namespace {
+
+bool isBlockElement(const QString &name) {
+    static const QStringList blockElements = {
+        QStringLiteral("address"),
+        QStringLiteral("article"),
+        QStringLiteral("aside"),
+        QStringLiteral("blockquote"),
+        QStringLiteral("dd"),
+        QStringLiteral("div"),
+        QStringLiteral("dl"),
+        QStringLiteral("dt"),
+        QStringLiteral("en-note"),
+        QStringLiteral("figcaption"),
+        QStringLiteral("figure"),
+        QStringLiteral("footer"),
+        QStringLiteral("form"),
+        QStringLiteral("h1"),
+        QStringLiteral("h2"),
+        QStringLiteral("h3"),
+        QStringLiteral("h4"),
+        QStringLiteral("h5"),
+        QStringLiteral("h6"),
+        QStringLiteral("header"),
+        QStringLiteral("hr"),
+        QStringLiteral("li"),
+        QStringLiteral("main"),
+        QStringLiteral("nav"),
+        QStringLiteral("ol"),
+        QStringLiteral("p"),
+        QStringLiteral("pre"),
+        QStringLiteral("section"),
+        QStringLiteral("table"),
+        QStringLiteral("tbody"),
+        QStringLiteral("td"),
+        QStringLiteral("tfoot"),
+        QStringLiteral("th"),
+        QStringLiteral("thead"),
+        QStringLiteral("tr"),
+        QStringLiteral("ul")
+    };
+
+    return blockElements.contains(name);
+}
+
+void trimTrailingHorizontalWhitespace(QString &text) {
+    while (!text.isEmpty()) {
+        const QChar ch = text.at(text.size() - 1);
+        if (ch != QLatin1Char(' ') && ch != QLatin1Char('\t')) {
+            break;
+        }
+        text.chop(1);
+    }
+}
+
+void appendForcedLineBreak(QString &text) {
+    trimTrailingHorizontalWhitespace(text);
+    text.append(QLatin1Char('\n'));
+}
+
+void appendBlockLineBreak(QString &text) {
+    trimTrailingHorizontalWhitespace(text);
+    if (!text.isEmpty() && !text.endsWith(QLatin1Char('\n'))) {
+        text.append(QLatin1Char('\n'));
+    }
+}
+
+void trimTrailingLineBreaks(QString &text) {
+    trimTrailingHorizontalWhitespace(text);
+    while (!text.isEmpty()) {
+        const QChar ch = text.at(text.size() - 1);
+        if (ch != QLatin1Char('\n') && ch != QLatin1Char('\r')) {
+            break;
+        }
+        text.chop(1);
+        trimTrailingHorizontalWhitespace(text);
+    }
+}
+
+QString normalizePlainText(QString text) {
+    text.replace(QStringLiteral("\r\n"), QStringLiteral("\n"));
+    text.replace(QLatin1Char('\r'), QLatin1Char('\n'));
+    text.replace(QChar(0x00a0), QLatin1Char(' '));
+    trimTrailingLineBreaks(text);
+    return text;
+}
+
+QString stripTagsFallback(QString content) {
+    content.replace(QRegularExpression(QStringLiteral("<\\s*br\\s*/?\\s*>"),
+                                       QRegularExpression::CaseInsensitiveOption),
+                    QStringLiteral("\n"));
+    content.replace(QRegularExpression(
+                        QStringLiteral("</\\s*(address|article|aside|blockquote|dd|div|dl|dt|en-note|figcaption|figure|footer|form|h[1-6]|header|hr|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\\s*>"),
+                        QRegularExpression::CaseInsensitiveOption),
+                    QStringLiteral("\n"));
+    content.remove(QRegularExpression(QStringLiteral("<[^>]*>")));
+    return normalizePlainText(content);
+}
+
+} // namespace
 
 ExtractNoteText::ExtractNoteText(QObject *parent) :
     QObject(parent)
@@ -86,5 +188,33 @@ void ExtractNoteText::unwrap(QString data) {
 
 
 QString ExtractNoteText::stripTags(QString content) {
-    return content.remove(QRegularExpression("<[^>]*>"));
+    QString text;
+    QXmlStreamReader reader(content);
+    while (!reader.atEnd()) {
+        reader.readNext();
+
+        if (reader.isStartElement()) {
+            const QString name = reader.name().toString().toLower();
+            if (name == QStringLiteral("br")) {
+                appendForcedLineBreak(text);
+            } else if (name == QStringLiteral("hr")) {
+                appendBlockLineBreak(text);
+            }
+        } else if (reader.isEndElement()) {
+            const QString name = reader.name().toString().toLower();
+            if (isBlockElement(name)) {
+                appendBlockLineBreak(text);
+            }
+        } else if (reader.isCharacters()) {
+            text.append(reader.text().toString());
+        }
+    }
+
+    if (reader.hasError()) {
+        QLOG_WARN() << "Unable to parse note ENML while extracting text; using fallback tag stripper:"
+                    << reader.errorString();
+        return stripTagsFallback(content);
+    }
+
+    return normalizePlainText(text);
 }

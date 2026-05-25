@@ -1,3 +1,6 @@
+NixNote (2.1.43) stable; urgency=low
+  * Preserved paragraph and line breaks in command-line readNote output.
+
 NixNote (2.1.42) stable; urgency=low
   * Kept command-line output quiet by default so logs do not mix with scriptable results.
 

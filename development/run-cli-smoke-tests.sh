@@ -66,6 +66,20 @@ function assert_empty {
     fi
 }
 
+function assert_file_equals {
+    local expected="$1"
+    local actual="$2"
+
+    if ! cmp -s "${expected}" "${actual}"; then
+        echo "Expected output:" 1>&2
+        cat "${expected}" 1>&2
+        echo "Actual output:" 1>&2
+        cat "${actual}" 1>&2
+        diff -u "${expected}" "${actual}" 1>&2 || true
+        exit 1
+    fi
+}
+
 function run_help_smoke {
     local name="$1"
     shift
@@ -115,6 +129,40 @@ if [ -d "${PROGRAM_DATA_DIR}" ]; then
     fi
 
     assert_empty "${TMPDIR}/query-quiet.err"
+
+    if command -v sqlite3 >/dev/null; then
+        READNOTE_CONFIG="${TMPDIR}/readnote-config"
+        READNOTE_DATA="${TMPDIR}/readnote-data"
+        mkdir -p "${READNOTE_CONFIG}" "${READNOTE_DATA}/db-2"
+        printf '[SaveState]\nlastAccessedAccount=2\ndatabaseVersion=2\n' \
+            >"${READNOTE_CONFIG}/nixnote.conf"
+
+        sqlite3 "${READNOTE_DATA}/db-2/nixnote.db" <<'SQL'
+CREATE TABLE NoteTable (lid INTEGER PRIMARY KEY, title TEXT);
+CREATE TABLE DataStore (lid integer, key integer, data blob default null collate nocase);
+INSERT INTO NoteTable (lid, title) VALUES (1, 'CLI text smoke');
+INSERT INTO DataStore (lid, key, data)
+VALUES (1, 5000, '00000000-0000-4000-8000-000000000001');
+INSERT INTO DataStore (lid, key, data)
+VALUES (1, 5002, '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd"><en-note><div>First line</div><div><br/></div><div>Second line</div><div>Third line</div></en-note>');
+SQL
+
+        if ! "${BINARY}" readNote \
+            --id=1 \
+            --accountId=2 \
+            --configDir="${READNOTE_CONFIG}" \
+            --userDataDir="${READNOTE_DATA}" \
+            --programDataDir="${PROGRAM_DATA_DIR}" \
+            >"${TMPDIR}/readnote-format.out" 2>"${TMPDIR}/readnote-format.err"; then
+            echo "Command failed: ${BINARY} readNote" 1>&2
+            cat "${TMPDIR}/readnote-format.err" 1>&2
+            exit 1
+        fi
+
+        assert_empty "${TMPDIR}/readnote-format.err"
+        printf 'First line\n\nSecond line\nThird line\n' >"${TMPDIR}/readnote-format.expected"
+        assert_file_equals "${TMPDIR}/readnote-format.expected" "${TMPDIR}/readnote-format.out"
+    fi
 fi
 
 echo "$0: OK"
