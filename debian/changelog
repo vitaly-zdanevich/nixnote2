@@ -1,3 +1,6 @@
+NixNote (2.1.40) stable; urgency=low
+  * Updated GitHub Actions checkout and artifact steps to Node 24 action runtimes.
+
 NixNote (2.1.39) stable; urgency=low
   * Made Global Dark note links brighter against the black editor background.
 
