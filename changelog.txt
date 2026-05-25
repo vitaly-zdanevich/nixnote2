@@ -1,3 +1,6 @@
+NixNote (2.1.41) stable; urgency=low
+  * Softened Global Dark note link colors while keeping them readable on black.
+
 NixNote (2.1.40) stable; urgency=low
   * Updated GitHub Actions checkout and artifact steps to Node 24 action runtimes.
 
