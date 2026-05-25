@@ -1,3 +1,9 @@
+NixNote (2.1.21) stable; urgency=low
+  * Fixed command-line help formatting, examples and option descriptions.
+  * Made command-line exit codes consistently return zero on success and non-zero on failure.
+  * Added non-destructive CLI smoke tests and run them in CI before the Qt unit tests.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 06:38:11 +0400
+
 NixNote (2.1.20) stable; urgency=low
   * Treated plain theme color values as style data so shorthand colors such as #8cf no longer emit missing-image warnings.
   * Fixed Ubuntu Purple theme icon keys for right-arrow and notebook resources.
