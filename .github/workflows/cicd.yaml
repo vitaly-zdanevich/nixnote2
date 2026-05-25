@@ -82,12 +82,28 @@ jobs:
 
       - name: Build and run tests
         env:
+          JOBS: 1
           QT_QPA_PLATFORM: offscreen
+        shell: bash
         run: |
-          ./development/run-cli-smoke-tests.sh
-          qmake6 testsrc/tests.pro CONFIG+=release PREFIX=/usr
-          make -j1
-          ./qmake-build-release-t/tests -platform offscreen
+          set -o pipefail
+
+          if {
+            ./development/run-cli-smoke-tests.sh
+            ./development/run-tests.sh release clean /usr/lib
+          } 2>&1 | tee build-tests.log; then
+            exit 0
+          fi
+
+          status=${PIPESTATUS[0]}
+          echo "::group::Build and run tests failure tail"
+          tail -n 200 build-tests.log
+          echo "::endgroup::"
+
+          tail -n 80 build-tests.log > build-tests-error-summary.log
+          message=$(perl -0pe 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' build-tests-error-summary.log)
+          echo "::error title=Build and run tests failed::${message}"
+          exit "${status}"
 
       - name: Install AppImage tools
         shell: bash

@@ -55,13 +55,14 @@ mkdir ${TEMP_DIR}
 
 
 QMAKE_BINARY=${QMAKE_BINARY:-qmake6}
+JOBS=${JOBS:-$(nproc)}
 
 if [ "${TIDY_LIB_DIR}" == "/usr/lib" ] ; then
   # at least on ubuntu pkgconfig for "libtidy-dev" is not installed - so we provide default
   # there could be better option
   # check: env PKG_CONFIG_PATH=./development/pkgconfig pkg-config --libs --cflags tidy
   CDIR=`pwd`
-  echo export PKG_CONFIG_PATH=${CDIR}/../development/pkgconfig
+  echo export PKG_CONFIG_PATH=${CDIR}/development/pkgconfig
   export PKG_CONFIG_PATH=${CDIR}/development/pkgconfig
 elif [ -d ${TIDY_LIB_DIR}/pkgconfig ] ; then
   echo export PKG_CONFIG_PATH=${TIDY_LIB_DIR}/pkgconfig
@@ -69,6 +70,6 @@ elif [ -d ${TIDY_LIB_DIR}/pkgconfig ] ; then
 fi
 
 (${QMAKE_BINARY} testsrc/tests.pro CONFIG+=${BUILD_TYPE} QMAKE_RPATHDIR+=${TIDY_LIB_DIR} \
-   && make \
+   && make -j"${JOBS}" \
    && ./${BUILD_DIR}/tests -platform offscreen \
 ) || error_exit "tests"
