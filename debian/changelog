@@ -1,3 +1,6 @@
+NixNote (2.1.39) stable; urgency=low
+  * Made Global Dark note links brighter against the black editor background.
+
 NixNote (2.1.38) stable; urgency=low
   * Fixed rendering of notes with consecutive self-closing Evernote image media tags.
   * Made Global Dark checked menu indicators visible in the theme selector.
