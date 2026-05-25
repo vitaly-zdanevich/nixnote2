@@ -1,3 +1,7 @@
+NixNote (2.1.36) stable; urgency=low
+  * Fixed the amd64 CI ENML link test by accepting its tidy/Qt attribute spacing variant.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 12:31:04 +0400
+
 NixNote (2.1.35) stable; urgency=low
   * Switched CI project and test builds from one worker to the runner CPU count.
  -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 12:17:08 +0400
