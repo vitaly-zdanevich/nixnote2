@@ -1,13 +1,5 @@
 # NixNote2
 
-## Project Status
-
-> **NixNote2 is currently unmaintained.**
->
-> I no longer use Evernote or NixNote2 and cannot provide regular support, bug triage, packaging help, or feature development. The repository remains available for existing users and for anyone who wants to fork or continue the project.
->
-> Critical fixes or well-scoped community pull requests may still be considered, but please do not assume maintainer availability.
-
 ## Introduction
 
 Nixnote is Evernote desktop client for Linux (can be also build on macOS and Windows).
