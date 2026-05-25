@@ -156,6 +156,8 @@ Run the application inside a normal graphical session. The offscreen platform is
 useful for automated tests:
 
 ```bash
+./development/run-cli-smoke-tests.sh
+
 cd testsrc
 qmake6 tests.pro
 make -j1
