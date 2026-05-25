@@ -1,3 +1,7 @@
+NixNote (2.1.35) stable; urgency=low
+  * Switched CI project and test builds from one worker to the runner CPU count.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 12:17:08 +0400
+
 NixNote (2.1.34) stable; urgency=low
   * Fixed remaining CI ENML tests by accepting equivalent tidy/Qt attribute serialization variants.
  -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 12:07:52 +0400
