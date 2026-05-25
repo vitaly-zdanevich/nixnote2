@@ -259,14 +259,21 @@ QString NoteFormatter::preHtmlFormat(QString note) {
     while (pos != -1) {
         int endPos = content.indexOf(">", pos);
         int tagEndPos = content.indexOf("/>", pos);
-
-        // Check the next /> end tag.  If it is before the end
-        // of the current tag or if it doesn't exist then we
-        // need to fix the end of the img
-        if (tagEndPos == -1 || tagEndPos < endPos) {
-            content = content.mid(0, endPos) + QByteArray("></en-media>") + content.mid(endPos + 1);
+        if (endPos == -1) {
+            break;
         }
-        pos = content.indexOf("<en-media", pos + 1);
+
+        // Convert self-closing media tags into explicit element pairs
+        // before QDom parses them.
+        if (tagEndPos != -1 && tagEndPos < endPos) {
+            const QString replacement = QStringLiteral("></en-media>");
+            content = content.mid(0, tagEndPos) +
+                    replacement +
+                    content.mid(tagEndPos + 2);
+            pos = content.indexOf("<en-media", tagEndPos + replacement.size());
+        } else {
+            pos = content.indexOf("<en-media", pos + 1);
+        }
     }
     QLOG_TRACE_OUT();
     return content;
