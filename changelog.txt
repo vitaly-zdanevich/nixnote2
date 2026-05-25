@@ -1,3 +1,7 @@
+NixNote (2.1.24) stable; urgency=low
+  * Fixed CI builds on Ubuntu 24.04 by avoiding a QCheckBox signal that exists only in newer Qt 6 releases.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 07:27:41 +0400
+
 NixNote (2.1.23) stable; urgency=low
   * Refreshed the README to describe the current Qt 6 build flow and repository links.
   * Documented version-tagged GitHub Release AppImages for amd64 and arm64.
