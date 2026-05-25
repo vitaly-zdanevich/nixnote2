@@ -5,10 +5,18 @@ on:
     branches:
       - master
       - develop
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - master
       - develop
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing version tag to build and publish, for example v2.1.21'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -32,6 +40,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
 
       - name: Install dependencies
         run: |
@@ -116,16 +126,18 @@ jobs:
           if-no-files-found: error
 
   release-appimages:
-    name: Upload AppImage release assets
+    name: Upload versioned AppImage release assets
     needs: appimage
     runs-on: ubuntu-24.04
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+    if: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '') }}
     permissions:
       contents: write
 
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
 
       - name: Download AppImage artifacts
         uses: actions/download-artifact@v4
@@ -134,23 +146,52 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Upload AppImage release assets
+      - name: Prepare release notes
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
 
-          wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-          if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-            export UPLOADTOOL_SUFFIX=develop
+          version="${RELEASE_TAG#v}"
+          {
+            echo "NixNote ${version}"
+            echo
+            if [ -f debian/changelog ]; then
+              awk 'NF { print; next } { exit }' debian/changelog
+              echo
+            fi
+
+            echo "AppImage builds:"
+            for appimage in dist/*.AppImage; do
+              echo "- $(basename "${appimage}")"
+            done
+            echo
+            echo "Built by GitHub Actions: ${RUN_URL}"
+          } > release-notes.md
+
+      - name: Upload AppImage release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          case "${RELEASE_TAG}" in
+            v*) ;;
+            *)
+              echo "Release tag must start with v, got: ${RELEASE_TAG}"
+              exit 1
+              ;;
+          esac
+
+          version="${RELEASE_TAG#v}"
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release edit "${RELEASE_TAG}" --title "NixNote ${version}" --notes-file release-notes.md
+          else
+            gh release create "${RELEASE_TAG}" --title "NixNote ${version}" --notes-file release-notes.md
           fi
 
-          RELEASE_NOTES=$(cat ./development/release-notes/release-${{ github.ref_name }}.md)
-          VERSION=$(find dist -maxdepth 1 -name 'NixNote-*.AppImage' -printf '%f\n' | head -n 1 | sed -E 's/^NixNote-([0-9][^-]*)-.+$/\1/')
-          if [ -z "${VERSION}" ]; then
-            echo "Unable to determine AppImage version"
-            exit 1
-          fi
-          export UPLOADTOOL_BODY="$RELEASE_NOTES - Version: **${VERSION}** - Architectures: **amd64, arm64** - [GitHub Actions build log](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})."
-          bash upload.sh dist/*.AppImage || exit 1
+          gh release upload "${RELEASE_TAG}" dist/*.AppImage --clobber
