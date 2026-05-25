@@ -1,3 +1,7 @@
+NixNote (2.1.29) stable; urgency=low
+  * Fixed Ubuntu 24.04 CI builds by avoiding QDomDocument::ParseResult on older Qt 6 packages.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 09:35:02 +0400
+
 NixNote (2.1.28) stable; urgency=low
   * Fixed Ubuntu 24.04 CI builds by avoiding QSqlQuery::boundValueNames() on Qt 6.0 through 6.5.
  -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 09:13:05 +0400
