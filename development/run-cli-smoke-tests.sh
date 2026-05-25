@@ -56,6 +56,16 @@ function assert_not_contains {
     fi
 }
 
+function assert_empty {
+    local file="$1"
+
+    if [ -s "${file}" ]; then
+        echo "Expected output to be empty, got:" 1>&2
+        cat "${file}" 1>&2
+        exit 1
+    fi
+}
+
 function run_help_smoke {
     local name="$1"
     shift
@@ -88,5 +98,23 @@ assert_not_contains "${TMPDIR}/help-long.out" "--url=<id>"
 run_help_smoke help-command help
 run_help_smoke help-question "--?"
 run_help_smoke help-short "-?"
+
+PROGRAM_DATA_DIR="${CDIR}/appdir/usr/share/nixnote2"
+if [ -d "${PROGRAM_DATA_DIR}" ]; then
+    if ! "${BINARY}" query \
+        --configDir="${TMPDIR}/quiet-config" \
+        --userDataDir="${TMPDIR}/quiet-data" \
+        --programDataDir="${PROGRAM_DATA_DIR}" \
+        --search='intitle:"NixNote smoke test"' \
+        --display='%i|%t' \
+        --noHeaders \
+        >"${TMPDIR}/query-quiet.out" 2>"${TMPDIR}/query-quiet.err"; then
+        echo "Command failed: ${BINARY} query" 1>&2
+        cat "${TMPDIR}/query-quiet.err" 1>&2
+        exit 1
+    fi
+
+    assert_empty "${TMPDIR}/query-quiet.err"
+fi
 
 echo "$0: OK"

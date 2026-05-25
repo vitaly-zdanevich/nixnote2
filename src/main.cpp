@@ -76,6 +76,63 @@ void registerWebEngineUrlSchemes()
                           | QWebEngineUrlScheme::ContentSecurityPolicyIgnored);
     QWebEngineUrlScheme::registerScheme(nnresScheme);
 }
+
+bool hasExplicitLogLevel(int argc, char *argv[])
+{
+    for (int i = 1; i < argc; ++i) {
+        if (QString::fromLocal8Bit(argv[i]).startsWith("--logLevel=", Qt::CaseSensitive)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool isNonGuiCommand(const QString &argument)
+{
+    static const char *commands[] = {
+        "sync",
+        "shutdown",
+        "show_window",
+        "addNote",
+        "appendNote",
+        "alterNote",
+        "query",
+        "readNote",
+        "deleteNote",
+        "emailNote",
+        "backup",
+        "export",
+        "import",
+        "closeNotebook",
+        "openNotebook",
+        "sqlExec",
+        "signalGui",
+    };
+
+    for (const char *command : commands) {
+        if (argument.startsWith(command, Qt::CaseSensitive)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool shouldQuietCliLogging(int argc, char *argv[])
+{
+    if (hasExplicitLogLevel(argc, argv)) {
+        return false;
+    }
+
+    for (int i = 1; i < argc; ++i) {
+        if (isNonGuiCommand(QString::fromLocal8Bit(argv[i]))) {
+            return true;
+        }
+    }
+
+    return false;
+}
 }
 
 //*********************************************************************
@@ -144,6 +201,9 @@ int main(int argc, char *argv[]) {
     QsLogging::DestinationPtr debugDestination(
         QsLogging::DestinationFactory::MakeDebugOutputDestination());
     logger.addDestination(debugDestination.get());
+    if (shouldQuietCliLogging(argc, argv)) {
+        logger.setLoggingLevel(QsLogging::WarnLevel);
+    }
 
     signal(SIGSEGV, fault_handler);   // install our handler
 
@@ -154,6 +214,9 @@ int main(int argc, char *argv[]) {
 
     // note guiAvailable is passed by reference and can be modified by cmd line arguments
     int retval = startupConfig.init(argc, argv, guiAvailable);
+    if (!guiAvailable && !startupConfig.logLevelSpecified) {
+        logger.setLoggingLevel(QsLogging::WarnLevel);
+    }
     QLOG_DEBUG() << "Startup config ret=" << retval << ", guiAvailable=" << guiAvailable;
     if (retval < 0) {
         return 0;

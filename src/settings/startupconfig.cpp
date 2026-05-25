@@ -43,6 +43,7 @@ StartupConfig::StartupConfig() {
     this->forceSystemTrayAvailable = false;
     this->disableEditing = false;
     this->accountId = -1;
+    this->logLevelSpecified = false;
 
     command = new QBitArray(STARTUP_OPTION_COUNT);
     command->fill(false);
@@ -276,6 +277,7 @@ int StartupConfig::init(int argc, char *argv[], bool &guiAvailable) {
         if (parm.startsWith("--logLevel=", Qt::CaseSensitive)) {
             parm = parm.section('=', 1, 1); // 2nd part
             int level = parm.toInt();
+            logLevelSpecified = true;
             QLOG_INFO() << "Changed logLevel via command line option to " << level;
             setDebugLevel(level);
             continue;

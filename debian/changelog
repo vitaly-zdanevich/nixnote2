@@ -1,3 +1,6 @@
+NixNote (2.1.42) stable; urgency=low
+  * Kept command-line output quiet by default so logs do not mix with scriptable results.
+
 NixNote (2.1.41) stable; urgency=low
   * Softened Global Dark note link colors while keeping them readable on black.
 

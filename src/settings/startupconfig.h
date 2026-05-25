@@ -92,6 +92,7 @@ public:
     bool forceSystemTrayAvailable;
     bool disableEditing;
     bool purgeTemporaryFiles;
+    bool logLevelSpecified;
     AddNote *newNote;
     SignalGui *signalGui;
     DeleteNote *delNote;
