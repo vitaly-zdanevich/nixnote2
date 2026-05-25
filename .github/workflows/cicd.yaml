@@ -56,8 +56,22 @@ jobs:
       - name: Build project
         env:
           JOBS: 1
+        shell: bash
         run: |
-          ./development/build-with-qmake.sh release clean /usr/lib browser
+          set -o pipefail
+
+          if ./development/build-with-qmake.sh release clean /usr/lib browser 2>&1 | tee build-project.log; then
+            exit 0
+          fi
+
+          status=${PIPESTATUS[0]}
+          echo "::group::Build project failure tail"
+          tail -n 200 build-project.log
+          echo "::endgroup::"
+
+          message=$(tail -n 80 build-project.log | perl -0pe 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g')
+          echo "::error title=Build project failed::${message}"
+          exit "${status}"
 
       - name: Build and run tests
         env:
