@@ -289,6 +289,7 @@ void Tests::enmlNixnoteLinkTest2() {
             hrefAttr + " " + styleAttr + " " + titleAttr,
             hrefAttr + " " + titleAttr + " " + styleAttr,
             styleAttr + " " + hrefAttr + " " + titleAttr,
+            styleAttr + " " + hrefAttr + titleAttr,
             styleAttr + " " + titleAttr + " " + hrefAttr,
             titleAttr + " " + hrefAttr + " " + styleAttr,
             titleAttr + " " + styleAttr + " " + hrefAttr
