@@ -68,13 +68,13 @@ void StartupConfig::printHelp() {
         + QString("  start <options>                      Start NixNote GUI with the specified options.\n")
         + QString("                                       If no command is specified, this is the default.\n")
         + QString("     start options:\n")
-        + QString("          --logLevel=<level>           Set initial logging level (0=trace,1=debug,2=info,3=error,..\n")
+        + QString("          --logLevel=<level>           Set initial logging level (0=trace,1=debug,2=info,3=warn,4=error,...)\n")
         + QString("                                       This is ONLY valid at program startup until settings are read.\n")
         + QString("          --accountId=<id>             Start with specified user account.\n")
         // see FileManager.getConfigDir() for more info
         + QString("          --configDir=<dir>            Directory containing config files.\n")
         + QString("          --userDataDir=<dir>          Directory containing database, logs etc..\n")
-        + QString("                                       Warning: ff you set configDir, but don't set userDataDir; userDataDir defaults\n")
+        + QString("                                       Warning: if you set configDir, but don't set userDataDir; userDataDir defaults\n")
         + QString("                                       to configDir.\n")
         + QString("          --programDataDir=<dir>       Directory containing deployed fixed program data (like images).\n")
         + QString("          --dontStartMinimized         Override option to start minimized.\n")
@@ -91,8 +91,8 @@ void StartupConfig::printHelp() {
         + QString("     query options:\n")
         + QString("          --search=\"search string\"     Search string.\n\n")
         + QString("          --delimiter=\"character\"      Character to place between fields.  Defaults to |.\n")
-        + QString("          --noHeaders                  Do not show column headings.")
-        + QString("          --display=\"<output format>\"  Search string.\n\n")
+        + QString("          --noHeaders                  Do not show column headings.\n")
+        + QString("          --display=\"<output format>\"  Output format.\n\n")
         + QString("             Output Format: <fieldID><padding><:>\n")
         + QString("                %i                     Show the internal note ID.\n")
         + QString("                %t                     Show the note title.\n")
@@ -116,35 +116,34 @@ void StartupConfig::printHelp() {
         + QString("                                       For multiple tags use multiple --tag statements.\n")
         + QString("          --attachment=\"<file_path>\"   File to attach to the note.\n")
         + QString("                                       For multiple files, use multiple --attachment statements.\n")
-        + QString("          --delimiter=\"<delmiiter>\"    Character string identifying attachment points.\n")
+        + QString("          --delimiter=\"<delimiter>\"    Character string identifying attachment points.\n")
         + QString("                                       Defaults to %%.\n")
-        + QString("          --created=\"<datetime>\"   Date & time created in yyyy-MM-ddTHH:mm:ss.zzzZ format.\n")
-        + QString("          --updated=\"<datetime>\"   Date & time updated in yyyy-MM-ddTHH:mm:ss.zzzZ format.\n")
-        + QString("          --reminder=\"<datetime>\"  Reminder date & time in yyyy-MM-ddTHH:mm:ss.zzzZ format.\n")
+        + QString("          --created=\"<datetime>\"       Date and time created in yyyy-MM-ddTHH:mm:ss.zzzZ format.\n")
+        + QString("          --updated=\"<datetime>\"       Date and time updated in yyyy-MM-ddTHH:mm:ss.zzzZ format.\n")
+        + QString("          --reminder=\"<datetime>\"      Reminder date and time in yyyy-MM-ddTHH:mm:ss.zzzZ format.\n")
         + QString("          --noteText=\"<text>\"          Text of the note.  If not provided input\n")
         + QString("                                       is read from stdin.\n")
         + QString("  appendNote <options>                 Append to an existing note.\n")
         + QString("     appendNote options:\n")
-        + QString("          --id=\"<title>\"               ID of note to append.\n")
+        + QString("          --id=\"<note_id>\"             ID of note to append.\n")
         + QString("          --attachment=\"<file_path>\"   File to attach to the note.\n")
         + QString("                                       For multiple files, use multiple --attachment statements.\n")
-        + QString("          --delimiter=\"<delmiiter>\"    Character string identifying attachment points.\n")
+        + QString("          --delimiter=\"<delimiter>\"    Character string identifying attachment points.\n")
         + QString("                                       Defaults to %%.\n")
         + QString("          --noteText=\"<text>\"          Text of the note.  If not provided input\n")
         + QString("                                       is read from stdin.\n")
         + QString("  alterNote <options>                  Change a note's notebook or tags.\n")
         + QString("     alterNote options:\n")
-        + QString("          --id=\"<note_ids>\"            Space separated list of note IDs to extract.\n")
+        + QString("          --id=\"<note_ids>\"            Space separated list of note IDs to alter.\n")
         + QString("          --search=\"search string\"     Alter notes matching search string.\n")
         + QString("          --notebook=\"<notebook>\"      Move matching notes to this notebook.\n")
         + QString("          --addTag=\"<tag_name>\"        Add this tag to matching notes.\n")
         + QString("          --delTag=\"<tag_name>\"        Remove this tag from matching notes.\n")
-        + QString("          --reminder=\"<datetime>\"      Set a reminder in yyyy-MM-ddTHH:mm:ss.zzzZ format")
-        + QString("          --reminderClear              Clear the note's reminder.\n")
+        + QString("          --reminder=\"<datetime>\"      Set a reminder in yyyy-MM-ddTHH:mm:ss.zzzZ format.\n")
+        + QString("          --clearReminder              Clear the note's reminder.\n")
         + QString("          --reminderComplete           Set the reminder as complete.\n")
-        + QString("                                       yyyy-MM-ddTHH:mm:ss.zzzZ format or the literal 'now' to default\n")
-        + QString("                                       to the current date & time.")
         + QString("  readNote <options>                   Read the text contents of a note.\n")
+        + QString("     readNote options:\n")
         + QString("          --id=\"<note_id>\"             ID of the note to read.\n")
         + QString("  deleteNote <options>                 Move a note to the trash via the command line.\n")
         + QString("     deleteNote options:\n")
@@ -167,7 +166,7 @@ void StartupConfig::printHelp() {
         + QString("          --id=\"<note_ids>\"            Space separated list of note IDs to extract.\n")
         + QString("          --search=\"search string\"     Export notes matching search string.\n")
         + QString("          --output=\"filename\"          Output file name.\n")
-        + QString("          --deleteAfterExtract         Delete notes after the extract completes.\n")
+        + QString("          --deleteAfterExtract         Delete notes after the export completes.\n")
         + QString("          --noVerifyDelete             Don't verify deletions.\n")
         + QString("  import <options>                     Import notes from a NixNote extract (.nnex).\n")
         + QString("     import options:\n")
@@ -190,14 +189,14 @@ void StartupConfig::printHelp() {
         + QString("          --openNoteNewTabUrl          Open a note in a new tab from a URL.  --url=<url> must be specified.\n")
         + QString("          --openExternalNoteUrl        Open a note in an external window from a URL.  --url=<url> must be specified.\n")
         + QString("          --id=<id>                    Note Id to open.\n")
-        + QString("          --url=<id>                   In-app or external URL for the Note to open.\n")
+        + QString("          --url=<url>                  In-app or external URL for the note to open.\n")
         + QString("          --newNote                    Create a new note.\n")
         + QString("          --newExternalNote            Create a new note in an external window.\n")
         + QString("  Examples:\n\n")
         + QString("     To start NixNote using a secondary account.\n")
         + QString("     " NN_APP_NAME " --accountId=2\n\n")
         + QString("     To close an open notebook.\n")
-        + QString("     " NN_APP_NAME " --closeNotebook notebook=\"My Notebook\"\n\n")
+        + QString("     " NN_APP_NAME " closeNotebook --notebook=\"My Notebook\"\n\n")
         + QString("     To add a note to the notebook \"My Notebook\"\n")
         + QString("     " NN_APP_NAME " addNote --notebook=\"My Stuff\" --title=\"My New Note\" --tag=\"Tag1\" --tag=\"Tag2\" --noteText=\"My Note Text\"\n\n")
         + QString("     To append to an existing note.\n")
@@ -272,7 +271,7 @@ int StartupConfig::init(int argc, char *argv[], bool &guiAvailable) {
         QLOG_DEBUG() << "Param #" << i << ": " << parm;
         if (parm == "--help" || parm == "-?" || parm == "help" || parm == "--?") {
             printHelp();
-            return 1;
+            return -1;
         }
         if (parm.startsWith("--logLevel=", Qt::CaseSensitive)) {
             parm = parm.section('=', 1, 1); // 2nd part
@@ -430,6 +429,10 @@ int StartupConfig::init(int argc, char *argv[], bool &guiAvailable) {
                 parm = parm.mid(13);
                 newNote->attachments.append(parm);
             }
+            if (parm.startsWith("--delimiter=", Qt::CaseSensitive)) {
+                parm = parm.mid(12);
+                newNote->attachmentDelimiter = parm;
+            }
             if (parm.startsWith("--created=", Qt::CaseSensitive)) {
                 parm = parm.mid(10);
                 newNote->created = parm;
@@ -451,6 +454,14 @@ int StartupConfig::init(int argc, char *argv[], bool &guiAvailable) {
             if (parm.startsWith("--id=", Qt::CaseSensitive)) {
                 parm = parm.mid(5);
                 newNote->lid = parm.toInt();
+            }
+            if (parm.startsWith("--attachment=", Qt::CaseSensitive)) {
+                parm = parm.mid(13);
+                newNote->attachments.append(parm);
+            }
+            if (parm.startsWith("--delimiter=", Qt::CaseSensitive)) {
+                parm = parm.mid(12);
+                newNote->attachmentDelimiter = parm;
             }
             if (parm.startsWith("--noteText=", Qt::CaseSensitive)) {
                 parm = parm.mid(11);
@@ -518,7 +529,8 @@ int StartupConfig::init(int argc, char *argv[], bool &guiAvailable) {
                         exportNotes->lids.append(tokens[i].toInt());
                 }
             }
-            if (parm.startsWith("--deleteAfterExport", Qt::CaseSensitive)) {
+            if (parm.startsWith("--deleteAfterExtract", Qt::CaseSensitive) ||
+                parm.startsWith("--deleteAfterExport", Qt::CaseSensitive)) {
                 exportNotes->deleteAfterExtract = true;
             }
             if (parm.startsWith("--noVerifyDelete", Qt::CaseSensitive)) {
@@ -561,29 +573,29 @@ int StartupConfig::init(int argc, char *argv[], bool &guiAvailable) {
                 signalGui->url = parm;
                 QLOG_DEBUG() << "got url from params: " << parm;
             }
-            if (parm.startsWith("--show", Qt::CaseSensitive))
+            if (parm == "--show")
                 signalGui->show = true;
-            if (parm.startsWith("--synchronize", Qt::CaseSensitive))
+            if (parm == "--synchronize")
                 signalGui->synchronize = true;
-            if (parm.startsWith("--screenshot", Qt::CaseSensitive))
+            if (parm == "--screenshot")
                 signalGui->takeScreenshot = true;
-            if (parm.startsWith("--openNote", Qt::CaseSensitive))
+            if (parm == "--openNote")
                 signalGui->openNote = true;
-            if (parm.startsWith("--openNoteUrl", Qt::CaseSensitive))
+            if (parm == "--openNoteUrl")
                 signalGui->openNoteUrl = true;
-            if (parm.startsWith("--openExternalNote", Qt::CaseSensitive))
+            if (parm == "--openExternalNote")
                 signalGui->openExternalNote = true;
-            if (parm.startsWith("--openExternalNoteUrl", Qt::CaseSensitive))
+            if (parm == "--openExternalNoteUrl")
                 signalGui->openExternalNoteUrl = true;
-            if (parm.startsWith("--openNoteNewTab", Qt::CaseSensitive))
+            if (parm == "--openNoteNewTab")
                 signalGui->openNoteNewTab = true;
-            if (parm.startsWith("--openNoteNewTabUrl", Qt::CaseSensitive))
+            if (parm == "--openNoteNewTabUrl")
                 signalGui->openNoteNewTabUrl = true;
-            if (parm.startsWith("--newNote", Qt::CaseSensitive))
+            if (parm == "--newNote")
                 signalGui->newNote = true;
-            if (parm.startsWith("--newExternalNote", Qt::CaseSensitive))
+            if (parm == "--newExternalNote")
                 signalGui->newExternalNote = true;
-            if (parm.startsWith("--shutdown", Qt::CaseSensitive))
+            if (parm == "--shutdown")
                 signalGui->shutdown = true;
         }
         if (command->at(STARTUP_ALTERNOTE)) {
@@ -612,11 +624,15 @@ int StartupConfig::init(int argc, char *argv[], bool &guiAvailable) {
                 parm = parm.mid(9);
                 alter->delTagNames.append(parm);
             }
-            if (parm == "--clearReminder") {
+            if (parm == "--clearReminder" || parm == "--reminderClear") {
                 alter->clearReminder = true;
             }
             if (parm == "--reminderComplete") {
                 alter->reminderCompleted = true;
+            }
+            if (parm.startsWith("--reminder=", Qt::CaseSensitive)) {
+                parm = parm.mid(11);
+                alter->reminder = parm;
             }
         }
         if (command->at(STARTUP_EMAILNOTE)) {
@@ -780,5 +796,3 @@ bool StartupConfig::closeNotebook() {
 bool StartupConfig::signalOtherGui() {
     return command->at(STARTUP_SIGNALGUI);
 }
-
-

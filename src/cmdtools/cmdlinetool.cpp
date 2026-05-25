@@ -66,7 +66,7 @@ int CmdLineTool::run(StartupConfig &config) {
         }
         global.sharedMemory->write(QString("IMMEDIATE_SHUTDOWN"));
         global.sharedMemory->detach();
-        return 1;
+        return 0;
     }
     if (config.show()) {
         QLOG_DEBUG() << "Command: show";
@@ -76,7 +76,7 @@ int CmdLineTool::run(StartupConfig &config) {
         }
         global.sharedMemory->write(QString("SHOW_WINDOW"));
         global.sharedMemory->detach();
-        return 1;
+        return 0;
     }
 
 
@@ -347,7 +347,7 @@ int CmdLineTool::addNote(StartupConfig config) {
     noteTable.expunge(newLid);
     noteTable.add(newLid,newNote,true);
     std::cout << newLid << QString(tr(" has been created.\n")).toStdString();
-    return newLid;
+    return 0;
 }
 
 
@@ -397,7 +397,7 @@ int CmdLineTool::appendNote(StartupConfig config) {
     NoteTable noteTable(global.db);
     if (!noteTable.get(newNote, config.newNote->lid, true, true)) {
         std::cerr << config.newNote->lid << QString(tr(" was not found.\n")).toStdString();
-        return -1;
+        return 16;
     }
 
     // Append the text to the existing note
@@ -455,7 +455,7 @@ int CmdLineTool::appendNote(StartupConfig config) {
     noteTable.expunge(config.newNote->lid);
     noteTable.add(config.newNote->lid,newNote,true);
     std::cout << config.newNote->lid << QString(tr(" has been appended.\n")).toStdString();
-    return config.newNote->lid;
+    return 0;
 }
 
 
@@ -471,6 +471,8 @@ int CmdLineTool::readNote(StartupConfig config) {
         text = config.extractText->stripTags(n.content);
     } else {
         text = tr("Note not found.");
+        std::cout << text.toStdString() << std::endl;
+        return 16;
     }
     std::cout << text.toStdString() << std::endl;
     return 0;
@@ -521,15 +523,17 @@ int CmdLineTool::openNotebook(StartupConfig config) {
     }
     global.db = new DatabaseConnection(NN_DB_CONNECTION_NAME);  // Startup the database
     NotebookTable bookTable(global.db);
+    bool failed = false;
     for (int i=0; i<config.notebookList.size(); i++) {
         qint32 lid = bookTable.findByName(config.notebookList[i]);
         if (lid >0) {
             bookTable.openNotebook(lid);
         } else {
             std::cout << tr("Notebook not found: ").toStdString() << config.notebookList[i].toStdString() << std::endl;
+            failed = true;
         }
     }
-    return 0;
+    return failed ? 16 : 0;
 }
 
 
@@ -541,15 +545,17 @@ int CmdLineTool::closeNotebook(StartupConfig config) {
     }
     global.db = new DatabaseConnection(NN_DB_CONNECTION_NAME);  // Startup the database
     NotebookTable bookTable(global.db);
+    bool failed = false;
     for (int i=0; i<config.notebookList.size(); i++) {
         qint32 lid = bookTable.findByName(config.notebookList[i]);
         if (lid >0) {
             bookTable.closeNotebook(lid);
         } else {
             std::cout << tr("Notebook not found: ").toStdString() << config.notebookList[i].toStdString() << std::endl;
+            failed = true;
         }
     }
-    return 0;
+    return failed ? 16 : 0;
 }
 
 

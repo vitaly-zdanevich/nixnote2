@@ -155,6 +155,9 @@ int main(int argc, char *argv[]) {
     // note guiAvailable is passed by reference and can be modified by cmd line arguments
     int retval = startupConfig.init(argc, argv, guiAvailable);
     QLOG_DEBUG() << "Startup config ret=" << retval << ", guiAvailable=" << guiAvailable;
+    if (retval < 0) {
+        return 0;
+    }
     if (retval != 0) {
         return retval;
     }
@@ -224,14 +227,14 @@ int main(int argc, char *argv[]) {
         if (sharedMemory->isAttached()) {
             sharedMemory->detach();
         }
-        if (retval1) {
+        if (retval1 == 0) {
             QLOG_INFO() << "Exit OK: retcode=" << retval1;
         } else {
             QLOG_ERROR() << "Exit FAILURE: retcode=" << retval1;
         }
         delete a;
 
-        exit(retval1);
+        return retval1;
     }
 
     // Create a shared memory region.  We use this to communicate

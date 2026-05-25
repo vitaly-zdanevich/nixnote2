@@ -17,7 +17,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ***********************************************************************************/
 #include <QtXml>
+#include <QDateTime>
 #include <QString>
+#include <iostream>
 
 #include "src/sql/notetable.h"
 #include "src/global.h"
@@ -68,6 +70,14 @@ int AlterNote::alterNote() {
     NotebookTable bookTable(global.db);
     TagTable tagTable(global.db);
     NoteTable noteTable(global.db);
+    QDateTime reminderDate;
+    if (reminder != "") {
+        reminderDate = QDateTime::fromString(reminder.trimmed(), "yyyy-MM-ddTHH:mm:ss.zzzZ");
+        if (!reminderDate.isValid()) {
+            std::cerr << tr("Invalid reminder date. Expected yyyy-MM-ddTHH:mm:ss.zzzZ.\n").toStdString();
+            return 16;
+        }
+    }
 
     // Loop through each note requested.
     for (int i=0; i<lids.size(); i++) {
@@ -116,6 +126,10 @@ int AlterNote::alterNote() {
         if (clearReminder) {
             noteTable.removeReminder(lid);
         }
+
+        if (reminder != "") {
+            noteTable.updateDate(lid, reminderDate.toMSecsSinceEpoch(), NOTE_ATTRIBUTE_REMINDER_TIME, true);
+        }
     }
 
     return 0;
@@ -147,6 +161,8 @@ QString AlterNote::wrap() {
         writer->writeTextElement("ClearReminder", "true");
     if (reminderCompleted)
         writer->writeTextElement("ReminderComplete", "true");
+    if (reminder != "")
+        writer->writeTextElement("Reminder", reminder);
     writer->writeEndElement();
     writer->writeEndElement();
     writer->writeEndDocument();
