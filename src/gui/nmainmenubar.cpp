@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "nmainmenubar.h"
 #include "src/global.h"
 #include <QAbstractAnimation>
+#include <QEvent>
 #include <QFileIconProvider>
 #include <QDesktopServices>
 #include <QShortcut>
@@ -671,7 +672,7 @@ void NMainMenuBar::onSortMenuTriggered() {
 
 
 void NMainMenuBar::createThemeMenu(QMenu *parentMenu) {
-    QMenu *menu = parentMenu->addMenu(tr("Theme"));
+    themeMenu = parentMenu->addMenu(tr("Theme"));
     QStringList list = global.getThemeNames();
     QFont f = global.getGuiFont(QFont());
 
@@ -693,13 +694,18 @@ void NMainMenuBar::createThemeMenu(QMenu *parentMenu) {
         themeAction->setCheckable(true);
         themeAction->setFont(f);
         connect(themeAction, &QAction::triggered, parent, &NixNote::reloadIcons);
+        connect(themeAction, &QAction::hovered, parent, [this, themeName]() {
+            parent->previewTheme(themeName);
+        });
         if (themeName == userTheme) {
             themeAction->setChecked(true);
         }
         themeActions.append(themeAction);
     }
-    menu->addActions(themeActions);
-    menu->setFont(f);
+    themeMenu->addActions(themeActions);
+    themeMenu->setFont(f);
+    themeMenu->installEventFilter(this);
+    connect(themeMenu, &QMenu::aboutToHide, parent, &NixNote::restoreThemePreview);
 }
 
 
@@ -713,4 +719,12 @@ void NMainMenuBar::openThemeInformation() {
     }
     QString url = global.getResourceFileName(global.resourceList, ":themeInformation");
     QDesktopServices::openUrl(QUrl(url));
+}
+
+
+bool NMainMenuBar::eventFilter(QObject *watched, QEvent *event) {
+    if (watched == themeMenu && event->type() == QEvent::Leave) {
+        parent->restoreThemePreview();
+    }
+    return QMenuBar::eventFilter(watched, event);
 }

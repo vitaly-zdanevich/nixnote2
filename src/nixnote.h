@@ -145,6 +145,8 @@ private:
     QNetworkAccessManager *networkManager;
     QSplashScreen *splashScreen;
     QString clientId;
+    bool themePreviewActive = false;
+    QString themePreviewOriginalName;
 
     QShortcut *focusSearchShortcut;
     QShortcut *fileSaveShortcut;
@@ -188,6 +190,7 @@ private:
     void restoreAndShowMainWindow();
     void configurePdfPrinter(QPrinter &printer, QString &file) const;
     bool checkAuthAndReauthorize();
+    void applyTheme(const QString &themeName, bool persist);
     void applyThemeStyles();
 
 public:
@@ -301,6 +304,8 @@ public slots:
     void openMessageLogInfo();
     void showDesktopUrl(const QUrl &url);
     void reloadIcons();
+    void previewTheme(const QString &themeName);
+    void restoreThemePreview();
     void showMessage(QString title, QString msg, int timeout=10000);
     void toolbarVisibilityChanged();
     void presentationModeOn();

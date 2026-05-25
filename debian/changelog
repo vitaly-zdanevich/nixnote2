@@ -1,3 +1,9 @@
+NixNote (2.1.19) stable; urgency=low
+  * Added live theme preview from the View -> Theme menu: hovering a theme temporarily applies its styles and icons.
+  * Restored the saved theme automatically when leaving or closing the Theme menu without selecting a new theme.
+  * Kept clicked theme actions persistent and converted remaining bundled theme hex colors to compact three-digit approximations.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 06:07:56 +0400
+
 NixNote (2.1.18) stable; urgency=low
   * Made the Black theme note title and note metadata fields use a lighter blue that remains readable on a black background.
   * Added explicit Black theme CSS for active and inactive note title and date/time editors so they no longer fall back to the global dark-blue default.

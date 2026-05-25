@@ -3487,40 +3487,21 @@ void NixNote::applyThemeStyles() {
 }
 
 
-// Reload the icons after a theme switch
-void NixNote::reloadIcons() {
-    QAction *selectedTheme = qobject_cast<QAction *>(sender());
-
-    if (selectedTheme == nullptr) {
-        for (QAction *themeAction : menuBar->themeActions) {
-            if (themeAction->isChecked()) {
-                selectedTheme = themeAction;
-                break;
-            }
-        }
-    }
-
-    if (selectedTheme == nullptr && !menuBar->themeActions.isEmpty()) {
-        selectedTheme = menuBar->themeActions.first();
-    }
-
-    if (selectedTheme == nullptr) {
-        return;
-    }
-
-    QString newThemeName = selectedTheme->data().toString();
+void NixNote::applyTheme(const QString &themeName, bool persist) {
     for (QAction *themeAction : menuBar->themeActions) {
-        themeAction->setChecked(themeAction == selectedTheme);
+        themeAction->setChecked(themeAction->data().toString() == themeName);
     }
 
-    global.settings->beginGroup(INI_GROUP_APPEARANCE);
-    if (newThemeName.isEmpty())
-        global.settings->remove("themeName");
-    else
-        global.settings->setValue("themeName", newThemeName);
-    global.settings->endGroup();
+    if (persist) {
+        global.settings->beginGroup(INI_GROUP_APPEARANCE);
+        if (themeName.isEmpty())
+            global.settings->remove("themeName");
+        else
+            global.settings->setValue("themeName", themeName);
+        global.settings->endGroup();
+    }
 
-    global.loadTheme(global.resourceList, global.colorList, newThemeName);
+    global.loadTheme(global.resourceList, global.colorList, themeName);
     applyThemeStyles();
 
     const auto wIcon = QIcon(global.getIconResource(":windowIcon"));
@@ -3555,8 +3536,61 @@ void NixNote::reloadIcons() {
         return;
 
     QFile f(themeInformation);
-    if (!f.exists() && newThemeName != "")
+    if (!f.exists() && themeName != "")
         menuBar->themeInformationAction->setVisible(false);
+}
+
+
+// Reload the icons after a theme switch
+void NixNote::reloadIcons() {
+    QAction *selectedTheme = qobject_cast<QAction *>(sender());
+
+    if (selectedTheme == nullptr) {
+        for (QAction *themeAction : menuBar->themeActions) {
+            if (themeAction->isChecked()) {
+                selectedTheme = themeAction;
+                break;
+            }
+        }
+    }
+
+    if (selectedTheme == nullptr && !menuBar->themeActions.isEmpty()) {
+        selectedTheme = menuBar->themeActions.first();
+    }
+
+    if (selectedTheme == nullptr) {
+        return;
+    }
+
+    themePreviewActive = false;
+    themePreviewOriginalName.clear();
+    applyTheme(selectedTheme->data().toString(), true);
+}
+
+
+void NixNote::previewTheme(const QString &themeName) {
+    if (!themePreviewActive) {
+        global.settings->beginGroup(INI_GROUP_APPEARANCE);
+        themePreviewOriginalName = global.settings->value("themeName", DEFAULT_THEME_NAME).toString();
+        global.settings->endGroup();
+        themePreviewActive = true;
+    }
+
+    QLOG_DEBUG() << "Previewing theme" << themeName;
+    applyTheme(themeName, false);
+}
+
+
+void NixNote::restoreThemePreview() {
+    if (!themePreviewActive) {
+        return;
+    }
+
+    QString themeName = themePreviewOriginalName;
+    themePreviewActive = false;
+    themePreviewOriginalName.clear();
+    QLOG_DEBUG() << "Restoring theme after preview" << themeName;
+    applyTheme(themeName, false);
 }
 
 

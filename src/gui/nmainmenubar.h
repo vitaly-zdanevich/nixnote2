@@ -31,6 +31,7 @@ class NMainMenuBar : public QMenuBar
     Q_OBJECT
 private:
     NixNote *parent;
+    QMenu *themeMenu = nullptr;
 
     void setupFileMenu();
     void setupEditMenu();
@@ -130,6 +131,9 @@ public:
     void addUserAccount(QAction *action);
 
 signals:
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private slots:
     void onSortMenuTriggered();
