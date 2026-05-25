@@ -1,9 +1,12 @@
+NixNote (2.1.38) stable; urgency=low
+  * Fixed rendering of notes with consecutive self-closing Evernote image media tags.
+  * Kept changelog release entries free of maintainer name/date trailer lines.
+
 NixNote (2.1.37) stable; urgency=low
   * Omitted Debian maintainer signature metadata from GitHub release notes.
   * Used the system dark color-scheme preference to select Global Dark by default.
   * Made Global Dark editor and Qt widget backgrounds pure black.
   * Removed separator lines from the left sidebar navigation sections.
- -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 13:14:54 +0400
 
 NixNote (2.1.36) stable; urgency=low
   * Fixed the amd64 CI ENML link test by accepting its tidy/Qt attribute spacing variant.
