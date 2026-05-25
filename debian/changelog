@@ -1,3 +1,7 @@
+NixNote (2.1.33) stable; urgency=low
+  * Improved CI test failure annotations so QtTest assertion details remain visible through curl.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 11:38:45 +0400
+
 NixNote (2.1.32) stable; urgency=low
   * Fixed CI tests by accepting equivalent ENML attribute ordering from Ubuntu's tidy/Qt stack.
  -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 11:09:09 +0400
