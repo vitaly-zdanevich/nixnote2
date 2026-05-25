@@ -677,7 +677,7 @@ void NMainMenuBar::createThemeMenu(QMenu *parentMenu) {
     QFont f = global.getGuiFont(QFont());
 
     global.settings->beginGroup(INI_GROUP_APPEARANCE);
-    QString userTheme = global.settings->value("themeName", DEFAULT_THEME_NAME).toString();
+    QString userTheme = global.getEffectiveThemeName(global.settings->value("themeName", "").toString());
     global.settings->endGroup();
 
 

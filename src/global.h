@@ -104,6 +104,7 @@ class IndexRunner;
 #define SET_MESSAGE_TIMEOUT_SHORT 1000
 #define SET_MESSAGE_TIMEOUT_LONGER 15000
 #define DEFAULT_THEME_NAME "Default"
+#define GLOBAL_DARK_THEME_NAME "Global Dark"
 
 // app binary name
 #define NN_APP_NAME "nixnote2"
@@ -402,6 +403,8 @@ public:
     QString getDateTimeEditorInactiveStyle();
 
     QString getEditorCss();
+    QString getEffectiveThemeName(const QString &configuredThemeName) const;
+    QString getSystemDefaultThemeName() const;
     const QPixmap* getPixmapResource(const QHash<QString, QString> &resourceList, const QString &key);   // Get a pixmap from the user's (or default) theme
     const QPixmap& getPixmapResource(const QString &key);                   // Get a pixmap from the user's (or default) theme
     const QIcon* getIconResource(const QHash<QString, QString> &resourceList, const QString &key);       // Get an icon from the user's (or default) theme

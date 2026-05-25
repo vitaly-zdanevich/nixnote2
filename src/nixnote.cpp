@@ -3571,7 +3571,7 @@ void NixNote::reloadIcons() {
 void NixNote::previewTheme(const QString &themeName) {
     if (!themePreviewActive) {
         global.settings->beginGroup(INI_GROUP_APPEARANCE);
-        themePreviewOriginalName = global.settings->value("themeName", DEFAULT_THEME_NAME).toString();
+        themePreviewOriginalName = global.getEffectiveThemeName(global.settings->value("themeName", "").toString());
         global.settings->endGroup();
         themePreviewActive = true;
     }

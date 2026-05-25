@@ -27,6 +27,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QWebEngineProfile>
 #include <QWebEngineSettings>
 #include <QApplication>
+#include <QGuiApplication>
+#include <QPalette>
+#include <QStyleHints>
 
 // The following include is needed for demangling names on a backtrace
 // Windows Check
@@ -52,6 +55,26 @@ qreal editorLogicalDpiX()
 QWebEngineSettings *defaultWebEngineSettings()
 {
     return QWebEngineProfile::defaultProfile()->settings();
+}
+
+bool systemPrefersDarkColorScheme()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    const QStyleHints *styleHints = QGuiApplication::styleHints();
+    if (styleHints != nullptr) {
+        const Qt::ColorScheme colorScheme = styleHints->colorScheme();
+        if (colorScheme == Qt::ColorScheme::Dark) {
+            return true;
+        }
+        if (colorScheme == Qt::ColorScheme::Light) {
+            return false;
+        }
+    }
+#endif
+
+    const QPalette palette = QGuiApplication::palette();
+    return palette.color(QPalette::Window).lightness() <
+            palette.color(QPalette::WindowText).lightness();
 }
 }
 
@@ -197,7 +220,7 @@ void Global::setup(StartupConfig startupConfig, bool guiAvailable) {
     }
 
     settings->beginGroup(INI_GROUP_APPEARANCE);
-    QString theme = settings->value("themeName", "").toString();
+    QString theme = getEffectiveThemeName(settings->value("themeName", "").toString());
     loadTheme(resourceList, colorList, theme);
     settings->endGroup();
 
@@ -918,6 +941,23 @@ QString Global::getDateTimeEditorInactiveStyle() {
 
 QString Global::getEditorCss() {
     return this->getThemeCss("editorCss");
+}
+
+QString Global::getEffectiveThemeName(const QString &configuredThemeName) const {
+    const QString themeName = configuredThemeName.trimmed();
+    if (!themeName.isEmpty()) {
+        return themeName;
+    }
+
+    return getSystemDefaultThemeName();
+}
+
+QString Global::getSystemDefaultThemeName() const {
+    if (guiAvailable && systemPrefersDarkColorScheme()) {
+        return GLOBAL_DARK_THEME_NAME;
+    }
+
+    return DEFAULT_THEME_NAME;
 }
 
 // Get a QIcon in an icon theme
