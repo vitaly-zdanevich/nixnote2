@@ -89,11 +89,6 @@ private:
     NSearchView *searchTreeView;
     NNotebookView *notebookTreeView;
     FavoritesView *favoritesTreeView;
-    QLabel *leftSeparator1;
-    QLabel *leftSeparator2;
-    QLabel *leftSeparator3;
-    QLabel *leftseparator4;
-    QLabel *leftSeparator5;
     NTrashTree *trashTree;
     NTagView *tagTreeView;
     QSplitter *mainSplitter;
@@ -183,7 +178,6 @@ private:
     void saveContents();
     void saveNoteColumnPositions();
     void saveNoteColumnWidths();
-    void checkLeftPanelSeparators();
     QString selectExportPDFFileName();
     void trayActivatedAction(int value);
     TrayMenu *createTrayContexMenu();

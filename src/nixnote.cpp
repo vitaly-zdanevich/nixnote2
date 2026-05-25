@@ -33,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <QApplication>
 #include <QThread>
-#include <QLabel>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QStringList>
@@ -538,7 +537,6 @@ void NixNote::setupGui() {
         trashTree->setVisible(false);
     }
     global.settings->endGroup();
-    checkLeftPanelSeparators();
 
     if (rightPanelSplitter->orientation() == Qt::Vertical)
         viewNoteListWide();
@@ -1025,11 +1023,6 @@ void NixNote::noteSynchronized(qint32 lid, bool value) {
 void NixNote::setupSearchTree() {
     QLOG_DEBUG() << "Starting NixNote.setupSearchTree()";
 
-    leftSeparator3 = new QLabel();
-    leftSeparator3->setTextFormat(Qt::RichText);
-    leftSeparator3->setText("<hr>");
-    leftPanel->addSeparator(leftSeparator3);
-
     searchTreeView = new NSearchView(leftPanel);
     leftPanel->addSearchView(searchTreeView);
     connect(&syncRunner, &SyncRunner::searchUpdated, searchTreeView, &NSearchView::searchUpdated);
@@ -1044,11 +1037,6 @@ void NixNote::setupSearchTree() {
 //*****************************************************************************
 void NixNote::setupTagTree() {
     QLOG_DEBUG() << "Starting NixNote.setupTagTree()";
-
-    leftSeparator2 = new QLabel();
-    leftSeparator2->setTextFormat(Qt::RichText);
-    leftSeparator2->setText("<hr>");
-    leftPanel->addSeparator(leftSeparator2);
 
     tagTreeView = new NTagView(leftPanel);
     leftPanel->addTagView(tagTreeView);
@@ -1071,11 +1059,6 @@ void NixNote::setupTagTree() {
 void NixNote::setupAttributeTree() {
     QLOG_DEBUG() << "Starting NixNote.setupAttributeTree()";
 
-    leftseparator4 = new QLabel();
-    leftseparator4->setTextFormat(Qt::RichText);
-    leftseparator4->setText("<hr>");
-    leftPanel->addSeparator(leftseparator4);
-
     attributeTree = new NAttributeTree(leftPanel);
     leftPanel->addAttributeTree(attributeTree);
     QLOG_TRACE() << "Exiting NixNote.setupAttributeTree()";
@@ -1087,11 +1070,6 @@ void NixNote::setupAttributeTree() {
 //*****************************************************************************
 void NixNote::setupTrashTree() {
     QLOG_DEBUG() << "Starting NixNote.setupTrashTree()";
-
-    leftSeparator5 = new QLabel();
-    leftSeparator5->setTextFormat(Qt::RichText);
-    leftSeparator5->setText("<hr>");
-    leftPanel->addSeparator(leftSeparator5);
 
     trashTree = new NTrashTree(leftPanel);
     leftPanel->addTrashTree(trashTree);
@@ -1117,11 +1095,6 @@ void NixNote::setupFavoritesTree() {
     connect(&counterRunner, &CounterRunner::notebookTotals, favoritesTreeView, &FavoritesView::updateTotals);
     connect(&counterRunner, &CounterRunner::tagTotals, favoritesTreeView, &FavoritesView::updateTotals);
     connect(favoritesTreeView, &FavoritesView::updateCounts, &counterRunner, &CounterRunner::countAll);
-
-    leftSeparator1 = new QLabel();
-    leftSeparator1->setTextFormat(Qt::RichText);
-    leftSeparator1->setText("<hr>");
-    leftPanel->addSeparator(leftSeparator1);
 
     QLOG_TRACE() << "Exiting NixNote.setupFavoritesTree()";
 }
@@ -3603,7 +3576,6 @@ void NixNote::toggleFavoritesTree() {
     global.settings->setValue("favoritesTreeVisible", visible);
     global.settings->endGroup();
     favoritesTreeView->setVisible(visible);
-    checkLeftPanelSeparators();
 }
 
 
@@ -3616,7 +3588,6 @@ void NixNote::toggleNotebookTree() {
     global.settings->setValue("notebookTreeVisible", visible);
     global.settings->endGroup();
     notebookTreeView->setVisible(visible);
-    checkLeftPanelSeparators();
 }
 
 
@@ -3629,7 +3600,6 @@ void NixNote::toggleTagTree() {
     global.settings->setValue("tagTreeVisible", visible);
     global.settings->endGroup();
     tagTreeView->setVisible(visible);
-    checkLeftPanelSeparators();
 }
 
 
@@ -3642,7 +3612,6 @@ void NixNote::toggleSavedSearchTree() {
     global.settings->setValue("savedSearchTreeVisible", visible);
     global.settings->endGroup();
     searchTreeView->setVisible(visible);
-    checkLeftPanelSeparators();
 }
 
 
@@ -3655,7 +3624,6 @@ void NixNote::toggleAttributesTree() {
     global.settings->setValue("attributeTreeVisible", visible);
     global.settings->endGroup();
     attributeTree->setVisible(visible);
-    checkLeftPanelSeparators();
 }
 
 // Show/Hide the trash tree on the left side
@@ -3667,56 +3635,6 @@ void NixNote::toggleTrashTree() {
     global.settings->setValue("trashTreeVisible", visible);
     global.settings->endGroup();
     trashTree->setVisible(visible);
-    checkLeftPanelSeparators();
-}
-
-
-// This function will show/hide all of the separators between the trees on the left side
-// of the gui.
-void NixNote::checkLeftPanelSeparators() {
-    bool s1 = false;
-    bool s2 = false;
-    bool s3 = false;
-    bool s4 = false;
-    bool s5 = false;
-
-    bool tags;
-    bool notebooks;
-    bool favorites;
-    bool searches;
-    bool attributes;
-    bool trash;
-
-    global.settings->beginGroup(INI_GROUP_SAVE_STATE);
-    favorites = global.settings->value("favoritesTreeVisible", true).toBool();
-    notebooks = global.settings->value("notebookTreeVisible", true).toBool();
-    tags = global.settings->value("tagTreeVisible", true).toBool();
-    searches = global.settings->value("savedSearchTreeVisible", true).toBool();
-    attributes = global.settings->value("attributeTreeVisible", true).toBool();
-    trash = global.settings->value("trashTreeVisible", true).toBool();
-    global.settings->endGroup();
-
-    if (favorites && (notebooks || tags || searches || attributes || trash)) {
-        s1 = true;
-    }
-    if (notebooks && (tags || searches || attributes || trash)) {
-        s2 = true;
-    }
-    if (tags && (searches || attributes || trash)) {
-        s3 = true;
-    }
-    if (searches && (attributes || trash)) {
-        s4 = true;
-    }
-    if (attributes && trash) {
-        s5 = true;
-    }
-
-    leftSeparator1->setVisible(s1);
-    leftSeparator2->setVisible(s2);
-    leftSeparator3->setVisible(s3);
-    leftseparator4->setVisible(s4);
-    leftSeparator5->setVisible(s5);
 }
 
 // Make sure the toolbar checkbox & the menu match.

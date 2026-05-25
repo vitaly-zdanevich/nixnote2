@@ -118,13 +118,6 @@ void WidgetPanel::addAttributeTree(NAttributeTree *view) {
 }
 
 
-void WidgetPanel::addSeparator(QLabel *separator) {
-    addWidget(separator);
-}
-
-
-
-
 void WidgetPanel::scrollTimer() {
     QScrollArea *scrollArea = (QScrollArea*)this->parentWidget();
     if (scrollUp) {

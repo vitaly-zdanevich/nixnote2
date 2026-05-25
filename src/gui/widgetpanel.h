@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QScrollArea>
-#include <QLabel>
 #include <QTimer>
 #include "src/gui/favoritesview.h"
 #include "src/gui/nnotebookview.h"
@@ -64,7 +63,6 @@ public:
     void addSearchView(NSearchView *view);
     void addAttributeTree(NAttributeTree *view);
     void addTrashTree(NTrashTree *view);
-    void addSeparator(QLabel *separator);
 
 signals:
 
