@@ -296,9 +296,13 @@ void IndexRunner::indexRecognition(qint32 lid, Resource &r) {
         return;
 
     QDomDocument doc;
-    const QDomDocument::ParseResult parseResult = doc.setContent(recognition.body);
-    if (!parseResult) {
-        QLOG_WARN() << "Unable to parse recognition XML:" << parseResult.errorMessage;
+    QString parseError;
+    int parseLine = 0;
+    int parseColumn = 0;
+    if (!doc.setContent(recognition.body, &parseError, &parseLine,
+                        &parseColumn)) {
+        QLOG_WARN() << "Unable to parse recognition XML:" << parseError
+                    << "at line" << parseLine << "column" << parseColumn;
         return;
     }
 
