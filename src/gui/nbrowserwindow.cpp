@@ -75,6 +75,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QPaintEngine>
 #include <QPageLayout>
 #include <QPageSize>
+#include <QPalette>
 #include <QRegularExpression>
 #include <QTransform>
 #include <QUrl>
@@ -125,8 +126,14 @@ QString resourceImageUrl(const QString &path)
 
 bool systemDarkModeEnabled()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     const QStyleHints *styleHints = QGuiApplication::styleHints();
     return styleHints != nullptr && styleHints->colorScheme() == Qt::ColorScheme::Dark;
+#else
+    const QPalette palette = QGuiApplication::palette();
+    return palette.color(QPalette::Window).lightness() <
+            palette.color(QPalette::WindowText).lightness();
+#endif
 }
 
 QString systemDarkEditorCss()
@@ -269,10 +276,18 @@ NBrowserWindow::NBrowserWindow(QWidget *parent) :
     connect(editor, &NWebView::noteChanged, this, &NBrowserWindow::noteContentUpdated);
     connect(editor, &NWebView::htmlEditAlert, this, &NBrowserWindow::noteContentEdited);
     connect(editor, &NWebView::htmlEditAlert, this, &NBrowserWindow::correctFontTagAttr);
-    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
-            this, [this](Qt::ColorScheme) {
-                setEditorStyle();
-            });
+    connect(qApp, &QGuiApplication::paletteChanged, this, [this](const QPalette &) {
+        setEditorStyle();
+    });
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    const auto *styleHints = QGuiApplication::styleHints();
+    if (styleHints != nullptr) {
+        connect(styleHints, &QStyleHints::colorSchemeChanged,
+                this, [this](Qt::ColorScheme) {
+                    setEditorStyle();
+                });
+    }
+#endif
 
     editor->settings()->setAttribute(QWebEngineSettings::PluginsEnabled, true);
     factory = new PluginFactory(this);
