@@ -69,7 +69,14 @@ jobs:
           tail -n 200 build-project.log
           echo "::endgroup::"
 
-          message=$(tail -n 80 build-project.log | perl -0pe 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g')
+          grep -E -i -C 3 'fatal error:|[^[:alnum:]_]error:|undefined reference|collect2:|ld:|make(\[[0-9]+\])?: \*\*\*' \
+            build-project.log > build-project-error-summary.log || true
+          if [ ! -s build-project-error-summary.log ]; then
+            tail -n 60 build-project.log > build-project-error-summary.log
+          fi
+
+          cut -c 1-500 build-project-error-summary.log > build-project-error-annotation.log
+          message=$(perl -0pe 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' build-project-error-annotation.log)
           echo "::error title=Build project failed::${message}"
           exit "${status}"
 
