@@ -11,8 +11,6 @@ and Windows, but Linux is the primary target.
 * [Contributing](CONTRIBUTING.md)
 * [Releases](https://github.com/vitaly-zdanevich/nixnote2/releases)
 
-![GitHub Actions](https://github.com/vitaly-zdanevich/nixnote2/actions/workflows/cicd.yaml/badge.svg)
-
 ## Packages
 ### Debian, Ubuntu and derivatives official repositories
 If your distribution is based on **Debian 10 (Buster), Ubuntu 19.04 (Disco),
