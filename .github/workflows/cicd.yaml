@@ -54,11 +54,11 @@ jobs:
             qt6-webchannel-dev qt6-webengine-dev
 
       - name: Build project
-        env:
-          JOBS: 1
         shell: bash
         run: |
           set -o pipefail
+          export JOBS="$(nproc)"
+          echo "Using JOBS=${JOBS}"
 
           if ./development/build-with-qmake.sh release clean /usr/lib browser 2>&1 | tee build-project.log; then
             exit 0
@@ -82,11 +82,12 @@ jobs:
 
       - name: Build and run tests
         env:
-          JOBS: 1
           QT_QPA_PLATFORM: offscreen
         shell: bash
         run: |
           set -o pipefail
+          export JOBS="$(nproc)"
+          echo "Using JOBS=${JOBS}"
 
           if {
             ./development/run-cli-smoke-tests.sh
