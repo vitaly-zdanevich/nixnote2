@@ -1,3 +1,9 @@
+NixNote (2.1.23) stable; urgency=low
+  * Refreshed the README to describe the current Qt 6 build flow and repository links.
+  * Documented version-tagged GitHub Release AppImages for amd64 and arm64.
+  * Corrected stale qmake, test, AppImage and Windows command examples.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 07:15:57 +0400
+
 NixNote (2.1.22) stable; urgency=low
   * Published versioned AppImages as GitHub Release assets when v* tags are pushed.
   * Added a manual GitHub Actions backfill path for rebuilding AppImages for an existing release tag.
