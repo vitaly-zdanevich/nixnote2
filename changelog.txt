@@ -1,3 +1,8 @@
+NixNote (2.1.31) stable; urgency=low
+  * Fixed CI test builds by reusing the test helper with Ubuntu's libtidy pkg-config fallback.
+  * Kept CI tests single-worker and added clearer failure annotations.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 10:34:54 +0400
+
 NixNote (2.1.30) stable; urgency=low
   * Fixed Ubuntu 24.04 CI builds by avoiding QTimeZone::UTC on older Qt 6 packages.
  -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 10:01:53 +0400
