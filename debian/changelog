@@ -1,3 +1,9 @@
+NixNote (2.1.26) stable; urgency=low
+  * Declared Qt WebEngineCore explicitly so Ubuntu AppImage CI and stricter distro qmake builds get the required include and link flags.
+  * Added filtered build-failure annotations to GitHub Actions so compiler and linker errors are visible through curl without using gh.
+  * Replaced the README donation footer with links to related Evernote projects.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 08:45:20 +0400
+
 NixNote (2.1.25) stable; urgency=low
   * Fixed GitHub Actions builds on Ubuntu 24.04 by guarding Qt 6.5+ system color-scheme APIs.
   * Kept dark editor detection working on older Qt 6 through a palette-based fallback.
