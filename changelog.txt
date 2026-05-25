@@ -1,3 +1,9 @@
+NixNote (2.1.22) stable; urgency=low
+  * Published versioned AppImages as GitHub Release assets when v* tags are pushed.
+  * Added a manual GitHub Actions backfill path for rebuilding AppImages for an existing release tag.
+  * Removed the stale unmaintained-project status notice from the README.
+ -- Vitaly Zdanevich <vitaly-zdanevich@users.noreply.github.com>  Mon, 25 May 2026 06:58:47 +0400
+
 NixNote (2.1.21) stable; urgency=low
   * Fixed command-line help formatting, examples and option descriptions.
   * Made command-line exit codes consistently return zero on success and non-zero on failure.
