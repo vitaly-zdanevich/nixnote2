@@ -38,6 +38,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 extern Global global;
 
+static void replaceFirstBoundValue(QString &query, const QString &placeholder,
+                                   const QVariant &value)
+{
+    if (placeholder.isEmpty()) {
+        return;
+    }
+
+    const int placeholderIndex = query.indexOf(placeholder);
+    if (placeholderIndex >= 0) {
+        query.replace(placeholderIndex, placeholder.size(), value.toString());
+    }
+}
+
 
 // Constructor
 NSqlQuery::NSqlQuery(DatabaseConnection *db) :
@@ -62,11 +75,19 @@ NSqlQuery::~NSqlQuery() {
 QString getLastExecutedQuery(const QSqlQuery& query)
 {
     QString str = query.lastQuery();
-    const QStringList names = query.boundValueNames();
     const QVariantList values = query.boundValues();
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    const QStringList names = query.boundValueNames();
     for (int i = 0; i < names.size() && i < values.size(); ++i) {
-      str.replace(names.at(i), values.at(i).toString());
+        replaceFirstBoundValue(str, names.at(i), values.at(i));
     }
+#else
+    for (const QVariant &value : values) {
+        replaceFirstBoundValue(str, QStringLiteral("?"), value);
+    }
+#endif
+
     return str;
 }
 
@@ -170,4 +191,3 @@ bool NSqlQuery::exec(const char *query) {
     q = QString::fromStdString(query);
     return this->exec(q);
 }
-
