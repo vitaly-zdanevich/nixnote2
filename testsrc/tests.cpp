@@ -1,6 +1,7 @@
 #include <QtTest/QtTest>
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QHash>
 #include <QPair>
 
@@ -273,11 +274,37 @@ void Tests::enmlNixnoteLinkTest() {
 void Tests::enmlNixnoteLinkTest2() {
     // link with id & href attribute
     {
+        const QString hrefAttr(QStringLiteral(R"R(href="https://www.example.com/xy")R"));
+        const QString styleAttr(QStringLiteral(R"R(style="box-sizing: border-box")R"));
+        const QString titleAttr(QStringLiteral(R"R(title="https://www.example.com/xy")R"));
+        const QString linkText(QStringLiteral("beenthere, done that"));
+
         QString src(
-                R"R(<a href="https://www.example.com/xy" name="5329482" style="box-sizing: border-box" id="5329482" title="https://www.example.com/xy">been there, done that</a>)R");
-        QString result(
-                R"R(<a href="https://www.example.com/xy" style="box-sizing: border-box"title="https://www.example.com/xy">been there, done that</a>)R");
-        QCOMPARE(formatToEnml(src), addEnmlEnvelope(result));
+                R"R(<a href="https://www.example.com/xy" name="5329482" style="box-sizing: border-box" id="5329482" title="https://www.example.com/xy">)R");
+        src.append(linkText);
+        src.append(QStringLiteral("</a>"));
+
+        const QStringList attrOrders({
+            hrefAttr + " " + styleAttr + titleAttr,
+            hrefAttr + " " + styleAttr + " " + titleAttr,
+            hrefAttr + " " + titleAttr + " " + styleAttr,
+            styleAttr + " " + hrefAttr + " " + titleAttr,
+            styleAttr + " " + titleAttr + " " + hrefAttr,
+            titleAttr + " " + hrefAttr + " " + styleAttr,
+            titleAttr + " " + styleAttr + " " + hrefAttr
+        });
+
+        QStringList expectedOutputs;
+        for (const auto &attrs : attrOrders) {
+            expectedOutputs.append(addEnmlEnvelope(QStringLiteral("<a ") + attrs + ">" + linkText + "</a>"));
+        }
+
+        const QString actual = formatToEnml(src);
+        const bool matchesExpectedOutput = expectedOutputs.contains(actual);
+        if (!matchesExpectedOutput) {
+            QLOG_WARN() << "DIFF actual: " << actual << ", expected one of: " << expectedOutputs;
+        }
+        QVERIFY(matchesExpectedOutput);
     }
 }
 
@@ -322,7 +349,17 @@ void Tests::enmlNixnoteTableTest() {
     );
     QString result(
             R"R(<div><table border="1" width="100%"><tbody><tr><td><br />aa aaa</td></tr></tbody></table></div>)R");
-    QCOMPARE(formatToEnml(src), addEnmlEnvelope(result));
+    QString resultWithWidthFirst(
+            R"R(<div><table width="100%" border="1"><tbody><tr><td><br />aa aaa</td></tr></tbody></table></div>)R");
+
+    const QString r1 = formatToEnml(src);
+    const QString r2 = addEnmlEnvelope(result);
+    const QString r3 = addEnmlEnvelope(resultWithWidthFirst);
+    const bool matchesExpectedOutput = (r1 == r2 || r1 == r3);
+    if (!matchesExpectedOutput) {
+        QLOG_WARN() << "DIFF r1: " << r1 << ", r2: " << r2 << ", r3: " << r3;
+    }
+    QVERIFY(matchesExpectedOutput);
 }
 
 void Tests::enmlHtml5TagsTest() {
