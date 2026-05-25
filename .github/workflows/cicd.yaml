@@ -203,7 +203,7 @@ jobs:
             echo "NixNote ${version}"
             echo
             if [ -f debian/changelog ]; then
-              awk 'NF { print; next } { exit }' debian/changelog
+              awk 'NF == 0 { exit } /^ -- / { next } { print }' debian/changelog
               echo
             fi
 
