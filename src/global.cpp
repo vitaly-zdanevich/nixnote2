@@ -985,7 +985,7 @@ void Global::loadThemeFile(QHash<QString, QString> &resourceList, QHash<QString,
 
     QTextStream in(&file);
     QString colon(":");
-    QString openingBracket(":");
+    QString openingBracket("{");
 
     bool themeFound = false;
     QString wantedThemeHeader = "[" + themeName.trimmed() + "]";
@@ -1020,9 +1020,9 @@ void Global::loadThemeFile(QHash<QString, QString> &resourceList, QHash<QString,
 
                 QLOG_TRACE() << "Theme " << wantedThemeHeader << ": key=" << key << "value=" << value;
 
-                // this is a guess, but inline CSS always needs to contain ":", file path should never
-                // or at least "{"
-                bool isInlineCss = value.contains(colon) || value.contains(openingBracket);
+                // Theme style values can be inline CSS or plain color values.
+                bool isInlineCss = value.contains(colon) || value.contains(openingBracket)
+                                   || value.startsWith("#") || key.endsWith("Color", Qt::CaseInsensitive);
                 if (isInlineCss) {
                     colorList.insert(key, value);
                     QLOG_TRACE() << "Theme " << wantedThemeHeader << ": added CSS key=" << key << "value=" << value;
